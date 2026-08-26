@@ -205,7 +205,7 @@ export const App: React.FC = () => {
         {isLoading && !currentBatch && activeTab === 'mix' ? (
           <div className="flex flex-col items-center justify-center py-24 space-y-3">
             <Loader2 className="w-8 h-8 animate-spin text-emerald-400" />
-            <p className="text-sm font-mono text-neutral-400">Connecting to Google Sheets & loading today's mix...</p>
+            <p className="text-sm font-mono text-neutral-400">Connecting to Cloudflare D1 Edge Database...</p>
           </div>
         ) : (
           <>
@@ -248,7 +248,7 @@ export const App: React.FC = () => {
       <footer className="border-t border-neutral-900 bg-neutral-950 py-6 text-center text-xs font-mono text-neutral-500">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <span>KnowSights Content Engine • Schema 2.0</span>
-          <span>Single Source of Truth: Production Pool (1HB4Zxg9qXzWVKyjAzSoTPHadPIVNZitojfaR0qd601w)</span>
+          <span>Primary: Cloudflare D1 (4,140 rows) • Backup: Sheet (1HB4Zxg9qXzWVKyjAzSoTPHadPIVNZitojfaR0qd601w)</span>
         </div>
       </footer>
 

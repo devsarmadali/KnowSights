@@ -145,8 +145,9 @@ export function loadConfig(): AppConfig {
     const raw = localStorage.getItem(STORAGE_KEY_CONFIG);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (!parsed.google_web_app_url || parsed.google_web_app_url.includes('example')) {
-        parsed.google_web_app_url = DEFAULT_WEB_APP_URL;
+      if (!parsed.google_web_app_url || parsed.google_web_app_url.includes('example') || parsed.google_web_app_url.includes('script.google.com')) {
+        parsed.google_web_app_url = CLOUDFLARE_EDGE_API_URL;
+        saveConfig({ ...DEFAULT_CONFIG, ...parsed });
       }
       return { ...DEFAULT_CONFIG, ...parsed };
     }

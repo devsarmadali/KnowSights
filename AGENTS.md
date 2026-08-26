@@ -41,7 +41,11 @@ When expanding the database, always use the `knowsights-database-expansion` skil
 
 ---
 
-## 4. Key Links
-- **Google Sheet ID**: `1HB4Zxg9qXzWVKyjAzSoTPHadPIVNZitojfaR0qd601w`
+## 4. Key Links & Infrastructure
+- **Primary Production Database**: **Cloudflare D1 SQL (`knowsights-db`)**
+  - **Database UUID**: `aeea8b1e-1c49-432a-811e-f4460c51a5af` (APAC)
+  - **Edge Worker API**: `https://knowsights-api.excisetools.workers.dev`
+- **Secondary / Backup Visual Sheet**: `1HB4Zxg9qXzWVKyjAzSoTPHadPIVNZitojfaR0qd601w`
+  - **Apps Script URL**: `https://script.google.com/macros/s/AKfycbzrJo3mT73UlHp5EbXwzteWdebFzMQunRIV0YY_44j_OvVhDhXRcvFqMieE2FrsL4kK_g/exec`
 - **Live Production Web App**: [https://knowsights-topic-mixer.vercel.app](https://knowsights-topic-mixer.vercel.app)
 - **Timezone**: `Asia/Karachi`

@@ -79,18 +79,26 @@ export const Header: React.FC<HeaderProps> = ({
             })}
           </nav>
 
-          {/* Right Action Bar: Direct Google Sheet Link */}
-          <div className="flex items-center space-x-3">
+          {/* Right Action Bar: Cloudflare D1 Active Badge & Sheet Backup */}
+          <div className="flex items-center space-x-2">
+            <span 
+              className="inline-flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-mono text-xs font-semibold"
+              title="Primary Datastore: Cloudflare D1 Serverless Edge SQL (knowsights-db)"
+            >
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>Cloudflare D1 ⚡</span>
+            </span>
+
             <a
               href={sheetUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-xs font-mono text-emerald-400 hover:text-emerald-300 transition-all group"
-              title="Open authoritative Google Sheet datastore"
+              className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-xs font-mono text-neutral-400 hover:text-emerald-300 transition-all group"
+              title="Open Google Sheet backup"
             >
-              <FileSpreadsheet className="w-4 h-4 text-emerald-500 group-hover:scale-110 transition-transform" />
-              <span className="hidden sm:inline">Google Sheet</span>
-              <ExternalLink className="w-3 h-3 text-neutral-500" />
+              <FileSpreadsheet className="w-3.5 h-3.5 text-neutral-400 group-hover:text-emerald-400 transition-colors" />
+              <span className="hidden sm:inline">Sheet</span>
+              <ExternalLink className="w-3 h-3 text-neutral-600 group-hover:text-neutral-400" />
             </a>
           </div>
 
