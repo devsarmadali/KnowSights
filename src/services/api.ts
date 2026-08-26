@@ -11,7 +11,9 @@ import {
 const STORAGE_KEY_CONFIG = 'knowsights_config_v2';
 const STORAGE_KEY_LOCAL_POOL = 'knowsights_local_pool_v2';
 
-export const DEFAULT_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzrJo3mT73UlHp5EbXwzteWdebFzMQunRIV0YY_44j_OvVhDhXRcvFqMieE2FrsL4kK_g/exec';
+export const CLOUDFLARE_EDGE_API_URL = 'https://knowsights-api.excisetools.workers.dev';
+export const GOOGLE_SHEETS_FALLBACK_URL = 'https://script.google.com/macros/s/AKfycbzrJo3mT73UlHp5EbXwzteWdebFzMQunRIV0YY_44j_OvVhDhXRcvFqMieE2FrsL4kK_g/exec';
+export const DEFAULT_WEB_APP_URL = CLOUDFLARE_EDGE_API_URL;
 
 export const DEFAULT_CONFIG: AppConfig = {
   daily_mix_size: 12,
@@ -445,32 +447,65 @@ function saveLocalPool(pool: ProductionIdea[]): void {
   } catch (e) {}
 }
 
-// Universal API Dispatcher (Connects directly to Google Apps Script endpoint)
+// Universal API Dispatcher (Connects to Cloudflare D1 Edge Worker with Google Sheets fallback)
 async function callApi(action: string, payload: Record<string, any> = {}): Promise<any> {
   const config = loadConfig();
-  const url = (config.google_web_app_url || DEFAULT_WEB_APP_URL)?.trim();
+  const primaryUrl = (config.google_web_app_url || DEFAULT_WEB_APP_URL)?.trim();
+  const urlsToTry = [primaryUrl];
 
-  if (url && url.startsWith('https://script.google.com/') && !url.includes('example')) {
+  if (primaryUrl !== GOOGLE_SHEETS_FALLBACK_URL && GOOGLE_SHEETS_FALLBACK_URL) {
+    urlsToTry.push(GOOGLE_SHEETS_FALLBACK_URL);
+  }
+
+  for (const url of urlsToTry) {
+    if (!url || url.includes('example')) continue;
     try {
-      const queryParams = new URLSearchParams();
-      queryParams.set('action', action);
-      for (const [k, v] of Object.entries(payload)) {
-        if (v !== undefined && v !== null) {
-          queryParams.set(k, typeof v === 'object' ? JSON.stringify(v) : String(v));
+      if (url.includes('workers.dev') || url.includes('cloudflare')) {
+        // Cloudflare Edge Worker API (Ultra-Fast REST)
+        const isMutation = ['generate_batch', 'replace_item', 'mark_used', 'undo_used'].includes(action);
+        const reqPayload = { action, ...payload };
+
+        if (isMutation) {
+          const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(reqPayload)
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.success !== false) return data;
+          }
+        } else {
+          const qParams = new URLSearchParams();
+          qParams.set('action', action);
+          for (const [k, v] of Object.entries(payload)) {
+            if (v !== undefined && v !== null) {
+              qParams.set(k, typeof v === 'object' ? JSON.stringify(v) : String(v));
+            }
+          }
+          const res = await fetch(`${url}?${qParams.toString()}`);
+          if (res.ok) {
+            const data = await res.json();
+            if (data && data.success !== false) return data;
+          }
+        }
+      } else if (url.includes('script.google.com')) {
+        // Google Apps Script API
+        const queryParams = new URLSearchParams();
+        queryParams.set('action', action);
+        for (const [k, v] of Object.entries(payload)) {
+          if (v !== undefined && v !== null) {
+            queryParams.set(k, typeof v === 'object' ? JSON.stringify(v) : String(v));
+          }
+        }
+        const res = await fetch(`${url}?${queryParams.toString()}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json && json.success !== false) return json;
         }
       }
-
-      const getUrl = `${url}?${queryParams.toString()}`;
-      const response = await fetch(getUrl, {
-        method: 'GET',
-        headers: { 'Accept': 'application/json' }
-      });
-      if (response.ok) {
-        const json = await response.json();
-        if (json && json.success !== false) return json;
-      }
     } catch (err) {
-      console.warn("Google Apps Script request failed, falling back to local engine:", err);
+      console.warn(`API call failed for ${url}, trying next fallback:`, err);
     }
   }
 

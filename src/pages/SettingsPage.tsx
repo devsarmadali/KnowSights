@@ -99,15 +99,40 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
         </button>
       </div>
 
-      {/* 1. Google Apps Script Web App Connection */}
+      {/* 1. Universal Database Connection (Cloudflare D1 & Google Sheets) */}
       <div className="glass-panel rounded-2xl p-6 border border-neutral-800 space-y-4">
-        <div className="flex items-center space-x-2.5">
-          <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-            <Server className="w-4 h-4" />
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2.5">
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+              <Server className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white">Database & Backend Endpoint</h3>
+              <p className="text-xs text-neutral-400">High-performance Cloudflare D1 Edge SQL with Google Sheets fallback</p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-sm font-bold text-white">Google Apps Script Web App URL</h3>
-            <p className="text-xs text-neutral-400">The live server-side API connecting to your Google Sheet</p>
+
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setFormData({ ...formData, google_web_app_url: 'https://knowsights-api.excisetools.workers.dev' })}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-mono font-medium border transition-all ${
+                (formData.google_web_app_url || '').includes('workers.dev')
+                  ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
+                  : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:text-white'
+              }`}
+            >
+              ⚡ Cloudflare D1 (Fastest)
+            </button>
+            <button
+              onClick={() => setFormData({ ...formData, google_web_app_url: 'https://script.google.com/macros/s/AKfycbzrJo3mT73UlHp5EbXwzteWdebFzMQunRIV0YY_44j_OvVhDhXRcvFqMieE2FrsL4kK_g/exec' })}
+              className={`px-2.5 py-1 rounded-lg text-[11px] font-mono font-medium border transition-all ${
+                (formData.google_web_app_url || '').includes('script.google.com')
+                  ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
+                  : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:text-white'
+              }`}
+            >
+              📊 Google Sheets
+            </button>
           </div>
         </div>
 
@@ -116,17 +141,17 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
             type="url"
             value={formData.google_web_app_url}
             onChange={(e) => setFormData({ ...formData, google_web_app_url: e.target.value })}
-            placeholder="https://script.google.com/macros/s/.../exec"
+            placeholder="https://knowsights-api.excisetools.workers.dev"
             className="w-full bg-neutral-900 text-white font-mono text-xs border border-neutral-800 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500"
           />
           <div className="flex items-center justify-between text-xs">
             <span className="text-neutral-500 font-mono text-[11px]">
-              Active Sheet ID: <code className="text-neutral-300">{spreadsheetId}</code>
+              D1 Database: <code className="text-emerald-400">knowsights-db (4,140 rows)</code> • Sheet ID: <code className="text-neutral-300">{spreadsheetId}</code>
             </span>
             <button
               onClick={handleTestConnection}
               disabled={testing}
-              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-emerald-400 hover:text-emerald-300 transition-all disabled:opacity-50"
+              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-emerald-400 hover:text-emerald-300 transition-all disabled:opacity-50 cursor-pointer"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${testing ? 'animate-spin' : ''}`} />
               <span>{testing ? 'Testing...' : 'Test Connection'}</span>
