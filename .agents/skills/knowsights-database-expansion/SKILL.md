@@ -1,40 +1,37 @@
 ---
 name: knowsights-database-expansion
 description: >-
-  Expert guide and workflow for safely expanding the KnowSights database across
-  Master Taxonomy, Content Candidates, and Production Pool without disturbing
+  Expert guide, CLI commands, and SQL workflows for safely expanding the KnowSights
+  database across Cloudflare D1 (Master Taxonomy & Production Pool) without disturbing
   existing ideas or breaking lineage.
 ---
 
-# KnowSights Database Expansion Skill
+# KnowSights Database Expansion Skill (Cloudflare D1 & Edge Engine)
 
-This skill teaches agents and developers how to safely expand the **KnowSights** content database using the 3 approved expansion paths, ensuring schema integrity, permanent identifier preservation, and seamless integration with the web application.
+This skill teaches AI agents and developers how to expand the **KnowSights** knowledge foundation and active video idea inventory directly in **Cloudflare D1 SQL (`knowsights-db`)**.
 
 ---
 
-## 🏛️ Permanent Content Model
+## 🏛️ Permanent Architecture & Lineage
 
 ```
-Master Taxonomy (Permanent Sr. seeds)
+Master Taxonomy (3,960+ Permanent Sr. Seeds in D1)
        │
        ├──────────────────────────────────────────┐
        │                                          │
        ▼ (1:1 Baseline Seed)                      ▼ (Discovery Workshop)
-Production Pool (KS-T-*)                  Content Candidates (Candidate ID)
+Production Pool (KS-T-*)                  Content Candidates (Staging)
        ▲                                          │
        │ (1:Many Editorial Angles)                │ (Editorial Promotion)
        └─────────────────── KS-P-* ───────────────┘
                                │
                                ▼
-                      KnowSights Web App
+            KnowSights Cloudflare Edge Worker API
+            (https://knowsights-api.excisetools.workers.dev)
                                │
-                ┌──────────────┴──────────────┐
-                ▼                             ▼
-           Daily Mixer                 Production Pool
-       (App Batches/Items)                 Browser
-                │                             │
-                ▼                             ▼
-         1-Click Prompts               Mark Used (Used = TRUE)
+                               ▼
+            KnowSights Web App (Vercel Production)
+            (https://knowsights-topic-mixer.vercel.app)
 ```
 
 ---
@@ -42,117 +39,117 @@ Production Pool (KS-T-*)                  Content Candidates (Candidate ID)
 ## 🔑 Core Invariants & Rules
 
 1. **Never use row numbers as identity**:
-   - `Master Taxonomy.Sr.` *(Integer, immutable)*
-   - `Production Pool.Idea ID` *(String, immutable: `KS-T-*` or `KS-P-*`)*
-   - `Content Candidates.Candidate ID` *(String, immutable)*
+   - `Master Taxonomy.Sr.` *(Integer, immutable primary key: `1`, `2`, ...)*
+   - `Production Pool.Idea ID` *(String, immutable primary key: `KS-T-*` or `KS-P-*`)*
    - `Parent Sr.` *(Lineage pointer linking back to `Master Taxonomy.Sr.`)*
 2. **`SHOWN != USED`**:
-   - Merely displaying an idea in a mix increments `Times Shown` and updates `Last Shown`. It does **not** consume the idea.
-   - Only setting `Used = TRUE` marks an idea as consumed.
-3. **Independent Idea Lifecycles**:
-   - Consuming one idea (e.g. `KS-P-0181`) marks **only that specific `Idea ID`** as used.
-   - The underlying topic (`Sr. 3044`) and sister angles (`KS-T-003044`, `KS-P-0182`) remain eligible for future mixes.
-4. **No Brief ≠ Unusable Idea**:
-   - All ideas in `Production Pool` are 100% usable directly without a manual `Source-Ready Brief`.
+   - Showing an idea in a batch increments `times_shown` and records `last_shown`.
+   - Only `used = 1` consumes an idea.
+3. **1-to-Many Non-Destructive Expansion**:
+   - Multiple `KS-P-*` editorial angles can point to the same `Parent Sr.`. Consuming one angle leaves the parent seed and all other angles available.
+4. **Cloudflare D1 is the Primary Datastore**:
+   - Database UUID: `aeea8b1e-1c49-432a-811e-f4460c51a5af` (Region: APAC).
+   - Any rows inserted into D1 are immediately live in the web app without redeploying.
 
 ---
 
-## 🚀 The 3 Expansion Paths (Procedures)
+## 🛠️ Instant Expansion via CLI (`scripts/expand_database.py`)
 
-### Path 1: Add a Completely New Subject / Topic / Subtopic (Taxonomy Seed)
+The repository includes an automated CLI tool that executes all validations, auto-increments permanent IDs, and writes to Cloudflare D1 with a single command.
 
-Use this when introducing a new evergreen knowledge area or curriculum subject.
-
-#### Step 1: Append to `Master Taxonomy`
-Find the highest current `Sr.` in `Master Taxonomy` (e.g., `3960`) and append the new row with `Sr. = 3961`:
-- `Sr.`: `3961`
-- `Subject`: `Science & Discoveries`
-- `Topic`: `Future Biology & Synthetic Life`
-- `Subtopic`: `How synthetic minimal cells define the boundary of life`
-
-> [!CAUTION]
-> Never renumber existing `Sr.` values. `Sr.` is permanent.
-
-#### Step 2: Create 1 Baseline Idea in `Production Pool`
-Add the corresponding baseline row in `Production Pool`:
-- `Idea ID`: `KS-T-003961` *(format: `KS-T-` + 6-digit padded `Sr.`)*
-- `Parent Sr.`: `3961`
-- `Subtopic Seed`: `How synthetic minimal cells define the boundary of life`
-- `Subject`: `Science & Discoveries`
-- `Topic Family`: `Future Biology & Synthetic Life`
-- `Video Idea`: `How synthetic minimal cells define the boundary of life`
-- `Curiosity Hook`: `What happens when you strip all non-essential DNA from an organism?`
-- `Signature Format`: `SF17 — Under the Hood`
-- `Visualization Direction`: `Microscopic cell animation stripped down to essential gene loops`
-- `Source-Family Guidance`: `Synthetic biology papers, J. Craig Venter Institute publications`
-- `Freshness Class`: `Evergreen`
-- `Research Status`: `Needs Research`
-- `Production Score`: `82`
-- `Priority Tier`: `Tier 2`
-- `Used`: `FALSE`
-- `Times Shown`: `0`
-- `Active`: `TRUE`
-- `Brief Available`: `FALSE`
-
----
-
-### Path 2: Create Multiple Angles for an Existing Subtopic (Editorial Expansion)
-
-This is the most common expansion path when spinning off multiple viral hooks from a single topic.
-
-#### Step 1: Identify the Parent Taxonomy Seed
-Locate the seed in `Master Taxonomy` (e.g., `Sr. 3044 — How Baarle became a maze of Belgian and Dutch enclaves`).
-
-#### Step 2: Determine Next `KS-P` Identifier
-Check `Production Pool` for the highest existing `KS-P` ID (e.g. `KS-P-0180`). Your new angles will be `KS-P-0181`, `KS-P-0182`, etc.
-
-#### Step 3: Add Rows to `Production Pool`
-Append each new angle linked to `Parent Sr. = 3044`:
-
-| Field | Row A | Row B | Row C |
-|---|---|---|---|
-| **`Idea ID`** | `KS-P-0181` | `KS-P-0182` | `KS-P-0183` |
-| **`Parent Sr.`** | `3044` | `3044` | `3044` |
-| **`Subtopic Seed`** | `How Baarle became a maze of enclaves` | `How Baarle became a maze of enclaves` | `How Baarle became a maze of enclaves` |
-| **`Subject`** | `History & Civilizations` | `History & Civilizations` | `History & Civilizations` |
-| **`Topic Family`** | `Enclaves & Border Curiosities` | `Enclaves & Border Curiosities` | `Enclaves & Border Curiosities` |
-| **`Video Idea`** | `The border that runs through houses and restaurants` | `How residents know which country their front door belongs to` | `What happens to taxes and policing inside Baarle` |
-| **`Curiosity Hook`** | `Why shifting a dining table moves you into a different country's tax jurisdiction.` | `The quirky Dutch-Belgian front door rule that determines citizenship and voting.` | `How police forces handle crimes that cross 15 borders on a single street.` |
-| **`Signature Format`** | `SF04 — Case Study Breakdown` | `SF08 — Visualized Rules & Quirks` | `SF12 — Systems & Institutions` |
-| **`Production Score`** | `90` | `88` | `86` |
-| **`Priority Tier`** | `Tier 1` | `Tier 1` | `Tier 2` |
-| **`Used`** | `FALSE` | `FALSE` | `FALSE` |
-| **`Active`** | `TRUE` | `TRUE` | `TRUE` |
-
----
-
-### Path 3: Use Content Candidates for Large-Scale Staging & Discovery
-
-Use this for high-volume idea brainstorming before promoting to the active web app.
-
-```
-Master Taxonomy Seed
-        │
-        ▼ (Brainstorm 50 rough angles)
-Content Candidates (Staging Backlog)
-        │
-        ├─► Angle 1 (Generic) ───────────► Keep in Backlog
-        ├─► Angle 2 (Duplicate) ─────────► Discard
-        └─► Angle 3 (Exceptional Hook) ──► PROMOTE TO PRODUCTION POOL (KS-P-XXXX)
+### 1. Check Current Database Status
+```bash
+python scripts/expand_database.py status
 ```
 
-1. Add raw drafts to **`Content Candidates`** with a unique `Candidate ID` (`CC-0001`...) and `Taxonomy Sr.`.
-2. Review pitches. Weak or redundant ideas remain in candidates.
-3. Promote approved ideas to **`Production Pool`** by assigning the next available `KS-P-*` ID and copying over metadata.
+### 2. Path 1: Add a Completely New Taxonomy Pillar (Subject/Topic/Subtopic)
+Adds a new curriculum seed to `master_taxonomy` with next `Sr.` and generates 1 baseline `KS-T-*` idea in `production_pool`:
+```bash
+python scripts/expand_database.py new-seed \
+  --subject "Science & Discoveries" \
+  --topic "Future Biology" \
+  --subtopic "How synthetic minimal cells define the boundary of life" \
+  --format "SF17 — Under the Hood" \
+  --hook "What happens when you strip all non-essential DNA from an organism?"
+```
+
+### 3. Path 2: Create Multiple Angles for an Existing Seed (Editorial Expansion)
+Create a JSON file with new angles (e.g. `data/new_angles.json`):
+```json
+[
+  {
+    "video_idea": "The border that runs through houses and restaurants",
+    "curiosity_hook": "Why shifting a dining table moves you into a different country's tax jurisdiction.",
+    "signature_format": "SF04 — Case Study Breakdown",
+    "production_score": 90,
+    "priority_tier": "Tier 1"
+  },
+  {
+    "video_idea": "How residents know which country their front door belongs to",
+    "curiosity_hook": "The quirky Dutch-Belgian front door rule that determines citizenship and voting.",
+    "signature_format": "SF08 — Visualized Rules & Quirks",
+    "production_score": 88,
+    "priority_tier": "Tier 1"
+  }
+]
+```
+Execute the CLI command targeting the `Parent Sr.` (e.g. `3044`):
+```bash
+python scripts/expand_database.py new-angles --parent-sr 3044 --angles-json "data/new_angles.json"
+```
 
 ---
 
-## 🧪 Validation Checklist Before Deploying New Rows
+## ⚡ Direct SQL Workflows (Cloudflare D1)
 
-- [ ] `Idea ID` is unique across the entire `Production Pool`.
-- [ ] `Parent Sr.` matches an existing integer in `Master Taxonomy.Sr.`.
-- [ ] `Used` is strictly set to `FALSE` (boolean).
-- [ ] `Active` is set to `TRUE`.
-- [ ] `Times Shown` is initialized to `0`.
-- [ ] `Production Score` is `>= 82` (baseline for KS-T is 82, curated KS-P is 85–95).
-- [ ] `Signature Format` matches a recognized format name (e.g., `SF01` to `SF20` or standard descriptors).
+If executing SQL directly via Cloudflare API / MCP `cloudflare` tool:
+
+### 1. Inserting a New Taxonomy Seed + Baseline Idea
+```sql
+-- Step A: Add to Master Taxonomy
+INSERT INTO master_taxonomy (sr, subject, topic, subtopic)
+VALUES (3961, 'Space & Astronomy', 'Exoplanet Atmospheres', 'How transmission spectroscopy detects atmospheric water');
+
+-- Step B: Add baseline KS-T to Production Pool
+INSERT INTO production_pool (
+  idea_id, parent_sr, subtopic_seed, subject, topic_family, signature_format,
+  video_idea, curiosity_hook, freshness_class, research_status,
+  used, times_shown, production_score, priority_tier, active, brief_available
+) VALUES (
+  'KS-T-003961', 3961,
+  'How transmission spectroscopy detects atmospheric water',
+  'Space & Astronomy', 'Exoplanet Atmospheres',
+  'SF01 — Hidden System',
+  'How transmission spectroscopy detects atmospheric water',
+  'How do we know a planet 100 light-years away has water without ever visiting it?',
+  'Evergreen', 'Needs Research',
+  0, 0, 82, 'Tier 2', 1, 0
+);
+```
+
+### 2. Inserting Editorial Signature Ideas (`KS-P-*`)
+```sql
+INSERT INTO production_pool (
+  idea_id, parent_sr, subtopic_seed, subject, topic_family, signature_format,
+  video_idea, curiosity_hook, freshness_class, research_status,
+  used, times_shown, production_score, priority_tier, active, brief_available
+) VALUES (
+  'KS-P-0181', 3044,
+  'How Baarle became a maze of Belgian and Dutch enclaves',
+  'History & Civilizations', 'Enclaves & Border Curiosities',
+  'SF04 — Case Study Breakdown',
+  'The border that runs through houses and restaurants',
+  'Why shifting a dining table moves you into a different country tax jurisdiction.',
+  'Evergreen', 'Needs Research',
+  0, 0, 90, 'Tier 1', 1, 0
+);
+```
+
+---
+
+## 🧪 Validation Checklist
+- [ ] `idea_id` is unique (`KS-P-XXXX` or `KS-T-XXXXXX`).
+- [ ] `parent_sr` exists in `master_taxonomy.sr`.
+- [ ] `used = 0` (integer boolean).
+- [ ] `active = 1`.
+- [ ] `production_score >= 82`.
