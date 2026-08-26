@@ -1174,6 +1174,7 @@ function handleApiRequest(e) {
         var ss = getSpreadsheet();
         output = { success: true, config: getAppConfigMap(ss) };
         break;
+      case "get_or_create_today_batch":
       case "get_today_batch":
         output = getOrCreateTodayBatch(requestId);
         break;
@@ -1197,6 +1198,7 @@ function handleApiRequest(e) {
         var uIdeaId = (postData && postData.idea_id) || params.idea_id;
         output = undoIdeaUsed(uIdeaId, requestId);
         break;
+      case "get_production_pool":
       case "browse_production_pool":
       case "search":
         var q = (postData && postData.query) || params.query || "";
@@ -1209,6 +1211,7 @@ function handleApiRequest(e) {
         var pageSize = (postData && postData.pageSize) || params.pageSize || 30;
         output = getProductionPool(q, s, fmt, rStatus, st, minSc, page, pageSize);
         break;
+      case "get_source_ready_brief":
       case "get_brief":
         var bIdeaId = (postData && postData.idea_id) || params.idea_id;
         output = getSourceReadyBrief(bIdeaId);
