@@ -63,6 +63,15 @@ export const App: React.FC = () => {
     try {
       const initData = await api.getInitialData();
       if (initData && initData.success) {
+        if (initData.config) {
+          const currentLocal = loadConfig();
+          const merged = { ...currentLocal, ...initData.config, google_web_app_url: currentLocal.google_web_app_url };
+          setConfig(merged);
+          saveConfig(merged);
+          if (merged.daily_mix_size) setSize(merged.daily_mix_size);
+          if (merged.default_mode) setMode(merged.default_mode as SelectionMode);
+        }
+
         const normalizedStats = normalizeStats(initData);
         setStats(normalizedStats);
         if (normalizedStats.subjects_coverage && normalizedStats.subjects_coverage.length) {

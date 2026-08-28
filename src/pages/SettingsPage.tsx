@@ -33,11 +33,36 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
   const [copied, setCopied] = useState(false);
 
-  const handleSave = () => {
-    saveConfig(formData);
-    setConfig(formData);
-    setTestResult({ success: true, message: "Configuration saved to local browser storage." });
-    onRefreshAll();
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    setTestResult(null);
+    try {
+      saveConfig(formData);
+      setConfig(formData);
+
+      const remoteRes = await api.saveConfig(formData);
+      if (remoteRes && remoteRes.success) {
+        setTestResult({ 
+          success: true, 
+          message: "✓ Settings successfully synced & saved directly to Cloudflare D1 edge datastore." 
+        });
+      } else {
+        setTestResult({ 
+          success: true, 
+          message: "Settings saved to local storage cache." 
+        });
+      }
+      await onRefreshAll();
+    } catch (err: any) {
+      setTestResult({ 
+        success: false, 
+        message: `Saved locally. Cloudflare D1 sync warning: ${err.message || err}` 
+      });
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleTestConnection = async () => {
@@ -92,10 +117,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
         </div>
         <button
           onClick={handleSave}
-          className="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-600/30 transition-all cursor-pointer"
+          disabled={saving}
+          className="flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shadow-lg shadow-emerald-600/30 transition-all cursor-pointer disabled:opacity-50"
         >
-          <Save className="w-4 h-4" />
-          <span>Save Changes</span>
+          <RefreshCw className={`w-4 h-4 ${saving ? 'animate-spin' : ''}`} />
+          <span>{saving ? 'Syncing to D1...' : 'Save Changes'}</span>
         </button>
       </div>
 

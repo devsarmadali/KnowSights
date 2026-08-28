@@ -26,6 +26,36 @@ function getKarachiDateString(d = new Date()) {
   }).format(d);
 }
 
+async function loadConfigFromDb(db) {
+  const rows = await db.prepare("SELECT key, value FROM app_config").all();
+  const config = {
+    daily_mix_size: 12,
+    cooldown_days: 7,
+    max_same_subject: 2,
+    max_same_topic: 1,
+    max_same_signature_format: 2,
+    minimum_production_score: 82,
+    timezone: 'Asia/Karachi',
+    default_mode: 'BALANCED',
+    prefer_never_shown: true,
+    allow_previously_shown: true,
+    exclude_used: true,
+    auto_generate_daily: true
+  };
+  if (rows && rows.results) {
+    for (const r of rows.results) {
+      if (['daily_mix_size', 'cooldown_days', 'max_same_subject', 'max_same_topic', 'max_same_signature_format', 'minimum_production_score'].includes(r.key)) {
+        config[r.key] = parseInt(r.value, 10) || config[r.key];
+      } else if (['prefer_never_shown', 'allow_previously_shown', 'exclude_used', 'auto_generate_daily'].includes(r.key)) {
+        config[r.key] = r.value === 'true' || r.value === '1';
+      } else {
+        config[r.key] = r.value;
+      }
+    }
+  }
+  return config;
+}
+
 export default {
   async fetch(request, env, ctx) {
     if (request.method === "OPTIONS") {
@@ -83,8 +113,38 @@ export default {
           });
         }
 
+        case "get_config": {
+          const config = await loadConfigFromDb(db);
+          return jsonResponse({ success: true, config });
+        }
+
+        case "save_config":
+        case "update_config": {
+          const newConfig = body.config || body;
+          const statements = [];
+          const now = new Date().toISOString();
+
+          for (const [k, v] of Object.entries(newConfig)) {
+            if (k === 'action' || k === 'request_id' || k === 'google_web_app_url') continue;
+            statements.push(
+              db.prepare("INSERT OR REPLACE INTO app_config (key, value) VALUES (?, ?)").bind(k, String(v))
+            );
+          }
+
+          if (statements.length > 0) {
+            statements.push(
+              db.prepare("INSERT INTO app_events (event_id, event_type, request_id, payload, created_at) VALUES (?, 'save_config', ?, ?, ?)").bind(`evt_${Date.now()}`, requestId, JSON.stringify(newConfig), now)
+            );
+            await db.batch(statements);
+          }
+
+          const saved = await loadConfigFromDb(db);
+          return jsonResponse({ success: true, config: saved });
+        }
+
         case "get_initial_data": {
           const today = getKarachiDateString();
+          const dbConfig = await loadConfigFromDb(db);
           const totalRes = await db.prepare("SELECT COUNT(*) as total, SUM(CASE WHEN used = 1 THEN 1 ELSE 0 END) as used_count FROM production_pool WHERE active = 1").first();
           const subjectsRes = await db.prepare(`
             SELECT subject, COUNT(*) as total, SUM(CASE WHEN used = 1 THEN 1 ELSE 0 END) as used, SUM(CASE WHEN used = 0 THEN 1 ELSE 0 END) as available
@@ -150,6 +210,7 @@ export default {
 
           return jsonResponse({
             success: true,
+            config: dbConfig,
             stats: {
               total_ideas: total,
               available_ideas: total - used,
@@ -222,14 +283,16 @@ export default {
           }
 
           // Generate new batch for today
-          return await generateBatchInternal(db, "BALANCED", 12, null, requestId);
+          const dbConfig = await loadConfigFromDb(db);
+          return await generateBatchInternal(db, dbConfig.default_mode || "BALANCED", dbConfig.daily_mix_size || 12, null, requestId, dbConfig);
         }
 
         case "generate_batch": {
-          const mode = (body.mode || params.mode || "BALANCED").toUpperCase();
-          const size = parseInt(body.size || params.size || "12", 10);
+          const dbConfig = await loadConfigFromDb(db);
+          const mode = (body.mode || params.mode || dbConfig.default_mode || "BALANCED").toUpperCase();
+          const size = parseInt(body.size || params.size || dbConfig.daily_mix_size || "12", 10);
           const subFilter = body.subject_filter || params.subject_filter || null;
-          return await generateBatchInternal(db, mode, size, subFilter, requestId);
+          return await generateBatchInternal(db, mode, size, subFilter, requestId, dbConfig);
         }
 
         case "replace_item": {
@@ -433,7 +496,7 @@ export default {
   }
 };
 
-async function generateBatchInternal(db, mode, size, subjectFilter, requestId) {
+async function generateBatchInternal(db, mode, size, subjectFilter, requestId, config = {}) {
   const today = getKarachiDateString();
   const now = new Date().toISOString();
   const batchId = `BATCH-${today.replace(/-/g, '')}-${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
@@ -469,10 +532,10 @@ async function generateBatchInternal(db, mode, size, subjectFilter, requestId) {
     return jsonResponse({ success: false, error: "No eligible ideas found in Production Pool" }, 404);
   }
 
-  // Enforce max 2 per subject balance
+  // Enforce max same subject balance from config
   const selected = [];
   const subjectCounts = {};
-  const maxPerSubject = subjectFilter ? size : 2;
+  const maxPerSubject = subjectFilter ? size : (config.max_same_subject || 2);
 
   for (const item of eligible) {
     if (selected.length >= size) break;

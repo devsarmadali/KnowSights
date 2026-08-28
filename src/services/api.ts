@@ -463,7 +463,7 @@ async function callApi(action: string, payload: Record<string, any> = {}): Promi
     try {
       if (url.includes('workers.dev') || url.includes('cloudflare')) {
         // Cloudflare Edge Worker API (Ultra-Fast REST)
-        const isMutation = ['generate_batch', 'replace_item', 'mark_used', 'undo_used'].includes(action);
+        const isMutation = ['generate_batch', 'replace_item', 'mark_used', 'undo_used', 'save_config', 'update_config'].includes(action);
         const reqPayload = { action, ...payload };
 
         if (isMutation) {
@@ -688,6 +688,8 @@ export const api = {
     callApi('get_stats'),
   getConfig: () => 
     callApi('get_config'),
+  saveConfig: (config: AppConfig) =>
+    callApi('save_config', { config, request_id: generateRequestId() }),
   syncInventory: () => 
     callApi('sync_inventory')
 };
