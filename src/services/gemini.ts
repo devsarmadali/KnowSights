@@ -176,14 +176,19 @@ Return a strictly valid JSON object matching this schema with NO markdown code f
           source_id: source.id,
           source_name: source.name,
           source_url: article.link || source.officialUrl,
+          source_official_url: source.officialUrl,
           source_article_title: article.title,
           source_published_date: article.pubDate || new Date().toISOString().split('T')[0],
           source_category: source.category,
+          reference_links: [
+            { label: `Primary Article: ${article.title}`, url: article.link || source.officialUrl, type: 'Article' },
+            { label: `Authority: ${source.name}`, url: source.officialUrl, type: 'Publication' }
+          ],
           production_score: Number(parsed.production_score || 90),
           priority_tier: (parsed.priority_tier === 'Tier 1' || parsed.priority_tier === 'Tier 2') ? parsed.priority_tier : 'Tier 1',
           freshness_class: 'Recent Publication (AI Curated)',
           visualization_direction: parsed.visualization_direction || `Incorporate archival scans, 3D maps, and visual motion graphics from ${source.name}.`,
-          source_family_guidance: `Primary publication: ${source.name} (${source.officialUrl}). AI analyzed (${model}) from live publication stream.`,
+          source_family_guidance: `Primary publication: ${source.name} (${source.officialUrl}). Article link: ${article.link || source.officialUrl}. AI analyzed (${model}) from live publication stream.`,
           added_to_pool: false,
           generated_at: new Date().toISOString(),
           generated_timestamp: Date.now()

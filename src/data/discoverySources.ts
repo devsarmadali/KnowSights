@@ -1034,14 +1034,19 @@ export function transformArticleToIdea(
     source_id: source.id,
     source_name: source.name,
     source_url: article.link || source.officialUrl,
+    source_official_url: source.officialUrl,
     source_article_title: cleanText(article.title),
     source_published_date: article.pubDate || new Date().toISOString().split('T')[0],
     source_category: source.category,
+    reference_links: [
+      { label: `Primary Article: ${cleanText(article.title)}`, url: article.link || source.officialUrl, type: 'Article' },
+      { label: `Authority: ${source.name}`, url: source.officialUrl, type: 'Publication' }
+    ],
     production_score: score,
     priority_tier: score >= 90 ? 'Tier 1' : 'Tier 2',
     freshness_class: 'Recent Publication',
     visualization_direction: `Incorporate high-resolution publication imagery, historical timeline maps, 3D structural diagrams, and animated flowcharts demonstrating the core findings of ${source.name}.`,
-    source_family_guidance: `Primary publication: ${source.name} (${source.officialUrl}). Refer to original reporting for verified field data, artifact measurements, and scholarly researcher commentary.`,
+    source_family_guidance: `Primary publication: ${source.name} (${source.officialUrl}). Article link: ${article.link || source.officialUrl}. Refer to original reporting for verified field data, artifact measurements, and scholarly researcher commentary.`,
     added_to_pool: false,
     generated_at: new Date().toISOString(),
     generated_timestamp: Date.now()

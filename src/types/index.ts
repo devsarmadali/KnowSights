@@ -128,9 +128,11 @@ export interface GeneratedTopicIdea {
   source_id?: string;
   source_name: string;
   source_url: string;
+  source_official_url?: string;
   source_article_title: string;
   source_published_date: string;
   source_category: string;
+  reference_links?: { label: string; url: string; type?: string }[];
   production_score: number;
   priority_tier: 'Tier 1' | 'Tier 2';
   freshness_class: string;

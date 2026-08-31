@@ -454,15 +454,25 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
     }
   };
 
-  // Copy Full Video Scriptwriting Prompt to Clipboard
+  // Copy Full Video Scriptwriting Prompt & Reference Links to Clipboard
   const handleCopyPrompt = async (idea: GeneratedTopicIdea) => {
+    const articleTitle = idea.source_article_title || idea.video_idea;
+    const primaryUrl = idea.source_url || idea.source_official_url || '';
+    const officialUrl = idea.source_official_url || (idea.source_url ? new URL(idea.source_url).origin : '');
+
     const promptText = `🎬 VIDEO CONCEPT: ${idea.video_idea}
 📌 Curiosity Hook: "${idea.curiosity_hook}"
 🏷️ Category: ${idea.subject} / ${idea.topic_family}
 ✨ Signature Format: ${idea.signature_format}
 ⭐ Production Score: ${idea.production_score} (${idea.priority_tier})
-📰 Source Publication: ${idea.source_name} (${idea.source_url})
-📅 Publication Date: ${idea.source_published_date}
+
+📚 RESEARCH RESOURCES & REFERENCE LINKS:
+• 📰 Primary Discovery Article: "${articleTitle}"
+  🔗 Direct Article URL: ${primaryUrl}
+• 🏛️ Publishing Authority: ${idea.source_name} (${idea.source_category})
+  🔗 Official Publication: ${officialUrl || primaryUrl}
+• 📅 Published / Documented Date: ${idea.source_published_date || 'Recent Finding'}
+• 🛡️ Research & Verification Guidance: ${idea.source_family_guidance || `Refer to verified reporting from ${idea.source_name}.`}
 
 ---
 ❓ 3 IN-DEPTH SCRIPT EXPLORATION QUESTIONS:
@@ -476,12 +486,13 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
    ${idea.core_questions[2]}
 
 ---
-💡 PROMPT FOR SCRIPTWRITING & VIDEO GENERATION:
+💡 MASTER SCRIPTWRITING & VIDEO GENERATION PROMPT:
 "You are a master educational documentary writer. Create a captivating, high-retention YouTube video script on the topic: '${idea.video_idea}'.
 
 1. HOOK & OPENING (0:00 - 1:00):
 - Open immediately with this high-tension curiosity hook: '${idea.curiosity_hook}'.
 - Interrupt viewer assumptions with the discovery reported by ${idea.source_name}.
+- Reference and cite the primary source findings (${primaryUrl}).
 
 2. DEEP-DIVE BODY (Core Narrative):
 - Systematically answer these three core inquiry questions:
@@ -489,6 +500,7 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
   • Q2: ${idea.core_questions[1]}
   • Q3: ${idea.core_questions[2]}
 - Maintain the '${idea.signature_format}' pedagogical structure.
+- Ground all empirical claims and findings in the cited reference article: ${primaryUrl}
 
 3. VISUAL CUES & DIRECTION:
 - ${idea.visualization_direction}
@@ -499,7 +511,7 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
     try {
       await navigator.clipboard.writeText(promptText);
       setCopiedId(idea.id);
-      showToast("Copied complete scriptwriting prompt to clipboard!", 'success');
+      showToast("Copied script prompt & reference links to clipboard!", 'success');
       setTimeout(() => setCopiedId(null), 2500);
     } catch (e) {
       showToast("Failed to copy prompt to clipboard", 'error');
@@ -667,6 +679,56 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
             <span className="text-neutral-500 truncate max-w-[200px]">
               {idea.topic_family}
             </span>
+          </div>
+
+          {/* Research Source & Reference Links Box */}
+          <div className="p-3.5 rounded-2xl bg-neutral-950/90 border border-neutral-800 space-y-2.5 text-xs">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] font-mono uppercase font-bold text-emerald-400 flex items-center space-x-1.5">
+                <Globe className="w-3 h-3 text-emerald-400" />
+                <span>Source & Reference Citations</span>
+              </span>
+              {idea.source_published_date && (
+                <span className="text-[10px] font-mono text-neutral-500">
+                  📅 {idea.source_published_date}
+                </span>
+              )}
+            </div>
+
+            {/* Clickable Primary Article Link */}
+            <a
+              href={idea.source_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-between p-2.5 rounded-xl bg-neutral-900/90 hover:bg-neutral-800 border border-neutral-800/90 text-neutral-200 hover:text-emerald-300 transition-all group"
+              title="Read full primary research article"
+            >
+              <div className="flex items-center space-x-2 truncate">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0"></span>
+                <span className="truncate font-medium text-xs">
+                  {idea.source_article_title || idea.video_idea}
+                </span>
+              </div>
+              <ExternalLink className="w-3.5 h-3.5 text-neutral-500 group-hover:text-emerald-400 flex-shrink-0 ml-2" />
+            </a>
+
+            {/* Publication Source & Guidance */}
+            <div className="flex items-center justify-between text-[11px] font-mono text-neutral-400 pt-0.5">
+              <span className="text-neutral-500 truncate">
+                Authority: <strong className="text-neutral-300">{idea.source_name}</strong>
+              </span>
+              {idea.source_official_url && (
+                <a
+                  href={idea.source_official_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-emerald-400 hover:text-emerald-300 underline underline-offset-2 flex items-center space-x-1 flex-shrink-0"
+                >
+                  <span>Home</span>
+                  <ExternalLink className="w-2.5 h-2.5" />
+                </a>
+              )}
+            </div>
           </div>
 
           {/* Expandable 3 Deep-Dive Script Questions */}
