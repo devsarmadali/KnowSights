@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   Search, 
   Sparkles, 
@@ -412,12 +412,6 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
     }));
   }, [filteredRepositories]);
 
-  // Quick Initial Scan on Mount if Empty
-  useEffect(() => {
-    if (generatedIdeas.length === 0) {
-      handleFetchAndGenerate();
-    }
-  }, []);
 
   // Render a Single Topic Idea Card
   const renderTopicCard = (idea: GeneratedTopicIdea) => {
@@ -596,7 +590,7 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              <span>Research Hub • 27 Publications & 36 Institutional Repositories</span>
+              <span>Research Hub • {DISCOVERY_SOURCES.length} Publications & {INSTITUTIONAL_REPOSITORIES.length} Institutional Authorities</span>
             </div>
 
             <div className="flex items-center space-x-2 flex-wrap gap-y-2">
@@ -639,7 +633,7 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
                   }`}
                 >
                   <Library className="w-3.5 h-3.5 text-teal-400" />
-                  <span>27 Publications</span>
+                  <span>{DISCOVERY_SOURCES.length} Publications</span>
                 </button>
                 <button
                   onClick={() => setActiveView('archives')}
@@ -650,7 +644,7 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
                   }`}
                 >
                   <Building2 className="w-3.5 h-3.5 text-blue-400" />
-                  <span>36 Institutional Repositories</span>
+                  <span>{INSTITUTIONAL_REPOSITORIES.length} Institutional Repositories</span>
                 </button>
               </div>
             </div>
