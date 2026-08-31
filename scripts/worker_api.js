@@ -487,6 +487,106 @@ export default {
           });
         }
 
+        case "fetch_source_feed": {
+          const feedUrl = body.url || params.url;
+          if (!feedUrl) return jsonResponse({ success: false, error: "Feed URL is required" }, 400);
+
+          try {
+            const feedRes = await fetch(feedUrl, {
+              headers: {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                "Accept": "application/rss+xml, application/atom+xml, application/xml, text/xml, application/json, text/html, */*"
+              },
+              cf: {
+                cacheTtl: 600,
+                cacheEverything: true
+              }
+            });
+
+            if (!feedRes.ok) {
+              return jsonResponse({ success: false, status: feedRes.status, error: `Feed responded with status ${feedRes.status}` }, 502);
+            }
+
+            const contentType = feedRes.headers.get("content-type") || "";
+            const contentText = await feedRes.text();
+
+            return jsonResponse({
+              success: true,
+              url: feedUrl,
+              content_type: contentType,
+              data: contentText
+            });
+          } catch (fetchErr) {
+            return jsonResponse({ success: false, error: `Failed to fetch feed: ${fetchErr.message}` }, 500);
+          }
+        }
+
+        case "add_production_idea": {
+          const videoIdea = (body.video_idea || params.video_idea || "").trim();
+          if (!videoIdea) return jsonResponse({ success: false, error: "video_idea is required" }, 400);
+
+          const hook = (body.curiosity_hook || params.curiosity_hook || "").trim();
+          const format = (body.signature_format || params.signature_format || "SF04 — Case Study Breakdown").trim();
+          const subject = (body.subject || params.subject || "General").trim();
+          const topicFamily = (body.topic_family || params.topic_family || "General Discoveries").trim();
+          const score = parseInt(body.production_score || params.production_score || "88", 10);
+          const tier = (body.priority_tier || params.priority_tier || (score >= 90 ? "Tier 1" : "Tier 2")).trim();
+          const visDir = (body.visualization_direction || params.visualization_direction || "").trim();
+          const srcGuidance = (body.source_family_guidance || params.source_family_guidance || "").trim();
+          let parentSr = parseInt(body.parent_sr || params.parent_sr || "0", 10);
+
+          // If no parent_sr, look for an existing taxonomy seed matching subject/topic, or use 1
+          if (!parentSr || parentSr <= 0) {
+            const taxMatch = await db.prepare("SELECT sr FROM master_taxonomy WHERE subject = ? LIMIT 1").bind(subject).first();
+            parentSr = taxMatch?.sr || 1;
+          }
+
+          // Get next KS-P-XXXX ID
+          const lastKsp = await db.prepare("SELECT idea_id FROM production_pool WHERE idea_id LIKE 'KS-P-%' ORDER BY idea_id DESC LIMIT 1").first();
+          let nextNum = 1;
+          if (lastKsp && lastKsp.idea_id) {
+            const parts = lastKsp.idea_id.split("-");
+            const lastVal = parseInt(parts[parts.length - 1], 10);
+            if (!isNaN(lastVal)) {
+              nextNum = lastVal + 1;
+            }
+          }
+          const ideaId = `KS-P-${String(nextNum).padStart(4, '0')}`;
+          const now = new Date().toISOString();
+          const notes = `Ingested via Discovery Lab from ${srcGuidance ? srcGuidance.slice(0, 50) : 'Publication Feed'}.`;
+
+          await db.batch([
+            db.prepare(`
+              INSERT INTO production_pool (
+                idea_id, parent_sr, subtopic_seed, subject, topic_family, signature_format,
+                video_idea, curiosity_hook, visualization_direction, source_family_guidance,
+                freshness_class, research_status, used, times_shown, production_score,
+                priority_tier, notes, active, brief_available
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Recent Publication', 'Ready', 0, 0, ?, ?, ?, 1, 0)
+            `).bind(
+              ideaId, parentSr, videoIdea, subject, topicFamily, format,
+              videoIdea, hook, visDir, srcGuidance, score, tier, notes
+            ),
+            db.prepare("INSERT INTO app_events (event_id, event_type, request_id, payload, created_at) VALUES (?, 'add_production_idea', ?, ?, ?)")
+              .bind(`evt_${Date.now()}`, requestId, JSON.stringify({ idea_id: ideaId, video_idea: videoIdea, subject }), now)
+          ]);
+
+          return jsonResponse({
+            success: true,
+            idea_id: ideaId,
+            video_idea: videoIdea,
+            curiosity_hook: hook,
+            subject,
+            topic_family: topicFamily,
+            signature_format: format,
+            production_score: score,
+            priority_tier: tier,
+            used: false,
+            times_shown: 0,
+            active: true
+          });
+        }
+
         default:
           return jsonResponse({ success: false, error: `Unknown action: ${action}` }, 400);
       }

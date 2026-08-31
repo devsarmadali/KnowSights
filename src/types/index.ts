@@ -82,6 +82,75 @@ export interface AppConfig {
   default_mode: string;
   auto_generate_daily: boolean;
   google_web_app_url: string;
+  gemini_api_key_1?: string;
+  gemini_api_key_2?: string;
+  gemini_api_key_3?: string;
 }
 
 export type SelectionMode = 'BALANCED' | 'DISCOVERY' | 'DEEP_DIVE' | 'REVISIT_UNUSED' | 'CURRENT_EMERGING' | 'RANDOM';
+
+export interface DiscoverySource {
+  id: string;
+  name: string;
+  type: string;
+  category: string;
+  group: 'archaeology' | 'science' | 'history' | 'academic' | 'curiosities';
+  bestFor: string;
+  officialUrl: string;
+  feedUrl: string;
+  searchFeedPattern?: string;
+  subjectMapping: string;
+  topicFamily: string;
+  defaultFormat: string;
+  badgeColor?: string;
+}
+
+export interface DiscoveryArticle {
+  id: string;
+  title: string;
+  link: string;
+  pubDate: string;
+  summary: string;
+  sourceId: string;
+  sourceName: string;
+  sourceCategory: string;
+}
+
+export interface GeneratedTopicIdea {
+  id: string;
+  video_idea: string;
+  curiosity_hook: string;
+  core_questions: [string, string, string]; // [Evidence/Discovery, Mechanism/Context, Implication/Impact]
+  signature_format: string;
+  subject: string;
+  topic_family: string;
+  source_name: string;
+  source_url: string;
+  source_article_title: string;
+  source_published_date: string;
+  source_category: string;
+  production_score: number;
+  priority_tier: 'Tier 1' | 'Tier 2';
+  freshness_class: string;
+  visualization_direction: string;
+  source_family_guidance: string;
+  added_to_pool?: boolean;
+}
+
+export interface InstitutionalRepository {
+  id: string;
+  name: string;
+  type: string;
+  category: string;
+  purpose: string;
+  tier: 'Tier 1 — Primary Evidence' | 'Tier 2 — Scholarly/Reference' | 'Tier 3 — Discovery/Archive';
+  officialUrl: string;
+  searchPattern?: string;
+  group: 'history-research' | 'archaeology-ancient' | 'military-war' | 'south-asian-islamic' | 'science-verification';
+  groupLabel: string;
+  subjectMapping: string;
+  topicFamily: string;
+  defaultFormat: string;
+  badgeColor?: string;
+}
+

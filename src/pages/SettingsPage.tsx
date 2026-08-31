@@ -10,10 +10,17 @@ import {
   ExternalLink,
   Code2,
   Copy,
-  Check
+  Check,
+  Key,
+  Bot,
+  Sparkles,
+  ShieldCheck,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { AppConfig } from '../types';
 import { DEFAULT_CONFIG, loadConfig, saveConfig, DEFAULT_WEB_APP_URL, api } from '../services/api';
+import { testGeminiApiKey } from '../services/gemini';
 
 interface SettingsPageProps {
   config: AppConfig;
@@ -32,8 +39,32 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
   const [copied, setCopied] = useState(false);
-
   const [saving, setSaving] = useState(false);
+
+  // Gemini Key Testing & Visibility State
+  const [showKey1, setShowKey1] = useState(false);
+  const [showKey2, setShowKey2] = useState(false);
+  const [showKey3, setShowKey3] = useState(false);
+  const [keyTestStatus, setKeyTestStatus] = useState<{ [key: number]: { loading: boolean; valid?: boolean; message?: string } }>({});
+
+  const handleTestGeminiKey = async (keyNum: 1 | 2 | 3) => {
+    const keyVal = keyNum === 1 ? formData.gemini_api_key_1 : keyNum === 2 ? formData.gemini_api_key_2 : formData.gemini_api_key_3;
+    if (!keyVal || !keyVal.trim()) {
+      setKeyTestStatus(prev => ({ ...prev, [keyNum]: { loading: false, valid: false, message: "Please enter an API key first." } }));
+      return;
+    }
+
+    setKeyTestStatus(prev => ({ ...prev, [keyNum]: { loading: true } }));
+    const result = await testGeminiApiKey(keyVal);
+    setKeyTestStatus(prev => ({
+      ...prev,
+      [keyNum]: {
+        loading: false,
+        valid: result.valid,
+        message: result.valid ? "✓ Key verified (gemini-1.5-flash active)" : `✗ ${result.error}`
+      }
+    }));
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -198,7 +229,166 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
         )}
       </div>
 
-      {/* 2. Runtime Mixer Rules (App Config) */}
+      {/* 2. Gemini Multi-Key Auto-Rotation Engine */}
+      <div className="glass-panel rounded-2xl p-6 border border-neutral-800 space-y-5 bg-neutral-950/60">
+        <div className="flex items-center justify-between border-b border-neutral-800/80 pb-4">
+          <div className="flex items-center space-x-2.5">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-500/20 to-teal-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+              <Bot className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <h3 className="text-sm font-bold text-white">Gemini AI Multi-Key Engine</h3>
+                <span className="text-[10px] uppercase font-mono font-bold px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+                  3-Key Auto-Rotation
+                </span>
+              </div>
+              <p className="text-xs text-neutral-400">Configure up to 3 Gemini API keys for seamless auto-failover during topic generation</p>
+            </div>
+          </div>
+
+          <div className="text-right">
+            <span className="text-[11px] font-mono text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-xl">
+              Model: gemini-1.5-flash
+            </span>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          {/* Key 1: Primary */}
+          <div className="space-y-1.5 p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-white flex items-center space-x-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                <span>Primary Gemini API Key (Key 1)</span>
+              </label>
+              <button
+                type="button"
+                onClick={() => handleTestGeminiKey(1)}
+                disabled={keyTestStatus[1]?.loading}
+                className="text-[11px] text-cyan-400 hover:text-cyan-300 font-mono flex items-center space-x-1 cursor-pointer"
+              >
+                <Sparkles className="w-3 h-3" />
+                <span>{keyTestStatus[1]?.loading ? 'Testing...' : 'Test Key 1'}</span>
+              </button>
+            </div>
+            <div className="relative">
+              <input
+                type={showKey1 ? 'text' : 'password'}
+                value={formData.gemini_api_key_1 || ''}
+                onChange={(e) => setFormData({ ...formData, gemini_api_key_1: e.target.value })}
+                placeholder="AIzaSy... (Paste primary Gemini API key)"
+                className="w-full bg-neutral-950 text-white font-mono text-xs border border-neutral-800 rounded-lg pl-3 pr-10 py-2.5 focus:outline-none focus:border-cyan-500"
+              />
+              <button
+                type="button"
+                onClick={() => setShowKey1(!showKey1)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-300"
+              >
+                {showKey1 ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+            {keyTestStatus[1]?.message && (
+              <p className={`text-[11px] font-mono mt-1 ${keyTestStatus[1].valid ? 'text-emerald-400' : 'text-rose-400'}`}>
+                {keyTestStatus[1].message}
+              </p>
+            )}
+          </div>
+
+          {/* Key 2: Secondary / Backup */}
+          <div className="space-y-1.5 p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-white flex items-center space-x-2">
+                <span className="w-2 h-2 rounded-full bg-amber-400"></span>
+                <span>Secondary Gemini API Key (Key 2 — Failover 1)</span>
+              </label>
+              <button
+                type="button"
+                onClick={() => handleTestGeminiKey(2)}
+                disabled={keyTestStatus[2]?.loading}
+                className="text-[11px] text-cyan-400 hover:text-cyan-300 font-mono flex items-center space-x-1 cursor-pointer"
+              >
+                <Sparkles className="w-3 h-3" />
+                <span>{keyTestStatus[2]?.loading ? 'Testing...' : 'Test Key 2'}</span>
+              </button>
+            </div>
+            <div className="relative">
+              <input
+                type={showKey2 ? 'text' : 'password'}
+                value={formData.gemini_api_key_2 || ''}
+                onChange={(e) => setFormData({ ...formData, gemini_api_key_2: e.target.value })}
+                placeholder="AIzaSy... (Paste backup Gemini API key)"
+                className="w-full bg-neutral-950 text-white font-mono text-xs border border-neutral-800 rounded-lg pl-3 pr-10 py-2.5 focus:outline-none focus:border-cyan-500"
+              />
+              <button
+                type="button"
+                onClick={() => setShowKey2(!showKey2)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-300"
+              >
+                {showKey2 ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+            {keyTestStatus[2]?.message && (
+              <p className={`text-[11px] font-mono mt-1 ${keyTestStatus[2].valid ? 'text-emerald-400' : 'text-rose-400'}`}>
+                {keyTestStatus[2].message}
+              </p>
+            )}
+          </div>
+
+          {/* Key 3: Tertiary / Backup */}
+          <div className="space-y-1.5 p-4 rounded-xl bg-neutral-900/60 border border-neutral-800">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-white flex items-center space-x-2">
+                <span className="w-2 h-2 rounded-full bg-purple-400"></span>
+                <span>Tertiary Gemini API Key (Key 3 — Failover 2)</span>
+              </label>
+              <button
+                type="button"
+                onClick={() => handleTestGeminiKey(3)}
+                disabled={keyTestStatus[3]?.loading}
+                className="text-[11px] text-cyan-400 hover:text-cyan-300 font-mono flex items-center space-x-1 cursor-pointer"
+              >
+                <Sparkles className="w-3 h-3" />
+                <span>{keyTestStatus[3]?.loading ? 'Testing...' : 'Test Key 3'}</span>
+              </button>
+            </div>
+            <div className="relative">
+              <input
+                type={showKey3 ? 'text' : 'password'}
+                value={formData.gemini_api_key_3 || ''}
+                onChange={(e) => setFormData({ ...formData, gemini_api_key_3: e.target.value })}
+                placeholder="AIzaSy... (Paste 2nd backup Gemini API key)"
+                className="w-full bg-neutral-950 text-white font-mono text-xs border border-neutral-800 rounded-lg pl-3 pr-10 py-2.5 focus:outline-none focus:border-cyan-500"
+              />
+              <button
+                type="button"
+                onClick={() => setShowKey3(!showKey3)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-300"
+              >
+                {showKey3 ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+            {keyTestStatus[3]?.message && (
+              <p className={`text-[11px] font-mono mt-1 ${keyTestStatus[3].valid ? 'text-emerald-400' : 'text-rose-400'}`}>
+                {keyTestStatus[3].message}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Rotation Architecture Note */}
+        <div className="p-3.5 rounded-xl bg-neutral-900/50 border border-neutral-800/80 text-xs text-neutral-300 flex items-start space-x-2.5">
+          <ShieldCheck className="w-4 h-4 text-cyan-400 flex-shrink-0 mt-0.5" />
+          <div className="space-y-1 text-[11px]">
+            <p className="font-bold text-white">How 3-Key Auto-Rotation Works:</p>
+            <p className="text-neutral-400 leading-relaxed">
+              When searching & generating topics in the Discovery Lab, the system requests Gemini using <strong>Key 1</strong>. If Key 1 reaches free tier rate limits (HTTP 429) or errors, the engine automatically falls over to <strong>Key 2</strong>, and subsequently <strong>Key 3</strong>. If no keys are provided, it smoothly uses the built-in deterministic synthesis rules.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. Runtime Mixer Rules (App Config) */}
       <div className="glass-panel rounded-2xl p-6 border border-neutral-800 space-y-6">
         <div className="flex items-center space-x-2.5">
           <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">

@@ -5,7 +5,10 @@ import {
   SelectionMode, 
   AppConfig, 
   ProductionIdea, 
-  IdeaBrief 
+  IdeaBrief,
+  DiscoverySource,
+  DiscoveryArticle,
+  GeneratedTopicIdea
 } from '../types';
 
 const STORAGE_KEY_CONFIG = 'knowsights_config_v2';
@@ -28,7 +31,10 @@ export const DEFAULT_CONFIG: AppConfig = {
   timezone: 'Asia/Karachi',
   default_mode: 'BALANCED',
   auto_generate_daily: true,
-  google_web_app_url: DEFAULT_WEB_APP_URL
+  google_web_app_url: DEFAULT_WEB_APP_URL,
+  gemini_api_key_1: '',
+  gemini_api_key_2: '',
+  gemini_api_key_3: ''
 };
 
 export function normalizeToProductionIdea(raw: any, idx: number = 0): ProductionIdea {
@@ -463,7 +469,7 @@ async function callApi(action: string, payload: Record<string, any> = {}): Promi
     try {
       if (url.includes('workers.dev') || url.includes('cloudflare')) {
         // Cloudflare Edge Worker API (Ultra-Fast REST)
-        const isMutation = ['generate_batch', 'replace_item', 'mark_used', 'undo_used', 'save_config', 'update_config'].includes(action);
+        const isMutation = ['generate_batch', 'replace_item', 'mark_used', 'undo_used', 'save_config', 'update_config', 'add_production_idea'].includes(action);
         const reqPayload = { action, ...payload };
 
         if (isMutation) {
@@ -668,6 +674,107 @@ function executeLocalEngine(action: string, payload: Record<string, any>, config
   return { success: false, error: "Unknown action" };
 }
 
+export function parseRssXmlToArticles(xmlText: string, source: DiscoverySource): DiscoveryArticle[] {
+  try {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(xmlText, 'text/xml');
+    const items = Array.from(doc.querySelectorAll('item, entry'));
+    if (!items || items.length === 0) return [];
+
+    return items.map((item, idx) => {
+      const title = item.querySelector('title')?.textContent || 'Recent Finding';
+      let link = item.querySelector('link')?.textContent || '';
+      if (!link) {
+        link = item.querySelector('link')?.getAttribute('href') || source.officialUrl;
+      }
+      const pubDate = item.querySelector('pubDate, published, updated, dc\\:date')?.textContent || new Date().toISOString().slice(0, 10);
+      const summary = item.querySelector('description, summary, content, content\\:encoded')?.textContent || '';
+
+      return {
+        id: `${source.id}-${idx}-${Date.now()}`,
+        title: title.replace(/<[^>]+>/g, '').trim(),
+        link: link.trim() || source.officialUrl,
+        pubDate: pubDate.trim(),
+        summary: summary.replace(/<[^>]+>/g, ' ').slice(0, 300).trim(),
+        sourceId: source.id,
+        sourceName: source.name,
+        sourceCategory: source.category
+      };
+    });
+  } catch (err) {
+    console.error(`Error parsing XML for ${source.name}:`, err);
+    return [];
+  }
+}
+
+export async function fetchSourceArticles(source: DiscoverySource, query?: string, limit: number = 6): Promise<DiscoveryArticle[]> {
+  let targetUrl = source.feedUrl;
+  if (query && query.trim() && source.searchFeedPattern) {
+    targetUrl = source.searchFeedPattern.replace('{query}', encodeURIComponent(query.trim()));
+  }
+
+  // Tier 1: Cloudflare Edge Worker Feed Proxy
+  try {
+    const edgeRes = await callApi('fetch_source_feed', { url: targetUrl });
+    if (edgeRes && edgeRes.success && edgeRes.data) {
+      const parsed = parseRssXmlToArticles(edgeRes.data, source);
+      if (parsed.length > 0) return parsed.slice(0, limit);
+    }
+  } catch (e) {
+    console.warn(`Worker proxy fetch failed for ${source.name}, falling back...`, e);
+  }
+
+  // Tier 2: Public AllOrigins CORS Proxy
+  try {
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+    const res = await fetch(proxyUrl);
+    if (res.ok) {
+      const xml = await res.text();
+      const parsed = parseRssXmlToArticles(xml, source);
+      if (parsed.length > 0) return parsed.slice(0, limit);
+    }
+  } catch (e) {
+    console.warn(`AllOrigins proxy fetch failed for ${source.name}:`, e);
+  }
+
+  // Tier 3: RSS2JSON Free Converter
+  try {
+    const r2jUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(targetUrl)}`;
+    const res = await fetch(r2jUrl);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.items && data.items.length > 0) {
+        return data.items.slice(0, limit).map((it: any, idx: number) => ({
+          id: `${source.id}-${idx}-${Date.now()}`,
+          title: it.title || 'Recent Finding',
+          link: it.link || source.officialUrl,
+          pubDate: it.pubDate || new Date().toISOString().slice(0, 10),
+          summary: (it.description || '').replace(/<[^>]+>/g, ' ').slice(0, 300).trim(),
+          sourceId: source.id,
+          sourceName: source.name,
+          sourceCategory: source.category
+        }));
+      }
+    }
+  } catch (e) {
+    console.warn(`RSS2JSON fallback failed for ${source.name}:`, e);
+  }
+
+  // Tier 4: Curated Seed Fallbacks for this source if network is totally offline
+  return [
+    {
+      id: `${source.id}-fallback-1`,
+      title: query ? `Recent findings and new evidence regarding ${query} from ${source.name}` : `Recent breakthroughs and unexpected discoveries documented by ${source.name}`,
+      link: source.officialUrl,
+      pubDate: new Date().toISOString().slice(0, 10),
+      summary: `Detailed investigation and scholarly reporting on ${source.category} from ${source.name}. Features field evidence, research analysis, and new discoveries.`,
+      sourceId: source.id,
+      sourceName: source.name,
+      sourceCategory: source.category
+    }
+  ];
+}
+
 // Exported API Interface
 export const api = {
   getInitialData: () => callApi('get_initial_data'),
@@ -691,5 +798,20 @@ export const api = {
   saveConfig: (config: AppConfig) =>
     callApi('save_config', { config, request_id: generateRequestId() }),
   syncInventory: () => 
-    callApi('sync_inventory')
+    callApi('sync_inventory'),
+  fetchSourceArticles,
+  addProductionIdea: (idea: Partial<GeneratedTopicIdea>) =>
+    callApi('add_production_idea', {
+      video_idea: idea.video_idea,
+      curiosity_hook: idea.curiosity_hook,
+      signature_format: idea.signature_format,
+      subject: idea.subject,
+      topic_family: idea.topic_family,
+      production_score: idea.production_score,
+      priority_tier: idea.priority_tier,
+      visualization_direction: idea.visualization_direction,
+      source_family_guidance: idea.source_family_guidance,
+      request_id: generateRequestId()
+    })
 };
+

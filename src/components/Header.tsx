@@ -7,13 +7,14 @@ import {
   FileSpreadsheet, 
   ExternalLink,
   CheckCircle2,
-  Compass
+  Compass,
+  Radio
 } from 'lucide-react';
 import { SystemStats } from '../types';
 
 interface HeaderProps {
-  activeTab: 'mix' | 'browse' | 'settings';
-  setActiveTab: (tab: 'mix' | 'browse' | 'settings') => void;
+  activeTab: 'mix' | 'browse' | 'discovery' | 'settings';
+  setActiveTab: (tab: 'mix' | 'browse' | 'discovery' | 'settings') => void;
   stats: SystemStats | null;
   spreadsheetId: string;
 }
@@ -26,9 +27,10 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const sheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`;
 
-  const tabs: { id: 'mix' | 'browse' | 'settings'; label: string; icon: any }[] = [
+  const tabs: { id: 'mix' | 'browse' | 'discovery' | 'settings'; label: string; icon: any; badge?: string }[] = [
     { id: 'mix', label: "Today's Ideas", icon: Compass },
     { id: 'browse', label: "Production Pool", icon: Search },
+    { id: 'discovery', label: "Discovery Lab", icon: Radio, badge: "27 Sources" },
     { id: 'settings', label: "Settings", icon: Settings },
   ];
 
@@ -74,6 +76,11 @@ export const Header: React.FC<HeaderProps> = ({
                 >
                   <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-emerald-400' : 'text-neutral-500'}`} />
                   <span>{tab.label}</span>
+                  {tab.badge && (
+                    <span className="text-[9px] uppercase font-mono px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold ml-0.5 hidden lg:inline">
+                      {tab.badge}
+                    </span>
+                  )}
                 </button>
               );
             })}
