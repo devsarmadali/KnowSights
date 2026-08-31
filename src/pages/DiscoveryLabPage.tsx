@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   Search, 
   Sparkles, 
@@ -33,7 +33,11 @@ import {
   Building2,
   Award,
   Shield,
-  FileText
+  FileText,
+  Grid,
+  LayoutGrid,
+  Tag,
+  FolderOpen
 } from 'lucide-react';
 import { 
   DISCOVERY_SOURCES, 
@@ -68,8 +72,11 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
   onRefreshStats,
   showToast
 }) => {
-  // Navigation View: 'generator' (AI & RSS Scanner) | 'publications' (27 Editorial Pubs) | 'archives' (36 Institutional Repositories)
+  // Navigation View: 'generator' | 'publications' | 'archives'
   const [activeView, setActiveView] = useState<'generator' | 'publications' | 'archives'>('generator');
+
+  // Idea Display Mode: 'categorized' (Categorized by Subject sections) vs 'flat' (Single grid)
+  const [ideaViewMode, setIdeaViewMode] = useState<'categorized' | 'flat'>('categorized');
 
   // Search & Filter State (Generator)
   const [searchQuery, setSearchQuery] = useState('');
@@ -270,7 +277,7 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
 
       setGeneratedIdeas(allGenerated);
       if (allGenerated.length > 0) {
-        showToast(`Generated ${allGenerated.length} fresh topic ideas from ${activeSources.length} sources!`, 'success');
+        showToast(`Generated ${allGenerated.length} fresh topic ideas across categorized sections!`, 'success');
       } else {
         showToast("No new articles found matching criteria", 'info');
       }
@@ -357,6 +364,22 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
     }
   };
 
+  // Categorize Generated Ideas by Subject / Discipline
+  const categorizedIdeas = useMemo(() => {
+    const map = new Map<string, GeneratedTopicIdea[]>();
+    for (const idea of generatedIdeas) {
+      const subj = idea.subject || 'General Discovery & Thought';
+      if (!map.has(subj)) {
+        map.set(subj, []);
+      }
+      map.get(subj)!.push(idea);
+    }
+    return Array.from(map.entries()).map(([subject, ideas]) => ({
+      subject,
+      ideas
+    }));
+  }, [generatedIdeas]);
+
   // Filter Institutional Repositories
   const filteredRepositories = INSTITUTIONAL_REPOSITORIES.filter(repo => {
     if (selectedArchiveGroup !== 'all' && repo.group !== selectedArchiveGroup) return false;
@@ -373,12 +396,188 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
     return true;
   });
 
+  // Group Institutional Repositories by Section
+  const groupedRepositories = useMemo(() => {
+    const map = new Map<string, InstitutionalRepository[]>();
+    for (const repo of filteredRepositories) {
+      const grp = repo.groupLabel || 'General Institutional Archives';
+      if (!map.has(grp)) {
+        map.set(grp, []);
+      }
+      map.get(grp)!.push(repo);
+    }
+    return Array.from(map.entries()).map(([groupLabel, repos]) => ({
+      groupLabel,
+      repos
+    }));
+  }, [filteredRepositories]);
+
   // Quick Initial Scan on Mount if Empty
   useEffect(() => {
     if (generatedIdeas.length === 0) {
       handleFetchAndGenerate();
     }
   }, []);
+
+  // Render a Single Topic Idea Card
+  const renderTopicCard = (idea: GeneratedTopicIdea) => {
+    const isQuestionsExpanded = expandedQuestionsId === idea.id;
+    const isCopied = copiedId === idea.id;
+    const isSaving = savingPoolId === idea.id;
+
+    return (
+      <div
+        key={idea.id}
+        className={`glass-panel glass-panel-hover p-6 rounded-3xl border transition-all flex flex-col justify-between space-y-4 ${
+          idea.added_to_pool
+            ? 'border-emerald-500/40 bg-emerald-950/15 ring-1 ring-emerald-500/20'
+            : 'border-neutral-800/90 hover:border-neutral-700 bg-neutral-900/50'
+        }`}
+      >
+        {/* Card Header: Source Pill & Format Badge */}
+        <div className="space-y-3">
+          <div className="flex items-center justify-between gap-2 flex-wrap">
+            <a
+              href={idea.source_url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-neutral-300 text-xs font-mono group"
+              title="Read original publication article"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+              <span className="font-bold">{idea.source_name}</span>
+              <ExternalLink className="w-3 h-3 text-neutral-500 group-hover:text-emerald-400 transition-colors" />
+            </a>
+
+            <div className="flex items-center space-x-2 text-[11px] font-mono">
+              <span className="px-2 py-0.5 rounded-md bg-neutral-800/80 border border-neutral-700 text-emerald-400 font-semibold">
+                {idea.signature_format}
+              </span>
+              <span className="px-2 py-0.5 rounded-md bg-neutral-900 border border-neutral-800 text-amber-300 font-bold">
+                ⭐ {idea.production_score}
+              </span>
+            </div>
+          </div>
+
+          {/* Video Concept Title */}
+          <h3 className="text-base sm:text-lg font-bold text-white tracking-tight leading-snug">
+            {idea.video_idea}
+          </h3>
+
+          {/* Curiosity Hook Quote Box */}
+          <div className="p-3.5 rounded-2xl bg-neutral-950/70 border border-emerald-500/20 text-emerald-300 text-xs leading-relaxed font-sans relative">
+            <span className="text-[10px] uppercase font-mono font-bold text-emerald-500 block mb-1">
+              📌 Curiosity Hook:
+            </span>
+            "{idea.curiosity_hook}"
+          </div>
+
+          {/* Discipline / Topic Family Lineage */}
+          <div className="flex items-center space-x-2 text-xs text-neutral-400 font-mono">
+            <span className="px-2 py-0.5 rounded bg-neutral-950 border border-neutral-800 text-neutral-300">
+              {idea.subject}
+            </span>
+            <span>›</span>
+            <span className="text-neutral-500 truncate max-w-[200px]">
+              {idea.topic_family}
+            </span>
+          </div>
+
+          {/* Expandable 3 Deep-Dive Script Questions */}
+          <div className="border-t border-neutral-800/80 pt-3">
+            <button
+              onClick={() => setExpandedQuestionsId(isQuestionsExpanded ? null : idea.id)}
+              className="flex items-center justify-between w-full text-xs font-mono text-neutral-400 hover:text-emerald-300 transition-colors cursor-pointer py-1"
+            >
+              <span className="flex items-center space-x-1.5">
+                <BookOpen className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="font-bold">3 Core Inquiry Questions</span>
+              </span>
+              {isQuestionsExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+            </button>
+
+            {isQuestionsExpanded && (
+              <div className="mt-3 space-y-2.5 p-3 rounded-2xl bg-neutral-950/80 border border-neutral-800/80 text-xs text-neutral-300 animate-in fade-in duration-150">
+                <div className="space-y-1">
+                  <span className="text-[10px] font-mono text-emerald-400 font-bold uppercase">
+                    1. Empirical & Physical Evidence:
+                  </span>
+                  <p className="text-neutral-300 leading-relaxed">{idea.core_questions[0]}</p>
+                </div>
+                <div className="space-y-1 border-t border-neutral-900 pt-2">
+                  <span className="text-[10px] font-mono text-amber-400 font-bold uppercase">
+                    2. Underlying Mechanism & Context:
+                  </span>
+                  <p className="text-neutral-300 leading-relaxed">{idea.core_questions[1]}</p>
+                </div>
+                <div className="space-y-1 border-t border-neutral-900 pt-2">
+                  <span className="text-[10px] font-mono text-cyan-400 font-bold uppercase">
+                    3. Broader Implication & Paradigm Shift:
+                  </span>
+                  <p className="text-neutral-300 leading-relaxed">{idea.core_questions[2]}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Card Actions Footer */}
+        <div className="border-t border-neutral-800/80 pt-4 flex items-center justify-between gap-2">
+          
+          {/* Copy Scriptwriting Prompt Button */}
+          <button
+            onClick={() => handleCopyPrompt(idea)}
+            className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
+              isCopied
+                ? 'bg-emerald-500 text-black font-bold'
+                : 'bg-neutral-800 hover:bg-neutral-700 text-white'
+            }`}
+            title="Copy full scriptwriting outline and prompt for LLM generation"
+          >
+            {isCopied ? (
+              <>
+                <Check className="w-3.5 h-3.5" />
+                <span>Prompt Copied!</span>
+              </>
+            ) : (
+              <>
+                <Copy className="w-3.5 h-3.5 text-neutral-400" />
+                <span>Copy Script Prompt</span>
+              </>
+            )}
+          </button>
+
+          {/* Add to Production Pool Button */}
+          {idea.added_to_pool ? (
+            <span className="inline-flex items-center space-x-1 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono font-bold">
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>In Production Pool</span>
+            </span>
+          ) : (
+            <button
+              onClick={() => handleAddToPool(idea)}
+              disabled={isSaving}
+              className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white text-xs font-bold transition-all shadow-sm shadow-emerald-950/50 disabled:opacity-50 cursor-pointer"
+              title="Permanently add to Cloudflare D1 Production Pool as a KS-P idea"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Saving to D1...</span>
+                </>
+              ) : (
+                <>
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add to Pool (KS-P)</span>
+                </>
+              )}
+            </button>
+          )}
+
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="space-y-8 pb-16">
@@ -459,14 +658,14 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
 
           <div className="max-w-3xl">
             <h1 className="text-2xl sm:text-3xl font-display font-black text-white tracking-tight">
-              {activeView === 'generator' && 'Publication Discovery & Topic Generator'}
-              {activeView === 'publications' && `Curated Publications Directory (${DISCOVERY_SOURCES.length} Resources)`}
-              {activeView === 'archives' && `Institutional Archives & Primary Repositories (${INSTITUTIONAL_REPOSITORIES.length} Authorities)`}
+              {activeView === 'generator' && 'Categorized Publication Discovery & Topic Generator'}
+              {activeView === 'publications' && `Classified Publications Directory (${DISCOVERY_SOURCES.length} Resources)`}
+              {activeView === 'archives' && `Classified Institutional Repositories (${INSTITUTIONAL_REPOSITORIES.length} Authorities)`}
             </h1>
             <p className="text-neutral-400 text-sm mt-1 leading-relaxed">
-              {activeView === 'generator' && `Search breaking articles, museum reports, and excavations across ${DISCOVERY_SOURCES.length} elite publications. Automatically synthesizes concepts, hooks, and 3-tier deep dive questions with optional 3-Key Gemini rotation.`}
-              {activeView === 'publications' && `Browse the curated directory of all ${DISCOVERY_SOURCES.length} history, archaeology, science, and curiosity publications. Click any resource to visit its official archive or trigger instant idea scanning.`}
-              {activeView === 'archives' && `Explore authoritative institutions: national libraries, national archives, museums, military commands, and scientific research agencies organized by evidence verification tiers.`}
+              {activeView === 'generator' && `Search breaking articles, museum reports, and excavations across ${DISCOVERY_SOURCES.length} elite publications. Automatically classified by subject section with 3-tier deep dive questions and optional 3-Key Gemini rotation.`}
+              {activeView === 'publications' && `Browse all ${DISCOVERY_SOURCES.length} publications visually classified across 5 thematic sections: World History, Archaeology, Academic Essays, Hidden Curiosities, and Science Discoveries.`}
+              {activeView === 'archives' && `Explore 36 authoritative repositories classified into sections 14 through 18, with Evidence Verification Tiers for primary ground truth verification.`}
             </p>
           </div>
 
@@ -694,18 +893,18 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
         </div>
       )}
 
-      {/* 3. VIEW B: 27 EDITORIAL PUBLICATIONS DIRECTORY */}
+      {/* 3. VIEW B: 27 CLASSIFIED EDITORIAL PUBLICATIONS DIRECTORY */}
       {activeView === 'publications' && (
-        <div className="space-y-6 animate-in fade-in duration-200">
+        <div className="space-y-8 animate-in fade-in duration-200">
           
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
               <h2 className="text-lg font-bold text-white flex items-center space-x-2">
                 <Globe className="w-5 h-5 text-emerald-400" />
-                <span>All {DISCOVERY_SOURCES.length} Curated Publications & Magazines</span>
+                <span>Classified Publications Directory ({DISCOVERY_SOURCES.length} Resources)</span>
               </h2>
               <p className="text-xs text-neutral-400 mt-0.5">
-                Navigate directly to any publication's homepage/archive to manually discover stories, or trigger instant AI topic generation.
+                Organized by curriculum clusters. Click to browse the publication or trigger instant AI topic generation.
               </p>
             </div>
             
@@ -718,14 +917,27 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
             </button>
           </div>
 
-          {/* Grouped Publications Grid */}
-          <div className="space-y-8">
-            {SOURCE_GROUPS.filter(g => g.id !== 'all').map(group => {
+          {/* Grouped Publications Sections */}
+          <div className="space-y-10">
+            {SOURCE_GROUPS.filter(g => g.id !== 'all').map((group, idx) => {
               const sourcesInGroup = DISCOVERY_SOURCES.filter(s => s.group === group.id);
               return (
-                <div key={group.id} className="space-y-3">
-                  <div className="flex items-center space-x-2 text-sm font-bold text-white border-b border-neutral-800 pb-2">
-                    <span className="font-mono text-emerald-400">{group.label}</span>
+                <div key={group.id} className="space-y-4">
+                  {/* Category Section Header Banner */}
+                  <div className="p-4 rounded-2xl bg-neutral-900/80 border border-neutral-800 flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-mono text-xs font-bold">
+                        {idx + 1}
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-white">{group.label}</h3>
+                        <p className="text-[11px] text-neutral-400">Curated publications & magazines</p>
+                      </div>
+                    </div>
+
+                    <span className="text-xs font-mono px-2.5 py-1 rounded-lg bg-neutral-950 text-emerald-400 border border-neutral-800 font-bold">
+                      {sourcesInGroup.length} Publications
+                    </span>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -785,18 +997,18 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
         </div>
       )}
 
-      {/* 4. VIEW C: 36 INSTITUTIONAL ARCHIVES & PRIMARY REPOSITORIES */}
+      {/* 4. VIEW C: 36 CLASSIFIED INSTITUTIONAL REPOSITORIES */}
       {activeView === 'archives' && (
-        <div className="space-y-6 animate-in fade-in duration-200">
+        <div className="space-y-8 animate-in fade-in duration-200">
           
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
               <h2 className="text-lg font-bold text-white flex items-center space-x-2">
                 <Building2 className="w-5 h-5 text-blue-400" />
-                <span>Authoritative Institutional Repositories ({INSTITUTIONAL_REPOSITORIES.length})</span>
+                <span>Classified Institutional Repositories ({INSTITUTIONAL_REPOSITORIES.length})</span>
               </h2>
               <p className="text-xs text-neutral-400 mt-0.5">
-                Museum collections, national libraries, declassified archives, and scientific research agencies for primary evidence verification.
+                Classified by section taxonomy (14–18) with Evidence Verification Tiers.
               </p>
             </div>
 
@@ -813,7 +1025,7 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
           <div className="p-4 sm:p-5 rounded-3xl bg-neutral-900/70 border border-neutral-800 space-y-3">
             <div className="flex items-center space-x-2 text-xs font-bold text-white font-mono">
               <Shield className="w-4 h-4 text-emerald-400" />
-              <span>Evidence Verification Hierarchy</span>
+              <span>Evidence Verification Hierarchy (Click to filter)</span>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
@@ -885,62 +1097,85 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
             </div>
           </div>
 
-          {/* Institutional Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredRepositories.map(repo => (
-              <div
-                key={repo.id}
-                className="glass-panel glass-panel-hover p-5 rounded-3xl border border-neutral-800/90 hover:border-neutral-700 bg-neutral-900/60 flex flex-col justify-between space-y-4"
-              >
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between flex-wrap gap-1">
-                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
-                      repo.tier.startsWith('Tier 1')
-                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
-                        : repo.tier.startsWith('Tier 2')
-                          ? 'bg-blue-500/10 text-blue-400 border-blue-500/30'
-                          : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
-                    }`}>
-                      {repo.tier}
-                    </span>
-
-                    <span className="text-[10px] font-mono text-neutral-500">
-                      {repo.groupLabel.split('.')[1] || repo.groupLabel}
-                    </span>
+          {/* Categorized Sections for Institutional Archives */}
+          <div className="space-y-10">
+            {groupedRepositories.map(({ groupLabel, repos }) => (
+              <div key={groupLabel} className="space-y-4">
+                {/* Section Header */}
+                <div className="p-4 rounded-2xl bg-neutral-900/80 border border-neutral-800 flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400">
+                      <Building2 className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-white">{groupLabel}</h3>
+                      <p className="text-[11px] text-neutral-400">Primary archives, museums & academic bodies</p>
+                    </div>
                   </div>
 
-                  <div>
-                    <h3 className="text-base font-bold text-white tracking-tight">
-                      {repo.name}
-                    </h3>
-                    <span className="text-[11px] font-mono text-neutral-400 block mt-0.5">
-                      {repo.type} • {repo.category}
-                    </span>
-                    <p className="text-xs text-neutral-300 mt-2 leading-relaxed">
-                      {repo.purpose}
-                    </p>
-                  </div>
+                  <span className="text-xs font-mono px-2.5 py-1 rounded-lg bg-neutral-950 text-blue-400 border border-neutral-800 font-bold">
+                    {repos.length} Authorities
+                  </span>
                 </div>
 
-                <div className="border-t border-neutral-800/80 pt-3 flex items-center justify-between gap-2">
-                  <a
-                    href={repo.officialUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 inline-flex items-center justify-center space-x-1.5 px-3 py-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 text-xs font-mono text-neutral-300 hover:text-blue-300 transition-all group"
-                  >
-                    <span>Visit Official Archive</span>
-                    <ExternalLink className="w-3 h-3 text-neutral-500 group-hover:text-blue-400" />
-                  </a>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {repos.map(repo => (
+                    <div
+                      key={repo.id}
+                      className="glass-panel glass-panel-hover p-5 rounded-3xl border border-neutral-800/90 hover:border-neutral-700 bg-neutral-900/60 flex flex-col justify-between space-y-4"
+                    >
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between flex-wrap gap-1">
+                          <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
+                            repo.tier.startsWith('Tier 1')
+                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30'
+                              : repo.tier.startsWith('Tier 2')
+                                ? 'bg-blue-500/10 text-blue-400 border-blue-500/30'
+                                : 'bg-amber-500/10 text-amber-400 border-amber-500/30'
+                          }`}>
+                            {repo.tier}
+                          </span>
 
-                  <button
-                    onClick={() => handleScanInstitutionalArchive(repo)}
-                    className="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-300 text-xs font-bold transition-all cursor-pointer"
-                    title="Generate ideas from this institutional repository"
-                  >
-                    <Zap className="w-3 h-3 text-blue-400" />
-                    <span>Scan Archive</span>
-                  </button>
+                          <span className="text-[10px] font-mono text-neutral-500">
+                            {repo.groupLabel.split('.')[1] || repo.groupLabel}
+                          </span>
+                        </div>
+
+                        <div>
+                          <h3 className="text-base font-bold text-white tracking-tight">
+                            {repo.name}
+                          </h3>
+                          <span className="text-[11px] font-mono text-neutral-400 block mt-0.5">
+                            {repo.type} • {repo.category}
+                          </span>
+                          <p className="text-xs text-neutral-300 mt-2 leading-relaxed">
+                            {repo.purpose}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="border-t border-neutral-800/80 pt-3 flex items-center justify-between gap-2">
+                        <a
+                          href={repo.officialUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex-1 inline-flex items-center justify-center space-x-1.5 px-3 py-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 text-xs font-mono text-neutral-300 hover:text-blue-300 transition-all group"
+                        >
+                          <span>Visit Official Archive</span>
+                          <ExternalLink className="w-3 h-3 text-neutral-500 group-hover:text-blue-400" />
+                        </a>
+
+                        <button
+                          onClick={() => handleScanInstitutionalArchive(repo)}
+                          className="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-300 text-xs font-bold transition-all cursor-pointer"
+                          title="Generate ideas from this institutional repository"
+                        >
+                          <Zap className="w-3 h-3 text-blue-400" />
+                          <span>Scan Archive</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             ))}
@@ -955,7 +1190,7 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
         </div>
       )}
 
-      {/* 5. VIEW A: TOPIC GENERATOR RESULTS */}
+      {/* 5. VIEW A: TOPIC GENERATOR RESULTS (CLASSIFIED BY SUBJECT SECTION) */}
       {activeView === 'generator' && (
         <div className="space-y-6">
 
@@ -1087,8 +1322,8 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
             </div>
           )}
 
-          {/* Generated Cards Header */}
-          <div className="flex items-center justify-between">
+          {/* Generated Cards Header with Display Toggle */}
+          <div className="flex items-center justify-between flex-wrap gap-3">
             <div className="flex items-center space-x-2">
               <Sparkles className="w-4 h-4 text-emerald-400" />
               <h2 className="text-lg font-bold text-white">
@@ -1097,9 +1332,33 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
             </div>
 
             {generatedIdeas.length > 0 && (
-              <span className="text-xs font-mono text-neutral-400">
-                Ready for 1-Click Script Prompting & Pool Promotion
-              </span>
+              <div className="flex items-center space-x-2">
+                {/* View Switcher: Categorized Sections vs Flat Grid */}
+                <div className="bg-neutral-900 p-1 rounded-xl border border-neutral-800 flex items-center space-x-1 text-xs">
+                  <button
+                    onClick={() => setIdeaViewMode('categorized')}
+                    className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
+                      ideaViewMode === 'categorized'
+                        ? 'bg-neutral-800 text-emerald-400 shadow-sm'
+                        : 'text-neutral-400 hover:text-white'
+                    }`}
+                  >
+                    <FolderOpen className="w-3.5 h-3.5" />
+                    <span>Classified Sections ({categorizedIdeas.length})</span>
+                  </button>
+                  <button
+                    onClick={() => setIdeaViewMode('flat')}
+                    className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
+                      ideaViewMode === 'flat'
+                        ? 'bg-neutral-800 text-white shadow-sm'
+                        : 'text-neutral-400 hover:text-white'
+                    }`}
+                  >
+                    <LayoutGrid className="w-3.5 h-3.5" />
+                    <span>Flat Grid</span>
+                  </button>
+                </div>
+              </div>
             )}
           </div>
 
@@ -1125,167 +1384,43 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
             </div>
           )}
 
-          {/* Generated Topic Cards Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-            {generatedIdeas.map((idea) => {
-              const isQuestionsExpanded = expandedQuestionsId === idea.id;
-              const isCopied = copiedId === idea.id;
-              const isSaving = savingPoolId === idea.id;
-
-              return (
-                <div
-                  key={idea.id}
-                  className={`glass-panel glass-panel-hover p-6 rounded-3xl border transition-all flex flex-col justify-between space-y-4 ${
-                    idea.added_to_pool
-                      ? 'border-emerald-500/40 bg-emerald-950/15 ring-1 ring-emerald-500/20'
-                      : 'border-neutral-800/90 hover:border-neutral-700 bg-neutral-900/50'
-                  }`}
-                >
-                  {/* Card Header: Source Pill & Format Badge */}
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between gap-2 flex-wrap">
-                      <a
-                        href={idea.source_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-neutral-300 text-xs font-mono group"
-                        title="Read original publication article"
-                      >
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                        <span className="font-bold">{idea.source_name}</span>
-                        <ExternalLink className="w-3 h-3 text-neutral-500 group-hover:text-emerald-400 transition-colors" />
-                      </a>
-
-                      <div className="flex items-center space-x-2 text-[11px] font-mono">
-                        <span className="px-2 py-0.5 rounded-md bg-neutral-800/80 border border-neutral-700 text-emerald-400 font-semibold">
-                          {idea.signature_format}
-                        </span>
-                        <span className="px-2 py-0.5 rounded-md bg-neutral-900 border border-neutral-800 text-amber-300 font-bold">
-                          ⭐ {idea.production_score}
-                        </span>
+          {/* 1. CATEGORIZED SECTIONS VIEW (DEFAULT) */}
+          {ideaViewMode === 'categorized' && generatedIdeas.length > 0 && (
+            <div className="space-y-10">
+              {categorizedIdeas.map(({ subject, ideas }, sIdx) => (
+                <div key={subject} className="space-y-4">
+                  {/* Category Section Banner */}
+                  <div className="p-4 rounded-2xl bg-neutral-900/80 border border-neutral-800 flex items-center justify-between">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 font-mono text-xs font-bold">
+                        {sIdx + 1}
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-white">{subject}</h3>
+                        <p className="text-[11px] text-neutral-400">Curated topic ideas & curiosity hooks</p>
                       </div>
                     </div>
 
-                    {/* Video Concept Title */}
-                    <h3 className="text-base sm:text-lg font-bold text-white tracking-tight leading-snug">
-                      {idea.video_idea}
-                    </h3>
-
-                    {/* Curiosity Hook Quote Box */}
-                    <div className="p-3.5 rounded-2xl bg-neutral-950/70 border border-emerald-500/20 text-emerald-300 text-xs leading-relaxed font-sans relative">
-                      <span className="text-[10px] uppercase font-mono font-bold text-emerald-500 block mb-1">
-                        📌 Curiosity Hook:
-                      </span>
-                      "{idea.curiosity_hook}"
-                    </div>
-
-                    {/* Discipline / Topic Family Lineage */}
-                    <div className="flex items-center space-x-2 text-xs text-neutral-400 font-mono">
-                      <span className="px-2 py-0.5 rounded bg-neutral-950 border border-neutral-800 text-neutral-300">
-                        {idea.subject}
-                      </span>
-                      <span>›</span>
-                      <span className="text-neutral-500 truncate max-w-[200px]">
-                        {idea.topic_family}
-                      </span>
-                    </div>
-
-                    {/* Expandable 3 Deep-Dive Script Questions */}
-                    <div className="border-t border-neutral-800/80 pt-3">
-                      <button
-                        onClick={() => setExpandedQuestionsId(isQuestionsExpanded ? null : idea.id)}
-                        className="flex items-center justify-between w-full text-xs font-mono text-neutral-400 hover:text-emerald-300 transition-colors cursor-pointer py-1"
-                      >
-                        <span className="flex items-center space-x-1.5">
-                          <BookOpen className="w-3.5 h-3.5 text-emerald-400" />
-                          <span className="font-bold">3 Core Inquiry Questions</span>
-                        </span>
-                        {isQuestionsExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-                      </button>
-
-                      {isQuestionsExpanded && (
-                        <div className="mt-3 space-y-2.5 p-3 rounded-2xl bg-neutral-950/80 border border-neutral-800/80 text-xs text-neutral-300 animate-in fade-in duration-150">
-                          <div className="space-y-1">
-                            <span className="text-[10px] font-mono text-emerald-400 font-bold uppercase">
-                              1. Empirical & Physical Evidence:
-                            </span>
-                            <p className="text-neutral-300 leading-relaxed">{idea.core_questions[0]}</p>
-                          </div>
-                          <div className="space-y-1 border-t border-neutral-900 pt-2">
-                            <span className="text-[10px] font-mono text-amber-400 font-bold uppercase">
-                              2. Underlying Mechanism & Context:
-                            </span>
-                            <p className="text-neutral-300 leading-relaxed">{idea.core_questions[1]}</p>
-                          </div>
-                          <div className="space-y-1 border-t border-neutral-900 pt-2">
-                            <span className="text-[10px] font-mono text-cyan-400 font-bold uppercase">
-                              3. Broader Implication & Paradigm Shift:
-                            </span>
-                            <p className="text-neutral-300 leading-relaxed">{idea.core_questions[2]}</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    <span className="text-xs font-mono px-2.5 py-1 rounded-lg bg-neutral-950 text-emerald-400 border border-neutral-800 font-bold">
+                      {ideas.length} {ideas.length === 1 ? 'Topic' : 'Topics'}
+                    </span>
                   </div>
 
-                  {/* Card Actions Footer */}
-                  <div className="border-t border-neutral-800/80 pt-4 flex items-center justify-between gap-2">
-                    
-                    {/* Copy Scriptwriting Prompt Button */}
-                    <button
-                      onClick={() => handleCopyPrompt(idea)}
-                      className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
-                        isCopied
-                          ? 'bg-emerald-500 text-black font-bold'
-                          : 'bg-neutral-800 hover:bg-neutral-700 text-white'
-                      }`}
-                      title="Copy full scriptwriting outline and prompt for LLM generation"
-                    >
-                      {isCopied ? (
-                        <>
-                          <Check className="w-3.5 h-3.5" />
-                          <span>Prompt Copied!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy className="w-3.5 h-3.5 text-neutral-400" />
-                          <span>Copy Script Prompt</span>
-                        </>
-                      )}
-                    </button>
-
-                    {/* Add to Production Pool Button */}
-                    {idea.added_to_pool ? (
-                      <span className="inline-flex items-center space-x-1 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono font-bold">
-                        <CheckCircle2 className="w-3.5 h-3.5" />
-                        <span>In Production Pool</span>
-                      </span>
-                    ) : (
-                      <button
-                        onClick={() => handleAddToPool(idea)}
-                        disabled={isSaving}
-                        className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white text-xs font-bold transition-all shadow-sm shadow-emerald-950/50 disabled:opacity-50 cursor-pointer"
-                        title="Permanently add to Cloudflare D1 Production Pool as a KS-P idea"
-                      >
-                        {isSaving ? (
-                          <>
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            <span>Saving to D1...</span>
-                          </>
-                        ) : (
-                          <>
-                            <Plus className="w-3.5 h-3.5" />
-                            <span>Add to Pool (KS-P)</span>
-                          </>
-                        )}
-                      </button>
-                    )}
-
+                  {/* Category Topic Cards Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    {ideas.map(renderTopicCard)}
                   </div>
                 </div>
-              );
-            })}
-          </div>
+              ))}
+            </div>
+          )}
+
+          {/* 2. FLAT GRID VIEW */}
+          {ideaViewMode === 'flat' && generatedIdeas.length > 0 && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {generatedIdeas.map(renderTopicCard)}
+            </div>
+          )}
 
         </div>
       )}
