@@ -34,7 +34,8 @@ export const DEFAULT_CONFIG: AppConfig = {
   google_web_app_url: DEFAULT_WEB_APP_URL,
   gemini_api_key_1: '',
   gemini_api_key_2: '',
-  gemini_api_key_3: ''
+  gemini_api_key_3: '',
+  theme: 'dark'
 };
 
 export function normalizeToProductionIdea(raw: any, idx: number = 0): ProductionIdea {

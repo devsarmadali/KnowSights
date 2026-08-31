@@ -16,7 +16,11 @@ import {
   Sparkles,
   ShieldCheck,
   Eye,
-  EyeOff
+  EyeOff,
+  Palette,
+  Moon,
+  Sun,
+  BookOpen
 } from 'lucide-react';
 import { AppConfig } from '../types';
 import { DEFAULT_CONFIG, loadConfig, saveConfig, DEFAULT_WEB_APP_URL, api } from '../services/api';
@@ -27,13 +31,15 @@ interface SettingsPageProps {
   setConfig: (config: AppConfig) => void;
   onRefreshAll: () => Promise<void>;
   spreadsheetId: string;
+  onThemeChange?: (theme: 'dark' | 'sepia' | 'solarized-dark' | 'solarized-light') => void;
 }
 
 export const SettingsPage: React.FC<SettingsPageProps> = ({
   config,
   setConfig,
   onRefreshAll,
-  spreadsheetId
+  spreadsheetId,
+  onThemeChange
 }) => {
   const [formData, setFormData] = useState<AppConfig>(config);
   const [testing, setTesting] = useState(false);
@@ -61,7 +67,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
       [keyNum]: {
         loading: false,
         valid: result.valid,
-        message: result.valid ? "✓ Key verified (gemini-1.5-flash active)" : `✗ ${result.error}`
+        message: result.valid ? `✓ Key verified (${result.model || 'gemini-2.5-flash'} active)` : `✗ ${result.error}`
       }
     }));
   };
@@ -249,7 +255,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
 
           <div className="text-right">
             <span className="text-[11px] font-mono text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-xl">
-              Model: gemini-1.5-flash
+              Model: gemini-2.5-flash
             </span>
           </div>
         </div>
@@ -382,13 +388,98 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
           <div className="space-y-1 text-[11px]">
             <p className="font-bold text-white">How 3-Key Auto-Rotation Works:</p>
             <p className="text-neutral-400 leading-relaxed">
-              When searching & generating topics in the Discovery Lab, the system requests Gemini using <strong>Key 1</strong>. If Key 1 reaches free tier rate limits (HTTP 429) or errors, the engine automatically falls over to <strong>Key 2</strong>, and subsequently <strong>Key 3</strong>. If no keys are provided, it smoothly uses the built-in deterministic synthesis rules.
+              When searching & generating topics in the Discovery Lab, the system requests Gemini using <strong>Key 1</strong> (defaulting to <code>gemini-2.5-flash</code>). If Key 1 reaches free tier rate limits (HTTP 429) or errors, the engine automatically falls over to <strong>Key 2</strong>, and subsequently <strong>Key 3</strong>. If no keys are provided, it smoothly uses the built-in deterministic synthesis rules.
             </p>
           </div>
         </div>
       </div>
 
-      {/* 3. Runtime Mixer Rules (App Config) */}
+      {/* 3. Theme & Readability Appearance */}
+      <div className="glass-panel rounded-2xl p-6 border border-neutral-800 space-y-5">
+        <div className="flex items-center justify-between border-b border-neutral-800/80 pb-4">
+          <div className="flex items-center space-x-2.5">
+            <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+              <Palette className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white">Theme & Readability Appearance</h3>
+              <p className="text-xs text-neutral-400">Choose between high-contrast dark, bookish warm sepia, or precision solarized</p>
+            </div>
+          </div>
+          <span className="text-[11px] font-mono text-amber-400 font-bold bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-xl capitalize">
+            Active: {(formData.theme || 'dark').replace('-', ' ')}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          {[
+            {
+              id: 'dark' as const,
+              name: 'Obsidian Dark',
+              icon: Moon,
+              desc: 'High-contrast obsidian with emerald accents',
+              bgClass: 'bg-neutral-950 border-neutral-800 text-white',
+              accent: 'text-emerald-400'
+            },
+            {
+              id: 'sepia' as const,
+              name: 'Warm Sepia',
+              icon: BookOpen,
+              desc: 'Paper & warm ink for zero eye strain',
+              bgClass: 'bg-[#221d18] border-[#4a3e35] text-[#f7eee2]',
+              accent: 'text-amber-400'
+            },
+            {
+              id: 'solarized-dark' as const,
+              name: 'Solarized Dark',
+              icon: Palette,
+              desc: 'Ethan Schoonover deep teal precision',
+              bgClass: 'bg-[#002b36] border-[#0e4c5b] text-[#fdf6e3]',
+              accent: 'text-cyan-400'
+            },
+            {
+              id: 'solarized-light' as const,
+              name: 'Solarized Light',
+              icon: Sun,
+              desc: 'Crisp parchment daylight readability',
+              bgClass: 'bg-[#fdf6e3] border-[#d3cbb4] text-[#073642]',
+              accent: 'text-blue-500'
+            }
+          ].map((themeItem) => {
+            const Icon = themeItem.icon;
+            const isSelected = (formData.theme || 'dark') === themeItem.id;
+            return (
+              <button
+                key={themeItem.id}
+                type="button"
+                onClick={() => {
+                  setFormData({ ...formData, theme: themeItem.id });
+                  if (onThemeChange) onThemeChange(themeItem.id);
+                }}
+                className={`p-4 rounded-xl border text-left transition-all relative cursor-pointer ${themeItem.bgClass} ${
+                  isSelected ? 'ring-2 ring-emerald-400 shadow-lg' : 'hover:opacity-90'
+                }`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="p-1.5 rounded-lg bg-black/20 border border-white/10">
+                    <Icon className={`w-4 h-4 ${themeItem.accent}`} />
+                  </div>
+                  {isSelected && (
+                    <span className="flex items-center space-x-1 text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/30">
+                      <Check className="w-3 h-3" />
+                      <span>Active</span>
+                    </span>
+                  )}
+                </div>
+                <p className="font-bold text-xs">{themeItem.name}</p>
+                <p className="text-[10px] opacity-75 mt-1 leading-snug">{themeItem.desc}</p>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 4. Runtime Mixer Rules (App Config) */}
       <div className="glass-panel rounded-2xl p-6 border border-neutral-800 space-y-6">
         <div className="flex items-center space-x-2.5">
           <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">

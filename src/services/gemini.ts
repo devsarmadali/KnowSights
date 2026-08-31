@@ -28,6 +28,12 @@ export function getConfiguredGeminiKeys(config?: AppConfig): { index: number; ke
   return keys;
 }
 
+export const PREFERRED_GEMINI_MODELS = [
+  'gemini-2.5-flash',
+  'gemini-2.0-flash',
+  'gemini-1.5-flash'
+];
+
 /**
  * Test a specific Gemini API Key for validity
  */
@@ -36,32 +42,43 @@ export async function testGeminiApiKey(apiKey: string): Promise<{ valid: boolean
     return { valid: false, error: "API Key is empty" };
   }
 
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(apiKey.trim())}`;
-  
-  try {
-    const res = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [{ text: "Respond with the word 'PONG' in plain text." }]
-          }
-        ],
-        generationConfig: { maxOutputTokens: 10 }
-      })
-    });
+  let lastError = "";
 
-    if (!res.ok) {
+  for (const model of PREFERRED_GEMINI_MODELS) {
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey.trim())}`;
+    
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [{ text: "Respond with the word 'PONG' in plain text." }]
+            }
+          ],
+          generationConfig: { maxOutputTokens: 10 }
+        })
+      });
+
+      if (res.ok) {
+        return { valid: true, model };
+      }
+
       const errData = await res.json().catch(() => ({}));
       const msg = errData?.error?.message || `HTTP ${res.status}: ${res.statusText}`;
-      return { valid: false, error: msg };
-    }
+      lastError = msg;
 
-    return { valid: true, model: "gemini-1.5-flash" };
-  } catch (err: any) {
-    return { valid: false, error: err.message || "Network error testing key" };
+      // If key is invalid (400 or 403 API key error), stop trying other models
+      if (res.status === 400 || res.status === 403 || msg.toLowerCase().includes('api_key_invalid') || msg.toLowerCase().includes('api key not valid')) {
+        return { valid: false, error: msg };
+      }
+    } catch (err: any) {
+      lastError = err.message || "Network error testing key";
+    }
   }
+
+  return { valid: false, error: lastError || "Could not connect to Gemini API" };
 }
 
 /**
@@ -106,66 +123,74 @@ Return a strictly valid JSON object matching this schema with NO markdown code f
   let lastError = "";
 
   for (const { index, key } of keys) {
-    try {
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(key)}`;
-      
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 1000,
-            responseMimeType: "application/json"
+    let keySucceeded = false;
+    
+    for (const model of PREFERRED_GEMINI_MODELS) {
+      try {
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
+        
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature: 0.7,
+              maxOutputTokens: 1000,
+              responseMimeType: "application/json"
+            }
+          })
+        });
+
+        if (!res.ok) {
+          const errJson = await res.json().catch(() => ({}));
+          const errorMsg = errJson?.error?.message || `HTTP ${res.status}`;
+          // If model not found (404), try next model in PREFERRED_GEMINI_MODELS
+          if (res.status === 404) {
+            continue;
           }
-        })
-      });
+          console.warn(`Gemini Key #${index} failed (${errorMsg}), rotating to next available key...`);
+          lastError = `Key #${index}: ${errorMsg}`;
+          break; // Key failed, move to next key
+        }
 
-      if (!res.ok) {
-        const errJson = await res.json().catch(() => ({}));
-        const errorMsg = errJson?.error?.message || `HTTP ${res.status}`;
-        console.warn(`Gemini Key #${index} failed (${errorMsg}), rotating to next available key...`);
-        lastError = `Key #${index}: ${errorMsg}`;
-        continue; // Try next key in rotation
+        const data = await res.json();
+        const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
+        const cleaned = rawText.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
+        const parsed = JSON.parse(cleaned);
+
+        const generated: GeneratedTopicIdea = {
+          id: `GEN-AI-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+          video_idea: parsed.video_idea || article.title,
+          curiosity_hook: parsed.curiosity_hook || `Why did ${article.title} surprise researchers?`,
+          core_questions: (parsed.core_questions && parsed.core_questions.length === 3) 
+            ? parsed.core_questions 
+            : [
+                `What specific physical evidence was found in ${article.title}?`,
+                `What underlying mechanism explains this finding?`,
+                `How does this reshape our broader understanding?`
+              ],
+          signature_format: parsed.signature_format || source.defaultFormat || 'SF04 — Case Study Breakdown',
+          subject: source.subjectMapping,
+          topic_family: source.topicFamily,
+          source_name: source.name,
+          source_url: article.link || source.officialUrl,
+          source_article_title: article.title,
+          source_published_date: article.pubDate || new Date().toISOString().split('T')[0],
+          source_category: source.category,
+          production_score: Number(parsed.production_score || 90),
+          priority_tier: (parsed.priority_tier === 'Tier 1' || parsed.priority_tier === 'Tier 2') ? parsed.priority_tier : 'Tier 1',
+          freshness_class: 'Recent Publication (AI Curated)',
+          visualization_direction: parsed.visualization_direction || `Incorporate archival scans, 3D maps, and visual motion graphics from ${source.name}.`,
+          source_family_guidance: `Primary publication: ${source.name} (${source.officialUrl}). AI analyzed (${model}) from live publication stream.`,
+          added_to_pool: false
+        };
+
+        return { idea: generated, keyUsedIndex: index };
+      } catch (e: any) {
+        console.warn(`Error with Gemini Key #${index}:`, e);
+        lastError = `Key #${index}: ${e.message}`;
       }
-
-      const data = await res.json();
-      const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-      const cleaned = rawText.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
-      const parsed = JSON.parse(cleaned);
-
-      const generated: GeneratedTopicIdea = {
-        id: `GEN-AI-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
-        video_idea: parsed.video_idea || article.title,
-        curiosity_hook: parsed.curiosity_hook || `Why did ${article.title} surprise researchers?`,
-        core_questions: (parsed.core_questions && parsed.core_questions.length === 3) 
-          ? parsed.core_questions 
-          : [
-              `What specific physical evidence was found in ${article.title}?`,
-              `What underlying mechanism explains this finding?`,
-              `How does this reshape our broader understanding?`
-            ],
-        signature_format: parsed.signature_format || source.defaultFormat || 'SF04 — Case Study Breakdown',
-        subject: source.subjectMapping,
-        topic_family: source.topicFamily,
-        source_name: source.name,
-        source_url: article.link || source.officialUrl,
-        source_article_title: article.title,
-        source_published_date: article.pubDate || new Date().toISOString().split('T')[0],
-        source_category: source.category,
-        production_score: Number(parsed.production_score || 90),
-        priority_tier: (parsed.priority_tier === 'Tier 1' || parsed.priority_tier === 'Tier 2') ? parsed.priority_tier : 'Tier 1',
-        freshness_class: 'Recent Publication (AI Curated)',
-        visualization_direction: parsed.visualization_direction || `Incorporate archival scans, 3D maps, and visual motion graphics from ${source.name}.`,
-        source_family_guidance: `Primary publication: ${source.name} (${source.officialUrl}). AI analyzed from live publication stream.`,
-        added_to_pool: false
-      };
-
-      return { idea: generated, keyUsedIndex: index };
-    } catch (e: any) {
-      console.warn(`Error with Gemini Key #${index}:`, e);
-      lastError = `Key #${index}: ${e.message}`;
     }
   }
 

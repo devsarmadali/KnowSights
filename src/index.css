@@ -3,8 +3,56 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --theme-bg: #09090b;
+    --theme-surface: #18181b;
+    --theme-surface-hover: #27272a;
+    --theme-border: #27272a;
+    --theme-text-primary: #f4f4f5;
+    --theme-text-secondary: #a1a1aa;
+    --theme-text-muted: #71717a;
+    --theme-accent: #10b981;
+    --theme-accent-light: #34d399;
+  }
+
+  html[data-theme="sepia"] {
+    --theme-bg: #221d18;
+    --theme-surface: #2c2520;
+    --theme-surface-hover: #383029;
+    --theme-border: #4a3e35;
+    --theme-text-primary: #f7eee2;
+    --theme-text-secondary: #d6c6b2;
+    --theme-text-muted: #9c8975;
+    --theme-accent: #d97706;
+    --theme-accent-light: #fbbf24;
+  }
+
+  html[data-theme="solarized-dark"] {
+    --theme-bg: #002b36;
+    --theme-surface: #073642;
+    --theme-surface-hover: #0d4452;
+    --theme-border: #0e4c5b;
+    --theme-text-primary: #fdf6e3;
+    --theme-text-secondary: #93a1a1;
+    --theme-text-muted: #657b83;
+    --theme-accent: #2aa198;
+    --theme-accent-light: #268bd2;
+  }
+
+  html[data-theme="solarized-light"] {
+    --theme-bg: #fdf6e3;
+    --theme-surface: #eee8d5;
+    --theme-surface-hover: #e2dbca;
+    --theme-border: #d3cbb4;
+    --theme-text-primary: #073642;
+    --theme-text-secondary: #586e75;
+    --theme-text-muted: #839496;
+    --theme-accent: #2aa198;
+    --theme-accent-light: #268bd2;
+  }
+
   body {
-    @apply bg-neutral-950 text-neutral-100 antialiased selection:bg-emerald-500/30 selection:text-emerald-200;
+    @apply bg-neutral-950 text-neutral-100 antialiased selection:bg-emerald-500/30 selection:text-emerald-200 transition-colors duration-200;
   }
 }
 
@@ -61,3 +109,262 @@
   mask-composite: exclude;
   pointer-events: none;
 }
+
+/* -------------------------------------------------------------------------- */
+/* SEPIA THEME (Warm Reading Palette for Zero Eye Strain)                    */
+/* -------------------------------------------------------------------------- */
+html[data-theme="sepia"] body,
+html[data-theme="sepia"] .bg-neutral-950 {
+  background-color: #221d18 !important;
+  color: #f7eee2 !important;
+}
+
+html[data-theme="sepia"] header,
+html[data-theme="sepia"] footer,
+html[data-theme="sepia"] .bg-neutral-950\/80,
+html[data-theme="sepia"] .bg-neutral-950\/90 {
+  background-color: rgba(34, 29, 24, 0.9) !important;
+  border-color: #4a3e35 !important;
+}
+
+html[data-theme="sepia"] .bg-neutral-900,
+html[data-theme="sepia"] .bg-neutral-900\/90,
+html[data-theme="sepia"] .bg-neutral-900\/80,
+html[data-theme="sepia"] .bg-neutral-900\/60,
+html[data-theme="sepia"] .bg-neutral-900\/50,
+html[data-theme="sepia"] .bg-neutral-900\/40 {
+  background-color: #2c2520 !important;
+}
+
+html[data-theme="sepia"] .bg-neutral-800,
+html[data-theme="sepia"] .bg-neutral-800\/90,
+html[data-theme="sepia"] .bg-neutral-800\/80,
+html[data-theme="sepia"] .bg-neutral-800\/60,
+html[data-theme="sepia"] .bg-neutral-800\/50,
+html[data-theme="sepia"] .bg-neutral-800\/40 {
+  background-color: #383029 !important;
+}
+
+html[data-theme="sepia"] .border-neutral-900,
+html[data-theme="sepia"] .border-neutral-800,
+html[data-theme="sepia"] .border-neutral-800\/80,
+html[data-theme="sepia"] .border-neutral-800\/50,
+html[data-theme="sepia"] .border-neutral-700 {
+  border-color: #4a3e35 !important;
+}
+
+html[data-theme="sepia"] .text-white,
+html[data-theme="sepia"] .text-neutral-100 {
+  color: #faf3ea !important;
+}
+
+html[data-theme="sepia"] .text-neutral-200,
+html[data-theme="sepia"] .text-neutral-300 {
+  color: #ebdcca !important;
+}
+
+html[data-theme="sepia"] .text-neutral-400 {
+  color: #d6c6b2 !important;
+}
+
+html[data-theme="sepia"] .text-neutral-500 {
+  color: #9c8975 !important;
+}
+
+html[data-theme="sepia"] .text-neutral-600 {
+  color: #7d6e5d !important;
+}
+
+html[data-theme="sepia"] .glass-panel {
+  background: rgba(44, 37, 32, 0.88) !important;
+  border-color: #4a3e35 !important;
+}
+
+html[data-theme="sepia"] input,
+html[data-theme="sepia"] select,
+html[data-theme="sepia"] textarea {
+  background-color: #1a1613 !important;
+  color: #f7eee2 !important;
+  border-color: #4a3e35 !important;
+}
+
+html[data-theme="sepia"] ::-webkit-scrollbar-track {
+  background: #221d18 !important;
+}
+
+html[data-theme="sepia"] ::-webkit-scrollbar-thumb {
+  background: #4a3e35 !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* SOLARIZED DARK THEME (Precision Ethan Schoonover Dark)                    */
+/* -------------------------------------------------------------------------- */
+html[data-theme="solarized-dark"] body,
+html[data-theme="solarized-dark"] .bg-neutral-950 {
+  background-color: #002b36 !important;
+  color: #93a1a1 !important;
+}
+
+html[data-theme="solarized-dark"] header,
+html[data-theme="solarized-dark"] footer,
+html[data-theme="solarized-dark"] .bg-neutral-950\/80,
+html[data-theme="solarized-dark"] .bg-neutral-950\/90 {
+  background-color: rgba(0, 43, 54, 0.9) !important;
+  border-color: #0e4c5b !important;
+}
+
+html[data-theme="solarized-dark"] .bg-neutral-900,
+html[data-theme="solarized-dark"] .bg-neutral-900\/90,
+html[data-theme="solarized-dark"] .bg-neutral-900\/80,
+html[data-theme="solarized-dark"] .bg-neutral-900\/60,
+html[data-theme="solarized-dark"] .bg-neutral-900\/50,
+html[data-theme="solarized-dark"] .bg-neutral-900\/40 {
+  background-color: #073642 !important;
+}
+
+html[data-theme="solarized-dark"] .bg-neutral-800,
+html[data-theme="solarized-dark"] .bg-neutral-800\/90,
+html[data-theme="solarized-dark"] .bg-neutral-800\/80,
+html[data-theme="solarized-dark"] .bg-neutral-800\/60,
+html[data-theme="solarized-dark"] .bg-neutral-800\/50,
+html[data-theme="solarized-dark"] .bg-neutral-800\/40 {
+  background-color: #0d4452 !important;
+}
+
+html[data-theme="solarized-dark"] .border-neutral-900,
+html[data-theme="solarized-dark"] .border-neutral-800,
+html[data-theme="solarized-dark"] .border-neutral-800\/80,
+html[data-theme="solarized-dark"] .border-neutral-800\/50,
+html[data-theme="solarized-dark"] .border-neutral-700 {
+  border-color: #0e4c5b !important;
+}
+
+html[data-theme="solarized-dark"] .text-white,
+html[data-theme="solarized-dark"] .text-neutral-100 {
+  color: #fdf6e3 !important;
+}
+
+html[data-theme="solarized-dark"] .text-neutral-200,
+html[data-theme="solarized-dark"] .text-neutral-300 {
+  color: #eee8d5 !important;
+}
+
+html[data-theme="solarized-dark"] .text-neutral-400 {
+  color: #93a1a1 !important;
+}
+
+html[data-theme="solarized-dark"] .text-neutral-500 {
+  color: #657b83 !important;
+}
+
+html[data-theme="solarized-dark"] .text-neutral-600 {
+  color: #586e75 !important;
+}
+
+html[data-theme="solarized-dark"] .glass-panel {
+  background: rgba(7, 54, 66, 0.88) !important;
+  border-color: #0e4c5b !important;
+}
+
+html[data-theme="solarized-dark"] input,
+html[data-theme="solarized-dark"] select,
+html[data-theme="solarized-dark"] textarea {
+  background-color: #00212b !important;
+  color: #fdf6e3 !important;
+  border-color: #0e4c5b !important;
+}
+
+html[data-theme="solarized-dark"] ::-webkit-scrollbar-track {
+  background: #002b36 !important;
+}
+
+html[data-theme="solarized-dark"] ::-webkit-scrollbar-thumb {
+  background: #0e4c5b !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* SOLARIZED LIGHT THEME (Parchment Scientific Readability)                  */
+/* -------------------------------------------------------------------------- */
+html[data-theme="solarized-light"] body,
+html[data-theme="solarized-light"] .bg-neutral-950 {
+  background-color: #fdf6e3 !important;
+  color: #586e75 !important;
+}
+
+html[data-theme="solarized-light"] header,
+html[data-theme="solarized-light"] footer,
+html[data-theme="solarized-light"] .bg-neutral-950\/80,
+html[data-theme="solarized-light"] .bg-neutral-950\/90 {
+  background-color: rgba(253, 246, 227, 0.95) !important;
+  border-color: #d3cbb4 !important;
+}
+
+html[data-theme="solarized-light"] .bg-neutral-900,
+html[data-theme="solarized-light"] .bg-neutral-900\/90,
+html[data-theme="solarized-light"] .bg-neutral-900\/80,
+html[data-theme="solarized-light"] .bg-neutral-900\/60,
+html[data-theme="solarized-light"] .bg-neutral-900\/50,
+html[data-theme="solarized-light"] .bg-neutral-900\/40 {
+  background-color: #eee8d5 !important;
+}
+
+html[data-theme="solarized-light"] .bg-neutral-800,
+html[data-theme="solarized-light"] .bg-neutral-800\/90,
+html[data-theme="solarized-light"] .bg-neutral-800\/80,
+html[data-theme="solarized-light"] .bg-neutral-800\/60,
+html[data-theme="solarized-light"] .bg-neutral-800\/50,
+html[data-theme="solarized-light"] .bg-neutral-800\/40 {
+  background-color: #e2dbca !important;
+}
+
+html[data-theme="solarized-light"] .border-neutral-900,
+html[data-theme="solarized-light"] .border-neutral-800,
+html[data-theme="solarized-light"] .border-neutral-800\/80,
+html[data-theme="solarized-light"] .border-neutral-800\/50,
+html[data-theme="solarized-light"] .border-neutral-700 {
+  border-color: #d3cbb4 !important;
+}
+
+html[data-theme="solarized-light"] .text-white,
+html[data-theme="solarized-light"] .text-neutral-100 {
+  color: #073642 !important;
+}
+
+html[data-theme="solarized-light"] .text-neutral-200,
+html[data-theme="solarized-light"] .text-neutral-300 {
+  color: #002b36 !important;
+}
+
+html[data-theme="solarized-light"] .text-neutral-400 {
+  color: #586e75 !important;
+}
+
+html[data-theme="solarized-light"] .text-neutral-500 {
+  color: #839496 !important;
+}
+
+html[data-theme="solarized-light"] .text-neutral-600 {
+  color: #93a1a1 !important;
+}
+
+html[data-theme="solarized-light"] .glass-panel {
+  background: rgba(238, 232, 213, 0.92) !important;
+  border-color: #d3cbb4 !important;
+}
+
+html[data-theme="solarized-light"] input,
+html[data-theme="solarized-light"] select,
+html[data-theme="solarized-light"] textarea {
+  background-color: #fdf6e3 !important;
+  color: #073642 !important;
+  border-color: #d3cbb4 !important;
+}
+
+html[data-theme="solarized-light"] ::-webkit-scrollbar-track {
+  background: #fdf6e3 !important;
+}
+
+html[data-theme="solarized-light"] ::-webkit-scrollbar-thumb {
+  background: #d3cbb4 !important;
+}
+

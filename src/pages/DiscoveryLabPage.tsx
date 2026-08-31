@@ -210,7 +210,7 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
     setKeyTestLoading(null);
     setKeyTestResult(prev => ({
       ...prev,
-      [num]: res.valid ? "✓ Valid key (gemini-1.5-flash active)" : `✗ ${res.error}`
+      [num]: res.valid ? `✓ Valid key (${res.model || 'gemini-2.5-flash'} active)` : `✗ ${res.error}`
     }));
   };
 

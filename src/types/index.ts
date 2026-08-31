@@ -85,6 +85,7 @@ export interface AppConfig {
   gemini_api_key_1?: string;
   gemini_api_key_2?: string;
   gemini_api_key_3?: string;
+  theme?: 'dark' | 'sepia' | 'solarized-dark' | 'solarized-light';
 }
 
 export type SelectionMode = 'BALANCED' | 'DISCOVERY' | 'DEEP_DIVE' | 'REVISIT_UNUSED' | 'CURRENT_EMERGING' | 'RANDOM';

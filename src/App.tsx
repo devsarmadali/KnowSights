@@ -6,7 +6,7 @@ import {
   AppConfig 
 } from './types';
 import { api, loadConfig, saveConfig, normalizeStats, normalizeBatch } from './services/api';
-import { Header } from './components/Header';
+import { Header, ThemeOption } from './components/Header';
 import { DailyMixPage } from './pages/DailyMixPage';
 import { BrowsePage } from './pages/BrowsePage';
 import { DiscoveryLabPage } from './pages/DiscoveryLabPage';
@@ -27,6 +27,27 @@ export const App: React.FC = () => {
   const [currentBatch, setCurrentBatch] = useState<DailyBatch | null>(null);
   const [stats, setStats] = useState<SystemStats | null>(null);
   const [subjectsList, setSubjectsList] = useState<string[]>([]);
+  
+  // Theme State (dark | sepia | solarized-dark | solarized-light)
+  const [theme, setTheme] = useState<ThemeOption>(() => {
+    const local = localStorage.getItem('knowsights_theme') as ThemeOption;
+    if (local && ['dark', 'sepia', 'solarized-dark', 'solarized-light'].includes(local)) {
+      return local;
+    }
+    return (loadConfig().theme as ThemeOption) || 'dark';
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('knowsights_theme', theme);
+  }, [theme]);
+
+  const handleThemeChange = (newTheme: ThemeOption) => {
+    setTheme(newTheme);
+    const updated = { ...config, theme: newTheme };
+    setConfig(updated);
+    saveConfig(updated);
+  };
   
   // Mixer Controls State
   const [mode, setMode] = useState<SelectionMode>((config.default_mode as SelectionMode) || 'BALANCED');
@@ -207,6 +228,8 @@ export const App: React.FC = () => {
         setActiveTab={setActiveTab}
         stats={stats}
         spreadsheetId={SPREADSHEET_ID}
+        currentTheme={theme}
+        onThemeChange={handleThemeChange}
       />
 
       {/* Main Content Area */}
@@ -254,6 +277,7 @@ export const App: React.FC = () => {
                 setConfig={setConfig}
                 onRefreshAll={initApp}
                 spreadsheetId={SPREADSHEET_ID}
+                onThemeChange={handleThemeChange}
               />
             )}
           </>
