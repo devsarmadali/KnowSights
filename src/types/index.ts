@@ -94,7 +94,7 @@ export interface DiscoverySource {
   name: string;
   type: string;
   category: string;
-  group: 'archaeology' | 'science' | 'history' | 'academic' | 'curiosities';
+  group: 'archaeology' | 'science' | 'history' | 'academic' | 'curiosities' | 'space' | 'ai-tech' | 'data-stats' | 'facts-mysteries' | 'deep-science';
   bestFor: string;
   officialUrl: string;
   feedUrl: string;
@@ -146,7 +146,7 @@ export interface InstitutionalRepository {
   tier: 'Tier 1 — Primary Evidence' | 'Tier 2 — Scholarly/Reference' | 'Tier 3 — Discovery/Archive';
   officialUrl: string;
   searchPattern?: string;
-  group: 'history-research' | 'archaeology-ancient' | 'military-war' | 'south-asian-islamic' | 'science-verification';
+  group: 'history-research' | 'archaeology-ancient' | 'military-war' | 'south-asian-islamic' | 'science-verification' | 'economics-finance' | 'credit-ratings' | 'trade-energy' | 'geopolitics-strategy' | 'health-governance';
   groupLabel: string;
   subjectMapping: string;
   topicFamily: string;
