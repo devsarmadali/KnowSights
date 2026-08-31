@@ -1031,6 +1031,7 @@ export function transformArticleToIdea(
     signature_format: format,
     subject: source.subjectMapping,
     topic_family: source.topicFamily,
+    source_id: source.id,
     source_name: source.name,
     source_url: article.link || source.officialUrl,
     source_article_title: cleanText(article.title),
@@ -1041,6 +1042,8 @@ export function transformArticleToIdea(
     freshness_class: 'Recent Publication',
     visualization_direction: `Incorporate high-resolution publication imagery, historical timeline maps, 3D structural diagrams, and animated flowcharts demonstrating the core findings of ${source.name}.`,
     source_family_guidance: `Primary publication: ${source.name} (${source.officialUrl}). Refer to original reporting for verified field data, artifact measurements, and scholarly researcher commentary.`,
-    added_to_pool: false
+    added_to_pool: false,
+    generated_at: new Date().toISOString(),
+    generated_timestamp: Date.now()
   };
 }

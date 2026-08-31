@@ -173,6 +173,7 @@ Return a strictly valid JSON object matching this schema with NO markdown code f
           signature_format: parsed.signature_format || source.defaultFormat || 'SF04 — Case Study Breakdown',
           subject: source.subjectMapping,
           topic_family: source.topicFamily,
+          source_id: source.id,
           source_name: source.name,
           source_url: article.link || source.officialUrl,
           source_article_title: article.title,
@@ -183,7 +184,9 @@ Return a strictly valid JSON object matching this schema with NO markdown code f
           freshness_class: 'Recent Publication (AI Curated)',
           visualization_direction: parsed.visualization_direction || `Incorporate archival scans, 3D maps, and visual motion graphics from ${source.name}.`,
           source_family_guidance: `Primary publication: ${source.name} (${source.officialUrl}). AI analyzed (${model}) from live publication stream.`,
-          added_to_pool: false
+          added_to_pool: false,
+          generated_at: new Date().toISOString(),
+          generated_timestamp: Date.now()
         };
 
         return { idea: generated, keyUsedIndex: index };

@@ -8,11 +8,14 @@ import {
   IdeaBrief,
   DiscoverySource,
   DiscoveryArticle,
-  GeneratedTopicIdea
+  GeneratedTopicIdea,
+  ResearchCycleState
 } from '../types';
 
 const STORAGE_KEY_CONFIG = 'knowsights_config_v2';
 const STORAGE_KEY_LOCAL_POOL = 'knowsights_local_pool_v2';
+const STORAGE_KEY_GENERATED_IDEAS = 'knowsights_generated_ideas_v1';
+const STORAGE_KEY_RESEARCH_CYCLE = 'knowsights_research_cycle_v1';
 
 export const CLOUDFLARE_EDGE_API_URL = 'https://knowsights-api.excisetools.workers.dev';
 export const GOOGLE_SHEETS_FALLBACK_URL = 'https://script.google.com/macros/s/AKfycbzrJo3mT73UlHp5EbXwzteWdebFzMQunRIV0YY_44j_OvVhDhXRcvFqMieE2FrsL4kK_g/exec';
@@ -166,6 +169,80 @@ export function loadConfig(): AppConfig {
 
 export function saveConfig(config: AppConfig): void {
   localStorage.setItem(STORAGE_KEY_CONFIG, JSON.stringify(config));
+}
+
+// Load / Save Generated Topic Ideas across reloads
+export function loadGeneratedIdeas(): GeneratedTopicIdea[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_GENERATED_IDEAS);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch (e) {
+    console.error("Error reading generated ideas from storage", e);
+  }
+  return [];
+}
+
+export function saveGeneratedIdeas(ideas: GeneratedTopicIdea[]): void {
+  try {
+    localStorage.setItem(STORAGE_KEY_GENERATED_IDEAS, JSON.stringify(ideas));
+  } catch (e) {
+    console.error("Error saving generated ideas to storage", e);
+  }
+}
+
+export function clearGeneratedIdeas(): void {
+  try {
+    localStorage.removeItem(STORAGE_KEY_GENERATED_IDEAS);
+  } catch (e) {
+    console.error("Error clearing generated ideas", e);
+  }
+}
+
+// Load / Save / Reset Research Cycle State (for 2-resource batching)
+export function loadResearchCycle(): ResearchCycleState {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_RESEARCH_CYCLE);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && Array.isArray(parsed.researchedSourceIds)) {
+        return {
+          researchedSourceIds: parsed.researchedSourceIds,
+          lastResetAt: parsed.lastResetAt || new Date().toISOString(),
+          lastRunAt: parsed.lastRunAt || undefined,
+          completedCycles: typeof parsed.completedCycles === 'number' ? parsed.completedCycles : 0
+        };
+      }
+    }
+  } catch (e) {
+    console.error("Error reading research cycle state", e);
+  }
+  return {
+    researchedSourceIds: [],
+    lastResetAt: new Date().toISOString(),
+    completedCycles: 0
+  };
+}
+
+export function saveResearchCycle(state: ResearchCycleState): void {
+  try {
+    localStorage.setItem(STORAGE_KEY_RESEARCH_CYCLE, JSON.stringify(state));
+  } catch (e) {
+    console.error("Error saving research cycle state", e);
+  }
+}
+
+export function resetResearchCycle(): ResearchCycleState {
+  const current = loadResearchCycle();
+  const nextState: ResearchCycleState = {
+    researchedSourceIds: [],
+    lastResetAt: new Date().toISOString(),
+    completedCycles: current.completedCycles + 1
+  };
+  saveResearchCycle(nextState);
+  return nextState;
 }
 
 // Built-in Seed Production Pool for offline fallback/testing

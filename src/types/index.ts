@@ -125,6 +125,7 @@ export interface GeneratedTopicIdea {
   signature_format: string;
   subject: string;
   topic_family: string;
+  source_id?: string;
   source_name: string;
   source_url: string;
   source_article_title: string;
@@ -136,6 +137,15 @@ export interface GeneratedTopicIdea {
   visualization_direction: string;
   source_family_guidance: string;
   added_to_pool?: boolean;
+  generated_at?: string;
+  generated_timestamp?: number;
+}
+
+export interface ResearchCycleState {
+  researchedSourceIds: string[];
+  lastResetAt: string;
+  lastRunAt?: string;
+  completedCycles: number;
 }
 
 export interface InstitutionalRepository {

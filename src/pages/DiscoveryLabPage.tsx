@@ -37,7 +37,10 @@ import {
   Grid,
   LayoutGrid,
   Tag,
-  FolderOpen
+  FolderOpen,
+  Clock,
+  RotateCcw,
+  Trash2
 } from 'lucide-react';
 import { 
   DISCOVERY_SOURCES, 
@@ -54,14 +57,72 @@ import {
   DiscoveryArticle, 
   GeneratedTopicIdea,
   InstitutionalRepository,
-  AppConfig 
+  AppConfig,
+  ResearchCycleState
 } from '../types';
-import { api, loadConfig, saveConfig } from '../services/api';
+import { 
+  api, 
+  loadConfig, 
+  saveConfig, 
+  loadGeneratedIdeas, 
+  saveGeneratedIdeas, 
+  clearGeneratedIdeas,
+  loadResearchCycle,
+  saveResearchCycle,
+  resetResearchCycle
+} from '../services/api';
 import { 
   getConfiguredGeminiKeys, 
   generateIdeaWithGeminiRotation,
   testGeminiApiKey 
 } from '../services/gemini';
+
+// Helper to format research timestamps and determine dynamic freshness status
+function formatGeneratedTime(timestamp?: number | string): { fullDate: string; relative: string; freshness: 'fresh' | 'recent' | 'saved' } {
+  if (!timestamp) {
+    return { fullDate: 'Earlier', relative: 'Saved', freshness: 'saved' };
+  }
+  const date = typeof timestamp === 'number' ? new Date(timestamp) : new Date(timestamp);
+  if (isNaN(date.getTime())) {
+    return { fullDate: 'Earlier', relative: 'Saved', freshness: 'saved' };
+  }
+  const now = Date.now();
+  const diffMs = Math.max(0, now - date.getTime());
+  const diffMinutes = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMinutes / 60);
+  const diffDays = Math.floor(diffHours / 24);
+
+  const fullDate = date.toLocaleString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true
+  });
+
+  let relative = 'Just now';
+  let freshness: 'fresh' | 'recent' | 'saved' = 'fresh';
+
+  if (diffMinutes < 1) {
+    relative = 'Just now';
+    freshness = 'fresh';
+  } else if (diffMinutes < 60) {
+    relative = `${diffMinutes}m ago`;
+    freshness = 'fresh';
+  } else if (diffHours < 24) {
+    relative = `${diffHours}h ago`;
+    freshness = 'recent';
+  } else if (diffDays === 1) {
+    relative = 'Yesterday';
+    freshness = 'saved';
+  } else {
+    relative = `${diffDays}d ago`;
+    freshness = 'saved';
+  }
+
+  return { fullDate, relative, freshness };
+}
 
 interface DiscoveryLabPageProps {
   onRefreshStats: () => Promise<void>;
@@ -101,10 +162,11 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
   const [keyTestLoading, setKeyTestLoading] = useState<number | null>(null);
   const [keyTestResult, setKeyTestResult] = useState<{ [key: number]: string }>({});
 
-  // Generation & Results State
+  // Generation, Persistent Ideas & Research Cycle State
   const [isFetching, setIsFetching] = useState<boolean>(false);
   const [fetchProgress, setFetchProgress] = useState<{ current: number; total: number; sourceName: string; aiActive?: boolean } | null>(null);
-  const [generatedIdeas, setGeneratedIdeas] = useState<GeneratedTopicIdea[]>([]);
+  const [generatedIdeas, setGeneratedIdeas] = useState<GeneratedTopicIdea[]>(() => loadGeneratedIdeas());
+  const [cycleState, setCycleState] = useState<ResearchCycleState>(() => loadResearchCycle());
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [expandedQuestionsId, setExpandedQuestionsId] = useState<string | null>(null);
   const [savingPoolId, setSavingPoolId] = useState<string | null>(null);
@@ -112,6 +174,26 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
   // Active Gemini keys count
   const activeGeminiKeys = getConfiguredGeminiKeys(config);
   const isAiActive = activeGeminiKeys.length > 0;
+
+  // Active selection & Round-robin batch metrics
+  const activeSelectedSources = useMemo(() => {
+    return DISCOVERY_SOURCES.filter(s => selectedSourceIds.includes(s.id));
+  }, [selectedSourceIds]);
+
+  const unresearchedInActive = useMemo(() => {
+    return activeSelectedSources.filter(s => !cycleState.researchedSourceIds.includes(s.id));
+  }, [activeSelectedSources, cycleState.researchedSourceIds]);
+
+  const nextTwoQueued = useMemo(() => {
+    if (unresearchedInActive.length > 0) {
+      return unresearchedInActive.slice(0, 2);
+    }
+    return activeSelectedSources.slice(0, 2);
+  }, [unresearchedInActive, activeSelectedSources]);
+
+  const totalBatches = Math.max(1, Math.ceil(activeSelectedSources.length / 2));
+  const completedInActive = activeSelectedSources.length - unresearchedInActive.length;
+  const currentBatchNumber = unresearchedInActive.length === 0 ? 1 : Math.min(totalBatches, Math.floor(completedInActive / 2) + 1);
 
   // Group filter handler (Generator)
   const handleGroupSelect = (groupId: string) => {
@@ -214,11 +296,42 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
     }));
   };
 
-  // Main Fetch & Idea Generation Engine with Multi-Key Gemini Rotation
+  // Main Fetch & Idea Generation Engine with Multi-Key Gemini Rotation & 2-Resource Throttled Loop
   const handleFetchAndGenerateCustom = async (sourcesToUse?: DiscoverySource[]) => {
-    const activeSources = sourcesToUse || DISCOVERY_SOURCES.filter(s => selectedSourceIds.includes(s.id));
-    if (activeSources.length === 0) {
-      showToast("Please select at least one publication source", 'error');
+    let targetSources: DiscoverySource[] = [];
+    const activeSelected = DISCOVERY_SOURCES.filter(s => selectedSourceIds.includes(s.id));
+
+    if (sourcesToUse && sourcesToUse.length <= 2) {
+      // Direct explicit scan of 1 or 2 specific sources (e.g. from Publications Directory or single scan)
+      targetSources = sourcesToUse;
+    } else {
+      // Multi-resource batch run: Throttled to 2 resources at a time with round-robin cycle loop
+      const pool = (sourcesToUse && sourcesToUse.length > 0) ? sourcesToUse : activeSelected;
+      if (pool.length === 0) {
+        showToast("Please select at least one publication source", 'error');
+        return;
+      }
+
+      if (pool.length <= 2) {
+        targetSources = pool;
+      } else {
+        // Find un-researched sources from this pool in the current cycle
+        const unresearched = pool.filter(s => !cycleState.researchedSourceIds.includes(s.id));
+        
+        if (unresearched.length === 0) {
+          // All active sources have been researched in current cycle -> loop back to beginning
+          const freshCycle = resetResearchCycle();
+          setCycleState(freshCycle);
+          targetSources = pool.slice(0, 2);
+          showToast(`Research cycle complete (${pool.length} sources researched)! Looping back to Batch 1.`, 'info');
+        } else {
+          targetSources = unresearched.slice(0, 2);
+        }
+      }
+    }
+
+    if (targetSources.length === 0) {
+      showToast("No sources available to scan", 'info');
       return;
     }
 
@@ -229,18 +342,19 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
 
     setFetchProgress({ 
       current: 0, 
-      total: activeSources.length, 
-      sourceName: 'Initializing Feeds...', 
+      total: targetSources.length, 
+      sourceName: `Scanning 2 resources: ${targetSources.map(s => s.name).join(' & ')}...`, 
       aiActive: useAi 
     });
-    const allGenerated: GeneratedTopicIdea[] = [];
+
+    const newlyGeneratedForBatch: GeneratedTopicIdea[] = [];
 
     try {
-      for (let i = 0; i < activeSources.length; i++) {
-        const source = activeSources[i];
+      for (let i = 0; i < targetSources.length; i++) {
+        const source = targetSources[i];
         setFetchProgress({
           current: i + 1,
-          total: activeSources.length,
+          total: targetSources.length,
           sourceName: source.name,
           aiActive: useAi
         });
@@ -268,18 +382,51 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
               idea = transformArticleToIdea(article, source);
             }
 
-            allGenerated.push(idea);
+            idea.source_id = source.id;
+            idea.generated_at = new Date().toISOString();
+            idea.generated_timestamp = Date.now();
+
+            newlyGeneratedForBatch.push(idea);
           }
         } catch (err) {
           console.warn(`Error fetching ${source.name}:`, err);
         }
       }
 
-      setGeneratedIdeas(allGenerated);
-      if (allGenerated.length > 0) {
-        showToast(`Generated ${allGenerated.length} fresh topic ideas across categorized sections!`, 'success');
+      // 1. Update and persist Research Cycle State
+      const targetSourceIds = targetSources.map(s => s.id);
+      const updatedResearchedIds = Array.from(new Set([...cycleState.researchedSourceIds, ...targetSourceIds]));
+      const nextCycleState: ResearchCycleState = {
+        ...cycleState,
+        researchedSourceIds: updatedResearchedIds,
+        lastRunAt: new Date().toISOString()
+      };
+      setCycleState(nextCycleState);
+      saveResearchCycle(nextCycleState);
+
+      // 2. Incremental Non-Destructive Merging:
+      // Keep topics from other sources, replace only topics originating from the currently researched sources
+      const processedIds = new Set(targetSources.map(s => s.id));
+      const processedNames = new Set(targetSources.map(s => s.name));
+
+      setGeneratedIdeas(prevIdeas => {
+        const preserved = prevIdeas.filter(it => {
+          if (it.source_id && processedIds.has(it.source_id)) return false;
+          if (!it.source_id && processedNames.has(it.source_name)) return false;
+          return true;
+        });
+        const merged = [...newlyGeneratedForBatch, ...preserved];
+        saveGeneratedIdeas(merged);
+        return merged;
+      });
+
+      if (newlyGeneratedForBatch.length > 0) {
+        showToast(
+          `Researched 2 sources (${targetSources.map(s => s.name).join(' & ')}). Generated ${newlyGeneratedForBatch.length} fresh topic ideas!`,
+          'success'
+        );
       } else {
-        showToast("No new articles found matching criteria", 'info');
+        showToast(`Scanned ${targetSources.map(s => s.name).join(' & ')}, no new articles found.`, 'info');
       }
     } catch (err: any) {
       showToast(`Generation error: ${err.message}`, 'error');
@@ -290,6 +437,22 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
   };
 
   const handleFetchAndGenerate = () => handleFetchAndGenerateCustom();
+
+  // Reset Research Cycle Loop to start
+  const handleResetCycle = () => {
+    const freshCycle = resetResearchCycle();
+    setCycleState(freshCycle);
+    showToast("Research cycle reset to beginning (Batch 1).", 'info');
+  };
+
+  // Clear all saved generated ideas
+  const handleClearGenerated = () => {
+    if (window.confirm("Are you sure you want to clear all saved generated research topics?")) {
+      clearGeneratedIdeas();
+      setGeneratedIdeas([]);
+      showToast("Cleared all generated research topics.", 'info');
+    }
+  };
 
   // Copy Full Video Scriptwriting Prompt to Clipboard
   const handleCopyPrompt = async (idea: GeneratedTopicIdea) => {
@@ -349,9 +512,11 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
     try {
       const res = await api.addProductionIdea(idea);
       if (res && res.success) {
-        setGeneratedIdeas(prev => 
-          prev.map(it => it.id === idea.id ? { ...it, added_to_pool: true } : it)
-        );
+        setGeneratedIdeas(prev => {
+          const updated = prev.map(it => it.id === idea.id ? { ...it, added_to_pool: true } : it);
+          saveGeneratedIdeas(updated);
+          return updated;
+        });
         showToast(`Added '${idea.video_idea}' to Production Pool as ${res.idea_id}!`, 'success');
         await onRefreshStats();
       } else {
@@ -418,6 +583,7 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
     const isQuestionsExpanded = expandedQuestionsId === idea.id;
     const isCopied = copiedId === idea.id;
     const isSaving = savingPoolId === idea.id;
+    const timeInfo = formatGeneratedTime(idea.generated_timestamp || idea.generated_at);
 
     return (
       <div
@@ -428,9 +594,35 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
             : 'border-neutral-800/90 hover:border-neutral-700 bg-neutral-900/50'
         }`}
       >
-        {/* Card Header: Source Pill & Format Badge */}
+        {/* Card Header: Timestamp & Source Pill */}
         <div className="space-y-3">
-          <div className="flex items-center justify-between gap-2 flex-wrap">
+          {/* Freshness & Generation Timestamp Bar */}
+          <div className="flex items-center justify-between text-[11px] font-mono border-b border-neutral-800/60 pb-2.5">
+            <div className="flex items-center space-x-1.5" title={`Generated on ${timeInfo.fullDate}`}>
+              <Clock className="w-3.5 h-3.5 text-neutral-500" />
+              <span className="text-neutral-300 font-medium">Generated {timeInfo.relative}</span>
+              <span className="text-neutral-600 hidden sm:inline">({timeInfo.fullDate})</span>
+            </div>
+
+            {timeInfo.freshness === 'fresh' && (
+              <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[10px] font-bold">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping mr-0.5"></span>
+                <span>Fresh</span>
+              </span>
+            )}
+            {timeInfo.freshness === 'recent' && (
+              <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 text-[10px] font-semibold">
+                <span>Recent</span>
+              </span>
+            )}
+            {timeInfo.freshness === 'saved' && (
+              <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-neutral-800 border border-neutral-700 text-neutral-400 text-[10px]">
+                <span>Saved</span>
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center justify-between gap-2 flex-wrap pt-0.5">
             <a
               href={idea.source_url}
               target="_blank"
@@ -692,16 +884,17 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
                   onClick={handleFetchAndGenerate}
                   disabled={isFetching}
                   className="inline-flex items-center justify-center space-x-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-semibold text-sm shadow-lg shadow-emerald-950/60 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  title="Research next 2 publication resources in the round-robin cycle"
                 >
                   {isFetching ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Scanning Feeds...</span>
+                      <span>Scanning 2 Feeds...</span>
                     </>
                   ) : (
                     <>
                       <Sparkles className="w-4 h-4" />
-                      <span>Fetch & Generate</span>
+                      <span>Fetch Next 2 Sources (Batch {currentBatchNumber}/{totalBatches})</span>
                     </>
                   )}
                 </button>
@@ -742,6 +935,48 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
                     </button>
                   );
                 })}
+              </div>
+
+              {/* 2-Resource Round-Robin Research Cycle Status Bar */}
+              <div className="p-3.5 rounded-2xl bg-neutral-950/80 border border-neutral-800/80 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div className="flex items-center space-x-2.5">
+                  <div className="w-7 h-7 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                    <RotateCcw className="w-3.5 h-3.5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-white font-bold font-mono">
+                        Cycle Progress: {completedInActive} of {activeSelectedSources.length} sources researched
+                      </span>
+                      {cycleState.completedCycles > 0 && (
+                        <span className="px-2 py-0.2 rounded-md bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 text-[10px] font-mono font-bold">
+                          Loop #{cycleState.completedCycles + 1}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-neutral-400">
+                      Throttled 2-resource batching ensures high Gemini quality without rate limits.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-3 text-xs">
+                  {nextTwoQueued.length > 0 && (
+                    <div className="hidden md:flex items-center space-x-1.5 font-mono text-[11px] bg-neutral-900 px-3 py-1.5 rounded-xl border border-neutral-800">
+                      <span className="text-neutral-500">Next batch:</span>
+                      <span className="text-emerald-400 font-semibold">{nextTwoQueued.map(s => s.name).join(' & ')}</span>
+                    </div>
+                  )}
+
+                  <button
+                    onClick={handleResetCycle}
+                    className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 hover:border-neutral-700 text-neutral-300 hover:text-white font-mono text-[11px] transition-all cursor-pointer"
+                    title="Reset cycle state to start from source #1 again"
+                  >
+                    <RotateCcw className="w-3 h-3 text-neutral-400" />
+                    <span>Reset Cycle</span>
+                  </button>
+                </div>
               </div>
             </>
           )}
@@ -941,10 +1176,17 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
                         className="glass-panel glass-panel-hover p-5 rounded-3xl border border-neutral-800/90 hover:border-neutral-700 bg-neutral-900/60 flex flex-col justify-between space-y-4"
                       >
                         <div className="space-y-2.5">
-                          <div className="flex items-center justify-between">
-                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-neutral-800 text-emerald-300 border border-neutral-700">
-                              {source.type}
-                            </span>
+                          <div className="flex items-center justify-between flex-wrap gap-1">
+                            <div className="flex items-center space-x-1.5">
+                              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-neutral-800 text-emerald-300 border border-neutral-700">
+                                {source.type}
+                              </span>
+                              {cycleState.researchedSourceIds.includes(source.id) && (
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                                  ✓ Researched
+                                </span>
+                              )}
+                            </div>
                             <span className="text-[11px] font-mono text-neutral-500">
                               {source.category}
                             </span>
@@ -1234,9 +1476,14 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1">
-                          <div className="flex items-center space-x-2">
+                          <div className="flex items-center space-x-2 flex-wrap gap-1">
                             <span className={`w-2 h-2 rounded-full ${isSelected ? 'bg-emerald-400' : 'bg-neutral-600'}`}></span>
                             <h4 className="text-xs font-bold text-white">{source.name}</h4>
+                            {cycleState.researchedSourceIds.includes(source.id) && (
+                              <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-semibold">
+                                ✓ Done
+                              </span>
+                            )}
                           </div>
                           <span className="text-[10px] font-mono text-neutral-400 block mt-0.5">
                             {source.category} • {source.type}
@@ -1316,17 +1563,35 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
             </div>
           )}
 
-          {/* Generated Cards Header with Display Toggle */}
+          {/* Generated Cards Header with Display Toggle & Clear Option */}
           <div className="flex items-center justify-between flex-wrap gap-3">
-            <div className="flex items-center space-x-2">
-              <Sparkles className="w-4 h-4 text-emerald-400" />
-              <h2 className="text-lg font-bold text-white">
-                Generated Research Topics ({generatedIdeas.length})
-              </h2>
+            <div className="space-y-1">
+              <div className="flex items-center space-x-2">
+                <Sparkles className="w-4 h-4 text-emerald-400" />
+                <h2 className="text-lg font-bold text-white">
+                  Generated Research Topics ({generatedIdeas.length})
+                </h2>
+              </div>
+              {cycleState.lastRunAt && (
+                <p className="text-[11px] text-neutral-400 font-mono flex items-center space-x-1.5">
+                  <Clock className="w-3 h-3 text-neutral-500" />
+                  <span>Last Research Run: {formatGeneratedTime(cycleState.lastRunAt).fullDate} ({formatGeneratedTime(cycleState.lastRunAt).relative})</span>
+                </p>
+              )}
             </div>
 
             {generatedIdeas.length > 0 && (
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center space-x-2 flex-wrap">
+                {/* Clear All Topics Button */}
+                <button
+                  onClick={handleClearGenerated}
+                  className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-neutral-900 hover:bg-rose-950/40 border border-neutral-800 hover:border-rose-800/50 text-neutral-400 hover:text-rose-300 text-xs font-mono transition-all cursor-pointer"
+                  title="Clear all generated topics from storage"
+                >
+                  <Trash2 className="w-3.5 h-3.5 text-neutral-500" />
+                  <span>Clear All ({generatedIdeas.length})</span>
+                </button>
+
                 {/* View Switcher: Categorized Sections vs Flat Grid */}
                 <div className="bg-neutral-900 p-1 rounded-xl border border-neutral-800 flex items-center space-x-1 text-xs">
                   <button
