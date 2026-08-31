@@ -171,13 +171,13 @@ export function saveConfig(config: AppConfig): void {
   localStorage.setItem(STORAGE_KEY_CONFIG, JSON.stringify(config));
 }
 
-// Load / Save Generated Topic Ideas across reloads
+// Load / Save Generated Topic Ideas across reloads (Strictly 4 topics max per phase)
 export function loadGeneratedIdeas(): GeneratedTopicIdea[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY_GENERATED_IDEAS);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed;
+      if (Array.isArray(parsed)) return parsed.slice(0, 4);
     }
   } catch (e) {
     console.error("Error reading generated ideas from storage", e);
@@ -187,7 +187,8 @@ export function loadGeneratedIdeas(): GeneratedTopicIdea[] {
 
 export function saveGeneratedIdeas(ideas: GeneratedTopicIdea[]): void {
   try {
-    localStorage.setItem(STORAGE_KEY_GENERATED_IDEAS, JSON.stringify(ideas));
+    const clamped = Array.isArray(ideas) ? ideas.slice(0, 4) : [];
+    localStorage.setItem(STORAGE_KEY_GENERATED_IDEAS, JSON.stringify(clamped));
   } catch (e) {
     console.error("Error saving generated ideas to storage", e);
   }
@@ -785,7 +786,7 @@ export function parseRssXmlToArticles(xmlText: string, source: DiscoverySource):
   }
 }
 
-export async function fetchSourceArticles(source: DiscoverySource, query?: string, limit: number = 6): Promise<DiscoveryArticle[]> {
+export async function fetchSourceArticles(source: DiscoverySource, query?: string, limit: number = 2): Promise<DiscoveryArticle[]> {
   let targetUrl = source.feedUrl;
   if (query && query.trim() && source.searchFeedPattern) {
     targetUrl = source.searchFeedPattern.replace('{query}', encodeURIComponent(query.trim()));
