@@ -296,16 +296,16 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
     }));
   };
 
-  // Main Fetch & Idea Generation Engine with Multi-Key Gemini Rotation & 2-Resource Throttled Loop
+  // Main Fetch & Idea Generation Engine: Strictly 2 Resources & Max 4 Topics per run
   const handleFetchAndGenerateCustom = async (sourcesToUse?: DiscoverySource[]) => {
     let targetSources: DiscoverySource[] = [];
     const activeSelected = DISCOVERY_SOURCES.filter(s => selectedSourceIds.includes(s.id));
 
     if (sourcesToUse && sourcesToUse.length <= 2) {
-      // Direct explicit scan of 1 or 2 specific sources (e.g. from Publications Directory or single scan)
-      targetSources = sourcesToUse;
+      // Direct explicit scan of 1 or 2 specific sources
+      targetSources = sourcesToUse.slice(0, 2);
     } else {
-      // Multi-resource batch run: Throttled to 2 resources at a time with round-robin cycle loop
+      // Multi-resource batch run: Strictly 2 resources per run with round-robin cycle loop
       const pool = (sourcesToUse && sourcesToUse.length > 0) ? sourcesToUse : activeSelected;
       if (pool.length === 0) {
         showToast("Please select at least one publication source", 'error');
@@ -313,7 +313,7 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
       }
 
       if (pool.length <= 2) {
-        targetSources = pool;
+        targetSources = pool.slice(0, 2);
       } else {
         // Find un-researched sources from this pool in the current cycle
         const unresearched = pool.filter(s => !cycleState.researchedSourceIds.includes(s.id));
@@ -329,6 +329,9 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
         }
       }
     }
+
+    // Strict safety cap: Never allow more than 2 resources in a single run
+    targetSources = targetSources.slice(0, 2);
 
     if (targetSources.length === 0) {
       showToast("No sources available to scan", 'info');
@@ -348,6 +351,7 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
     });
 
     const newlyGeneratedForBatch: GeneratedTopicIdea[] = [];
+    const articlesLimitPerSource = Math.min(2, Math.max(1, articlesPerSource || 2));
 
     try {
       for (let i = 0; i < targetSources.length; i++) {
@@ -360,13 +364,18 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
         });
 
         try {
-          const articles: DiscoveryArticle[] = await api.fetchSourceArticles(
+          const rawArticles: DiscoveryArticle[] = await api.fetchSourceArticles(
             source,
             searchQuery.trim() || undefined,
-            articlesPerSource
+            articlesLimitPerSource
           );
 
+          // Strictly take at most 2 articles per source to guarantee max 4 topics total
+          const articles = rawArticles.slice(0, 2);
+
           for (const article of articles) {
+            if (newlyGeneratedForBatch.length >= 4) break;
+
             let idea: GeneratedTopicIdea | null = null;
 
             // Tier 1: Try Gemini with 3-Key Auto-Rotation if keys exist
@@ -393,6 +402,9 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
         }
       }
 
+      // Hard cap: Exactly at most 4 topics in one run
+      const finalTopics = newlyGeneratedForBatch.slice(0, 4);
+
       // 1. Update and persist Research Cycle State
       const targetSourceIds = targetSources.map(s => s.id);
       const updatedResearchedIds = Array.from(new Set([...cycleState.researchedSourceIds, ...targetSourceIds]));
@@ -404,25 +416,13 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
       setCycleState(nextCycleState);
       saveResearchCycle(nextCycleState);
 
-      // 2. Incremental Non-Destructive Merging:
-      // Keep topics from other sources, replace only topics originating from the currently researched sources
-      const processedIds = new Set(targetSources.map(s => s.id));
-      const processedNames = new Set(targetSources.map(s => s.name));
+      // 2. Set and persist current run's 4 generated topics
+      setGeneratedIdeas(finalTopics);
+      saveGeneratedIdeas(finalTopics);
 
-      setGeneratedIdeas(prevIdeas => {
-        const preserved = prevIdeas.filter(it => {
-          if (it.source_id && processedIds.has(it.source_id)) return false;
-          if (!it.source_id && processedNames.has(it.source_name)) return false;
-          return true;
-        });
-        const merged = [...newlyGeneratedForBatch, ...preserved];
-        saveGeneratedIdeas(merged);
-        return merged;
-      });
-
-      if (newlyGeneratedForBatch.length > 0) {
+      if (finalTopics.length > 0) {
         showToast(
-          `Researched 2 sources (${targetSources.map(s => s.name).join(' & ')}). Generated ${newlyGeneratedForBatch.length} fresh topic ideas!`,
+          `Researched 2 sources (${targetSources.map(s => s.name).join(' & ')}). Generated ${finalTopics.length} fresh topic ideas!`,
           'success'
         );
       } else {
