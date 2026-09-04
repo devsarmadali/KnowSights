@@ -60,7 +60,7 @@ export const BriefModal: React.FC<BriefModalProps> = ({
     `Peer-reviewed academic research, verified statistical datasets, historical archives, and authoritative institutional publications.`;
 
   const handleCopyFullBrief = async () => {
-    const fullMarkdown = `📑 KNOWSIGHTS RESEARCH BRIEF & SCRIPTING PROMPT
+    const fullMarkdown = `📑 KNOWSIGHTS RESEARCH BRIEF
 ======================================================
 Idea ID: ${ideaId}
 Topic / Video Idea: ${brief?.title || videoIdea}
@@ -73,17 +73,7 @@ ${overviewText}
 ${keyPointsText}
 
 3. DATA SOURCES & REFERENCES
-${sourcesText}
-
-======================================================
-💡 SCRIPTWRITING & VIDEO GENERATION PROMPT:
-"Act as a professional YouTube documentary scriptwriter. Using the research brief above for '${brief?.title || videoIdea}', write a captivating, high-retention 8-10 minute video script. 
-
-Format the output with:
-- [Visual / B-Roll Directions]
-- [Narrator Script]
-- [On-Screen Graphic Cues]
-Ensure a strong opening hook within the first 15 seconds, smooth narrative pacing, and engaging explanations without fluff."`;
+${sourcesText}`.trim();
 
     try {
       await navigator.clipboard.writeText(fullMarkdown);
@@ -124,7 +114,7 @@ Ensure a strong opening hook within the first 15 seconds, smooth narrative pacin
                   ? 'bg-emerald-500 text-neutral-950 shadow-emerald-500/20'
                   : 'bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white shadow-sky-600/30 active:scale-95'
               }`}
-              title="Copy Full Research Brief & Scriptwriting Prompt to clipboard"
+              title="Copy Full Research Brief to clipboard"
             >
               {copied ? (
                 <>
@@ -134,7 +124,7 @@ Ensure a strong opening hook within the first 15 seconds, smooth narrative pacin
               ) : (
                 <>
                   <Copy className="w-3.5 h-3.5" />
-                  <span>Copy Brief Prompt</span>
+                  <span>Copy Brief</span>
                 </>
               )}
             </button>
@@ -210,7 +200,7 @@ Ensure a strong opening hook within the first 15 seconds, smooth narrative pacin
             className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-xs font-bold text-white transition-all shadow-md shadow-sky-600/30"
           >
             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-            <span>{copied ? 'Copied Full Prompt!' : 'Copy Full Research & Script Prompt'}</span>
+            <span>{copied ? 'Copied Research Brief!' : 'Copy Research Brief'}</span>
           </button>
 
           <button

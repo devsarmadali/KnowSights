@@ -454,7 +454,7 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
     }
   };
 
-  // Copy Full Video Scriptwriting Prompt & Reference Links to Clipboard
+  // Copy Topic Concept, Inquiry Questions & Reference Links to Clipboard
   const handleCopyPrompt = async (idea: GeneratedTopicIdea) => {
     const articleTitle = idea.source_article_title || idea.video_idea;
     const primaryUrl = idea.source_url || idea.source_official_url || '';
@@ -465,17 +465,18 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
 🏷️ Category: ${idea.subject} / ${idea.topic_family}
 ✨ Signature Format: ${idea.signature_format}
 ⭐ Production Score: ${idea.production_score} (${idea.priority_tier})
+🎨 Visual Direction: ${idea.visualization_direction || 'Exploded diagrams, motion graphics, and contextual archival footage.'}
 
-📚 RESEARCH RESOURCES & REFERENCE LINKS:
+📚 RESEARCH RESOURCES & REFERENCE CITATIONS:
 • 📰 Primary Discovery Article: "${articleTitle}"
   🔗 Direct Article URL: ${primaryUrl}
 • 🏛️ Publishing Authority: ${idea.source_name} (${idea.source_category})
   🔗 Official Publication: ${officialUrl || primaryUrl}
 • 📅 Published / Documented Date: ${idea.source_published_date || 'Recent Finding'}
-• 🛡️ Research & Verification Guidance: ${idea.source_family_guidance || `Refer to verified reporting from ${idea.source_name}.`}
+• 🛡️ Research Guidance: ${idea.source_family_guidance || `Refer to verified reporting from ${idea.source_name}.`}
 
 ---
-❓ 3 IN-DEPTH SCRIPT EXPLORATION QUESTIONS:
+❓ 3 CORE INQUIRY QUESTIONS:
 1. 🔍 Evidence & Discovery:
    ${idea.core_questions[0]}
 
@@ -483,38 +484,15 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
    ${idea.core_questions[1]}
 
 3. 🌐 Broader Implications & Paradigm Shift:
-   ${idea.core_questions[2]}
-
----
-💡 MASTER SCRIPTWRITING & VIDEO GENERATION PROMPT:
-"You are a master educational documentary writer. Create a captivating, high-retention YouTube video script on the topic: '${idea.video_idea}'.
-
-1. HOOK & OPENING (0:00 - 1:00):
-- Open immediately with this high-tension curiosity hook: '${idea.curiosity_hook}'.
-- Interrupt viewer assumptions with the discovery reported by ${idea.source_name}.
-- Reference and cite the primary source findings (${primaryUrl}).
-
-2. DEEP-DIVE BODY (Core Narrative):
-- Systematically answer these three core inquiry questions:
-  • Q1: ${idea.core_questions[0]}
-  • Q2: ${idea.core_questions[1]}
-  • Q3: ${idea.core_questions[2]}
-- Maintain the '${idea.signature_format}' pedagogical structure.
-- Ground all empirical claims and findings in the cited reference article: ${primaryUrl}
-
-3. VISUAL CUES & DIRECTION:
-- ${idea.visualization_direction}
-
-4. CONCLUSION:
-- Synthesize why this discovery matters for modern science/history and leave the viewer with a profound takeaway."`;
+   ${idea.core_questions[2]}`.trim();
 
     try {
       await navigator.clipboard.writeText(promptText);
       setCopiedId(idea.id);
-      showToast("Copied script prompt & reference links to clipboard!", 'success');
+      showToast("Copied topic concept & research brief to clipboard!", 'success');
       setTimeout(() => setCopiedId(null), 2500);
     } catch (e) {
-      showToast("Failed to copy prompt to clipboard", 'error');
+      showToast("Failed to copy topic to clipboard", 'error');
     }
   };
 
@@ -772,7 +750,7 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
         {/* Card Actions Footer */}
         <div className="border-t border-neutral-800/80 pt-4 flex items-center justify-between gap-2">
           
-          {/* Copy Scriptwriting Prompt Button */}
+          {/* Copy Topic & Research Brief Button */}
           <button
             onClick={() => handleCopyPrompt(idea)}
             className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer ${
@@ -780,17 +758,17 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
                 ? 'bg-emerald-500 text-black font-bold'
                 : 'bg-neutral-800 hover:bg-neutral-700 text-white'
             }`}
-            title="Copy full scriptwriting outline and prompt for LLM generation"
+            title="Copy topic concept, curiosity hook, and research citations"
           >
             {isCopied ? (
               <>
                 <Check className="w-3.5 h-3.5" />
-                <span>Prompt Copied!</span>
+                <span>Copied!</span>
               </>
             ) : (
               <>
                 <Copy className="w-3.5 h-3.5 text-neutral-400" />
-                <span>Copy Script Prompt</span>
+                <span>Copy Topic & Brief</span>
               </>
             )}
           </button>
