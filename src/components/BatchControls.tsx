@@ -23,6 +23,10 @@ interface BatchControlsProps {
   subjectsList: string[];
   onGenerate: () => Promise<void>;
   isLoading: boolean;
+  aiRefineEnabled?: boolean;
+  onToggleAiRefine?: (enabled: boolean) => void;
+  geminiKeysCount?: number;
+  preferredModel?: string;
 }
 
 const MODES: { id: SelectionMode; label: string; icon: any; desc: string }[] = [
@@ -73,9 +77,14 @@ export const BatchControls: React.FC<BatchControlsProps> = ({
   setSubjectFilter,
   subjectsList,
   onGenerate,
-  isLoading
+  isLoading,
+  aiRefineEnabled = true,
+  onToggleAiRefine,
+  geminiKeysCount = 0,
+  preferredModel
 }) => {
   const currentModeObj = MODES.find(m => m.id === mode) || MODES[0];
+  const hasGeminiKeys = geminiKeysCount > 0;
 
   return (
     <div className="glass-panel rounded-2xl p-5 sm:p-6 mb-8 border border-neutral-800/90 space-y-6">
@@ -112,7 +121,7 @@ export const BatchControls: React.FC<BatchControlsProps> = ({
         </div>
       </div>
 
-      {/* Secondary Controls Bar: Count, Subject Filter, and Generate Action */}
+      {/* Secondary Controls Bar: Count, Subject Filter, AI Refine Toggle, and Generate Action */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pt-2 border-t border-neutral-900">
         
         <div className="flex flex-wrap items-center gap-4">
@@ -140,7 +149,7 @@ export const BatchControls: React.FC<BatchControlsProps> = ({
           </div>
 
           {/* Subject Filter */}
-          <div className="flex-1 min-w-[220px]">
+          <div className="flex-1 min-w-[200px]">
             <label className="block text-xs font-mono uppercase text-neutral-400 mb-1.5 flex items-center justify-between">
               <span>Subject Scope {mode === 'DEEP_DIVE' && <span className="text-indigo-400 font-bold">(Required)</span>}</span>
               {subjectFilter && (
@@ -169,6 +178,37 @@ export const BatchControls: React.FC<BatchControlsProps> = ({
             </div>
           </div>
 
+          {/* AI YouTube Angle Refinement Toggle (Gemini Multi-Key) */}
+          <div className="flex flex-col justify-end">
+            <label className="block text-xs font-mono uppercase text-neutral-400 mb-1.5">
+              Gemini AI Refinement
+            </label>
+            <button
+              type="button"
+              onClick={() => onToggleAiRefine && onToggleAiRefine(!aiRefineEnabled)}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-xl border text-xs font-semibold transition-all ${
+                aiRefineEnabled && hasGeminiKeys
+                  ? 'bg-gradient-to-r from-violet-950/70 to-indigo-950/70 border-violet-500/50 text-violet-200 shadow-md shadow-violet-950/40 ring-1 ring-violet-500/20'
+                  : 'bg-neutral-900/80 border-neutral-800 text-neutral-400 hover:text-neutral-200'
+              }`}
+              title={
+                hasGeminiKeys
+                  ? `Click to toggle Gemini AI refinement (${geminiKeysCount} key${geminiKeysCount > 1 ? 's' : ''} active, ${preferredModel || 'flash models'}). Refines academic topics into YouTube concepts.`
+                  : "Configure Gemini API keys in Settings to enable YouTube angle refinement"
+              }
+            >
+              <Sparkles className={`w-3.5 h-3.5 ${aiRefineEnabled && hasGeminiKeys ? 'text-amber-400 fill-amber-400 animate-pulse' : 'text-neutral-500'}`} />
+              <span>YouTube Angles</span>
+              <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono font-bold ${
+                aiRefineEnabled && hasGeminiKeys
+                  ? 'bg-violet-600 text-white'
+                  : 'bg-neutral-800 text-neutral-500'
+              }`}>
+                {aiRefineEnabled && hasGeminiKeys ? 'ACTIVE' : 'OFF'}
+              </span>
+            </button>
+          </div>
+
         </div>
 
         {/* PRIMARY GENERATE BUTTON */}
@@ -180,7 +220,7 @@ export const BatchControls: React.FC<BatchControlsProps> = ({
           {isLoading ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
-              <span>Mixing Candidates...</span>
+              <span>{aiRefineEnabled && hasGeminiKeys ? 'Generating & Refining...' : 'Mixing Candidates...'}</span>
             </>
           ) : (
             <>

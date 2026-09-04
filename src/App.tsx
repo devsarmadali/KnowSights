@@ -6,6 +6,11 @@ import {
   AppConfig 
 } from './types';
 import { api, loadConfig, saveConfig, normalizeStats, normalizeBatch } from './services/api';
+import { 
+  refineBatchWithGeminiRotation, 
+  refineSingleTopicWithGeminiRotation, 
+  getConfiguredGeminiKeys 
+} from './services/gemini';
 import { Header, ThemeOption } from './components/Header';
 import { DailyMixPage } from './pages/DailyMixPage';
 import { BrowsePage } from './pages/BrowsePage';
@@ -116,16 +121,44 @@ export const App: React.FC = () => {
     initApp();
   }, []);
 
+  const [isRefiningBatch, setIsRefiningBatch] = useState<boolean>(false);
+
   // 1. Generate Fresh Batch
   const handleGenerate = async () => {
     setIsLoading(true);
     try {
       const res = await api.generateBatch(mode, size, subjectFilter);
       if (res && res.success) {
-        const normalized = normalizeBatch(res);
+        let normalized = normalizeBatch(res);
         if (normalized) {
+          const keys = getConfiguredGeminiKeys(config);
+          const shouldAiRefine = config.ai_refine_batch !== false && keys.length > 0;
+
+          if (shouldAiRefine) {
+            showToast(`Refining ${normalized.items.length} topics into YouTube concepts with Gemini AI...`, 'info');
+            try {
+              const aiRes = await refineBatchWithGeminiRotation(normalized.items, config);
+              if (aiRes.success && aiRes.refinedItems.length > 0) {
+                normalized = {
+                  ...normalized,
+                  items: aiRes.refinedItems
+                };
+                showToast(
+                  `✨ Generated & refined ${normalized.items.length} YouTube-ready concepts with ${aiRes.modelUsed || 'Gemini'} (Key #${aiRes.keyUsedIndex})!`,
+                  'success'
+                );
+              } else {
+                showToast(`Generated ${mode} mix (${aiRes.error || 'AI refinement skipped'})`, 'info');
+              }
+            } catch (aiErr: any) {
+              console.warn("AI refinement error during batch generation:", aiErr);
+              showToast(`Generated fresh ${mode} mix with ${normalized.items.length} curated ideas!`, 'success');
+            }
+          } else {
+            showToast(`Generated fresh ${mode} mix with ${normalized.items.length} curated ideas!`, 'success');
+          }
+
           setCurrentBatch(normalized);
-          showToast(`Generated fresh ${mode} mix with ${normalized.items.length} curated ideas!`, 'success');
           await refreshStats();
         } else {
           showToast("No items in generated mix", 'error');
@@ -201,21 +234,67 @@ export const App: React.FC = () => {
     try {
       const res = await api.replaceBatchItem(batchId, batchItemId, position, mode);
       if (res && res.success && res.new_item) {
+        let newItem = { ...res.new_item, position };
+
+        // If AI refinement is enabled and keys exist, refine the replacement card
+        const keys = getConfiguredGeminiKeys(config);
+        if (config.ai_refine_batch !== false && keys.length > 0) {
+          try {
+            const aiSingle = await refineSingleTopicWithGeminiRotation(newItem, config);
+            if (aiSingle.refinedItem) {
+              newItem = aiSingle.refinedItem;
+            }
+          } catch (e) {
+            console.warn("Single card AI refinement error:", e);
+          }
+        }
+
         if (currentBatch) {
           const updatedItems = currentBatch.items.map(item => {
             if (item.batch_item_id === batchItemId) {
-              return { ...res.new_item, position };
+              return newItem;
             }
             return item;
           });
           setCurrentBatch({ ...currentBatch, items: updatedItems });
         }
-        showToast(`Replaced item #${position} with ${res.new_item.idea.idea_id}`, 'info');
+        showToast(`Replaced item #${position} with ${newItem.idea.idea_id}${newItem.ai_refined ? ' (✨ AI Angle)' : ''}!`, 'info');
       } else {
         showToast(res.error || "No replacement candidate available", 'error');
       }
     } catch (err: any) {
       showToast(err.message || "Error replacing item", 'error');
+    }
+  };
+
+  // 5. On-Demand Batch Refinement with Gemini
+  const handleRefineBatch = async () => {
+    if (!currentBatch || !currentBatch.items.length) return;
+    const keys = getConfiguredGeminiKeys(config);
+    if (keys.length === 0) {
+      showToast("No Gemini API keys configured. Please add one in Settings.", 'error');
+      return;
+    }
+
+    setIsRefiningBatch(true);
+    try {
+      const aiRes = await refineBatchWithGeminiRotation(currentBatch.items, config);
+      if (aiRes.success && aiRes.refinedItems.length > 0) {
+        setCurrentBatch({
+          ...currentBatch,
+          items: aiRes.refinedItems
+        });
+        showToast(
+          `✨ Refined all ${aiRes.refinedItems.length} topics into YouTube concepts with ${aiRes.modelUsed || 'Gemini'} (Key #${aiRes.keyUsedIndex})!`,
+          'success'
+        );
+      } else {
+        showToast(`Refinement failed: ${aiRes.error || 'Unknown error'}`, 'error');
+      }
+    } catch (err: any) {
+      showToast(`Refinement error: ${err.message}`, 'error');
+    } finally {
+      setIsRefiningBatch(false);
     }
   };
 
@@ -257,6 +336,16 @@ export const App: React.FC = () => {
                 onUndoUsed={handleUndoUsed}
                 onReplace={handleReplace}
                 isLoading={isLoading}
+                onRefineBatch={handleRefineBatch}
+                isRefiningBatch={isRefiningBatch}
+                aiRefineEnabled={config.ai_refine_batch !== false}
+                onToggleAiRefine={(enabled) => {
+                  const updated = { ...config, ai_refine_batch: enabled };
+                  setConfig(updated);
+                  saveConfig(updated);
+                }}
+                geminiKeysCount={getConfiguredGeminiKeys(config).length}
+                preferredModel={config.preferred_gemini_model}
               />
             )}
 

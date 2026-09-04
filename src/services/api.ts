@@ -38,6 +38,8 @@ export const DEFAULT_CONFIG: AppConfig = {
   gemini_api_key_1: '',
   gemini_api_key_2: '',
   gemini_api_key_3: '',
+  ai_refine_batch: true,
+  preferred_gemini_model: 'gemini-2.5-flash',
   theme: 'dark'
 };
 
@@ -87,7 +89,9 @@ export function normalizeToProductionIdea(raw: any, idx: number = 0): Production
     notes: String(raw.notes || "").trim(),
     active: raw.active !== false && String(raw.active).toLowerCase() !== "false",
     hold_reason: raw.hold_reason || "",
-    brief_available: raw.brief_available !== undefined ? (raw.brief_available === true || String(raw.brief_available).toLowerCase() === "true") : false
+    brief_available: raw.brief_available !== undefined ? (raw.brief_available === true || String(raw.brief_available).toLowerCase() === "true") : false,
+    ai_refined: raw.ai_refined === true || String(raw.ai_refined).toLowerCase() === "true",
+    original_video_idea: raw.original_video_idea || undefined
   };
 }
 
@@ -138,7 +142,8 @@ export function normalizeBatch(raw: any): DailyBatch | null {
         position,
         status: (it.status || 'shown') as any,
         selected_at: it.selected_at || new Date().toISOString(),
-        idea: ideaObj
+        idea: ideaObj,
+        ai_refined: it.ai_refined === true || ideaObj.ai_refined === true
       };
     })
   };

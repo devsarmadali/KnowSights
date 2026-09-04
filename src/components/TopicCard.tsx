@@ -35,21 +35,21 @@ export const TopicCard: React.FC<TopicCardProps> = ({
   const isReplaced = item.status === 'replaced';
 
   const handleCopyPrompt = async () => {
+    const hookLine = idea.curiosity_hook ? `\n📌 Curiosity Hook: "${idea.curiosity_hook}"` : '';
+    const seedLine = idea.parent_sr ? `\n🌱 Taxonomy Seed: Master Taxonomy Sr. #${idea.parent_sr}` : '';
+    const origSeedLine = (idea.original_video_idea && idea.original_video_idea !== idea.video_idea) 
+      ? `\n📖 Original Subtopic Seed: "${idea.original_video_idea}"` 
+      : '';
+    const aiLine = idea.ai_refined ? '\n✨ Refined Angle: AI Curated YouTube Concept (Gemini)' : '';
     const visLine = idea.visualization_direction ? `\n🎨 Visual Direction: ${idea.visualization_direction}` : '';
     const srcLine = idea.source_family_guidance ? `\n📚 Source Guidance: ${idea.source_family_guidance}` : '';
-    const seedLine = idea.parent_sr ? `\n🌱 Taxonomy Seed: Master Taxonomy Sr. #${idea.parent_sr}` : '';
-    const textToCopy = `🎬 VIDEO CONCEPT: ${idea.video_idea}
-📌 Curiosity Hook: "${idea.curiosity_hook || `Core mechanisms and real-world dynamics of ${idea.video_idea}.`}"
+    const notesLine = idea.notes ? `\n📝 Notes: ${idea.notes}` : '';
+
+    const textToCopy = `🎬 TOPIC: ${idea.video_idea}${hookLine}
 🏷️ Category: ${idea.subject} / ${idea.topic_family}
 ✨ Format Style: ${idea.signature_format || 'Standard Explainer'}
 ⭐ Production Score: ${idea.production_score} (${idea.priority_tier || 'Tier 2'})
-🆔 Idea ID: ${idea.idea_id}${seedLine}${visLine}${srcLine}
-
----
-💡 Prompt for Scriptwriting & Video Generation:
-"Create a comprehensive, high-retention YouTube video script on the topic: '${idea.video_idea}'.
-Use this curiosity hook: '${idea.curiosity_hook || idea.video_idea}'.
-Structure the script using the '${idea.signature_format || 'Explainer'}' format.${idea.visualization_direction ? ` Incorporate visual directions: ${idea.visualization_direction}.` : ''} Include an opening pattern interrupt, engaging evidence-backed body points, clear visual cues for animation/b-roll, and a satisfying conclusion."`;
+🆔 Idea ID: ${idea.idea_id}${seedLine}${origSeedLine}${aiLine}${visLine}${srcLine}${notesLine}`.trim();
 
     try {
       await navigator.clipboard.writeText(textToCopy);
@@ -116,6 +116,15 @@ Structure the script using the '${idea.signature_format || 'Explainer'}' format.
               <span>{idea.production_score}</span>
             </span>
           )}
+          {idea.ai_refined && (
+            <span 
+              className="inline-flex items-center space-x-1 text-[10px] font-mono text-violet-300 font-bold bg-violet-500/15 px-1.5 py-0.5 rounded border border-violet-500/30"
+              title="Refined by Gemini AI for high-retention YouTube video framing"
+            >
+              <Sparkles className="w-2.5 h-2.5 text-violet-400 fill-violet-400" />
+              <span>YouTube Angle</span>
+            </span>
+          )}
         </div>
 
         {idea.signature_format && (
@@ -129,9 +138,17 @@ Structure the script using the '${idea.signature_format || 'Explainer'}' format.
       {/* 2. Main Content Area */}
       <div className="space-y-3 flex-1 flex flex-col justify-start">
         {/* Prominent Video Idea Headline */}
-        <h3 className="text-base font-display font-bold text-white leading-snug tracking-tight">
-          {idea.video_idea}
-        </h3>
+        <div>
+          <h3 className="text-base font-display font-bold text-white leading-snug tracking-tight">
+            {idea.video_idea}
+          </h3>
+          {idea.original_video_idea && idea.original_video_idea !== idea.video_idea && (
+            <p className="text-[11px] text-neutral-400 mt-1 font-mono flex items-center space-x-1 truncate" title={`Original Curriculum Subtopic: ${idea.original_video_idea}`}>
+              <span className="text-neutral-500">Seed:</span>
+              <span className="truncate italic">"{idea.original_video_idea}"</span>
+            </p>
+          )}
+        </div>
 
         {/* Curiosity Hook */}
         <div className="p-3 rounded-xl bg-neutral-950/70 border border-neutral-800/80 text-xs text-neutral-300 italic leading-relaxed">
@@ -189,7 +206,7 @@ Structure the script using the '${idea.signature_format || 'Explainer'}' format.
                   ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
                   : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-800 text-neutral-300 hover:text-white'
               }`}
-              title="Copy Video Concept & Prompt"
+              title="Copy Topic & Details"
             >
               {isCopied ? (
                 <>

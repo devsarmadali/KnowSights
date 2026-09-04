@@ -128,6 +128,86 @@ def add_editorial_angles(parent_sr, angles):
     print(f"✅ Success! Created {len(created)} editorial ideas for Parent Sr. {parent_sr}.")
     return created
 
+def generate_angles_with_gemini(parent_sr, count=3, api_key=None, insert=False):
+    key = api_key or os.environ.get("GEMINI_API_KEY")
+    if not key:
+        raise ValueError("GEMINI_API_KEY is required in environment or via --key.")
+
+    parent_res = execute_d1_query("SELECT * FROM master_taxonomy WHERE sr = ?;", [parent_sr])
+    if not parent_res:
+        raise ValueError(f"Parent Sr. {parent_sr} not found in Master Taxonomy.")
+    seed = parent_res[0]
+
+    models = [
+        "gemini-2.5-flash",
+        "gemini-3.5-flash",
+        "gemini-3.7-flash",
+        "gemini-3-flash",
+        "gemini-3.6-flash",
+        "gemini-3.5-flash-lite",
+        "gemini-2.0-flash",
+        "gemini-1.5-flash"
+    ]
+
+    prompt = f"""You are KnowSights' Senior YouTube Content Strategist and Video Topic Architect.
+Generate {count} distinct, high-retention, YouTube-optimized video concepts with unique curiosity angles based on this curriculum subtopic seed:
+
+Subject: {seed['subject']}
+Topic: {seed['topic']}
+Subtopic Seed: {seed['subtopic']}
+
+DIRECTIVES:
+1. DITCH ACADEMIC STIFFNESS: Create punchy, active, intrigue-driven YouTube video titles (50-80 chars).
+2. UNIQUE CURIOSITY ANGLES: Frame counterintuitive tension, hidden mechanisms, or shocking real-world paradoxes.
+3. EDUCATIONAL INTEGRITY: Strictly preserve factual accuracy and substance. No shallow clickbait.
+4. SIGNATURE FORMATS: Assign one of: SF01 — Hidden System, SF02 — Counterintuitive Mechanism, SF03 — Scale Shock, SF04 — Case Study Breakdown, SF08 — Visualized Rules & Quirks, SF11 — Myth vs Measurement, SF14 — Reverse Explanation, SF17 — Under the Hood.
+
+Return a strictly valid JSON array of objects with {count} items:
+[
+  {{
+    "video_idea": "Punchy YouTube Video Title",
+    "curiosity_hook": "Irresistible psychological curiosity hook question or premise",
+    "signature_format": "SF02 — Counterintuitive Mechanism",
+    "production_score": 90,
+    "priority_tier": "Tier 1",
+    "visualization_direction": "Visual pacing and motion graphic instructions for editors"
+  }}
+]"""
+
+    angles = None
+    for model in models:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}"
+        try:
+            res = requests.post(url, json={
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {
+                    "temperature": 0.7,
+                    "maxOutputTokens": 2048,
+                    "responseMimeType": "application/json"
+                }
+            }, timeout=30)
+            if res.status_code == 404:
+                continue
+            if not res.ok:
+                continue
+            data = res.json()
+            raw_text = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+            raw_clean = raw_text.strip().replace("```json", "").replace("```", "").strip()
+            angles = json.loads(raw_clean)
+            print(f"Generated {len(angles)} angles using Gemini ({model})")
+            break
+        except Exception as e:
+            continue
+
+    if not angles:
+        raise RuntimeError("Failed to generate angles with Gemini. Check API key and quotas.")
+
+    if insert:
+        return add_editorial_angles(parent_sr, angles)
+    else:
+        print(json.dumps(angles, indent=2, ensure_ascii=False))
+        return angles
+
 def main():
     parser = argparse.ArgumentParser(description="KnowSights Database Expansion CLI")
     subparsers = parser.add_subparsers(dest="command")
@@ -144,6 +224,13 @@ def main():
     p_angles = subparsers.add_parser("new-angles", help="Add editorial angles for an existing parent seed")
     p_angles.add_argument("--parent-sr", type=int, required=True, help="Parent Taxonomy Sr.")
     p_angles.add_argument("--angles-json", required=True, help="Path to JSON file containing array of angle objects")
+
+    # gemini-angles
+    p_gem = subparsers.add_parser("gemini-angles", help="Brainstorm YouTube-ready editorial angles for a seed using Gemini AI")
+    p_gem.add_argument("--parent-sr", type=int, required=True, help="Parent Taxonomy Sr.")
+    p_gem.add_argument("--count", type=int, default=3, help="Number of angles to generate (default 3)")
+    p_gem.add_argument("--key", default=None, help="Gemini API Key (optional, defaults to GEMINI_API_KEY env)")
+    p_gem.add_argument("--insert", action="store_true", help="Automatically insert generated angles into Cloudflare D1 Production Pool")
 
     # status
     subparsers.add_parser("status", help="Display current database stats from Cloudflare D1")
@@ -170,6 +257,9 @@ def main():
         with open(args.angles_json, 'r', encoding='utf-8') as f:
             angles = json.load(f)
         add_editorial_angles(args.parent_sr, angles)
+
+    elif args.command == "gemini-angles":
+        generate_angles_with_gemini(args.parent_sr, args.count, args.key, args.insert)
 
     else:
         parser.print_help()

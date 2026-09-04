@@ -49,21 +49,21 @@ export const BrowsePage: React.FC<BrowsePageProps> = ({ onRefreshStats }) => {
   });
 
   const handleCopyRow = async (it: ProductionIdea) => {
+    const hookLine = it.curiosity_hook ? `\n📌 Curiosity Hook: "${it.curiosity_hook}"` : '';
+    const seedLine = it.parent_sr ? `\n🌱 Taxonomy Seed: Master Taxonomy Sr. #${it.parent_sr}` : '';
+    const origSeedLine = (it.original_video_idea && it.original_video_idea !== it.video_idea)
+      ? `\n📖 Original Subtopic Seed: "${it.original_video_idea}"`
+      : '';
+    const aiLine = it.ai_refined ? '\n✨ Refined Angle: AI Curated YouTube Concept (Gemini)' : '';
     const visLine = it.visualization_direction ? `\n🎨 Visual Direction: ${it.visualization_direction}` : '';
     const srcLine = it.source_family_guidance ? `\n📚 Source Guidance: ${it.source_family_guidance}` : '';
-    const seedLine = it.parent_sr ? `\n🌱 Taxonomy Seed: Master Taxonomy Sr. #${it.parent_sr}` : '';
-    const text = `🎬 VIDEO CONCEPT: ${it.video_idea}
-📌 Curiosity Hook: "${it.curiosity_hook || 'Engaging deep dive hook'}"
+    const notesLine = it.notes ? `\n📝 Notes: ${it.notes}` : '';
+
+    const text = `🎬 TOPIC: ${it.video_idea}${hookLine}
 🏷️ Category: ${it.subject} / ${it.topic_family}
 ✨ Format Style: ${it.signature_format || 'Standard Explainer'}
 ⭐ Production Score: ${it.production_score} (${it.priority_tier || 'Tier 2'})
-🆔 Idea ID: ${it.idea_id}${seedLine}${visLine}${srcLine}
-
----
-💡 Prompt for Scriptwriting & Video Generation:
-"Create a comprehensive YouTube video script on the topic: '${it.video_idea}'.
-Use this curiosity hook: '${it.curiosity_hook || it.video_idea}'.
-Structure the script using the '${it.signature_format || 'Explainer'}' format.${it.visualization_direction ? ` Incorporate visual directions: ${it.visualization_direction}.` : ''} Include an opening pattern interrupt, engaging evidence-backed body points, clear visual cues for animation/b-roll, and a satisfying conclusion."`;
+🆔 Idea ID: ${it.idea_id}${seedLine}${origSeedLine}${aiLine}${visLine}${srcLine}${notesLine}`.trim();
 
     try {
       await navigator.clipboard.writeText(text);

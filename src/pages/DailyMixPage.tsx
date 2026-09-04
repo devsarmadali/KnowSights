@@ -10,7 +10,8 @@ import {
   HelpCircle,
   RotateCw,
   Copy,
-  Check
+  Check,
+  Loader2
 } from 'lucide-react';
 
 interface DailyMixPageProps {
@@ -27,6 +28,12 @@ interface DailyMixPageProps {
   onUndoUsed: (ideaId: string, batchItemId: string) => Promise<void>;
   onReplace: (batchId: string, batchItemId: string, position: number) => Promise<void>;
   isLoading: boolean;
+  onRefineBatch?: () => Promise<void>;
+  isRefiningBatch?: boolean;
+  aiRefineEnabled?: boolean;
+  onToggleAiRefine?: (enabled: boolean) => void;
+  geminiKeysCount?: number;
+  preferredModel?: string;
 }
 
 export const DailyMixPage: React.FC<DailyMixPageProps> = ({
@@ -42,7 +49,13 @@ export const DailyMixPage: React.FC<DailyMixPageProps> = ({
   onMarkUsed,
   onUndoUsed,
   onReplace,
-  isLoading
+  isLoading,
+  onRefineBatch,
+  isRefiningBatch = false,
+  aiRefineEnabled = true,
+  onToggleAiRefine,
+  geminiKeysCount = 0,
+  preferredModel
 }) => {
   const [briefModalState, setBriefModalState] = useState<{ isOpen: boolean; ideaId: string | null; videoIdea: string }>({
     isOpen: false,
@@ -53,20 +66,22 @@ export const DailyMixPage: React.FC<DailyMixPageProps> = ({
   const [batchCopied, setBatchCopied] = useState(false);
 
   const usedInCurrentBatch = batch?.items?.filter(i => i.status === 'used' || i.idea.used).length || 0;
+  const aiRefinedCount = batch?.items?.filter(i => i.ai_refined || i.idea.ai_refined).length || 0;
 
   const handleCopyAllBatch = async () => {
     if (!batch || !batch.items.length) return;
     const listText = batch.items.map((it, idx) => {
       const idea = it.idea;
-      return `${idx + 1}. [${idea.idea_id}] ${idea.video_idea}
+      const aiTag = idea.ai_refined ? ' [✨ AI YouTube Angle]' : '';
+      return `${idx + 1}. [${idea.idea_id}]${aiTag} ${idea.video_idea}
    • Hook: "${idea.curiosity_hook || 'Engaging deep dive hook'}"
    • Category: ${idea.subject} (${idea.topic_family})
    • Format: ${idea.signature_format || 'Standard'}
-   • Score: ${idea.production_score} (${idea.priority_tier || 'Tier 1'})`;
+   • Score: ${idea.production_score} (${idea.priority_tier || 'Tier 1'})${idea.visualization_direction ? `\n   • Visual Direction: ${idea.visualization_direction}` : ''}`;
     }).join('\n\n');
 
     const textToCopy = `🎬 KNOWSIGHTS TOPIC MIX (${batch.selection_mode} - ${batch.date})
-Total Ideas: ${batch.items.length}
+Total Ideas: ${batch.items.length}${aiRefinedCount > 0 ? ` (${aiRefinedCount} AI Refined YouTube Angles)` : ''}
 ======================================================
 ${listText}
 
@@ -100,15 +115,19 @@ ${listText}
         subjectsList={subjectsList}
         onGenerate={onGenerate}
         isLoading={isLoading}
+        aiRefineEnabled={aiRefineEnabled}
+        onToggleAiRefine={onToggleAiRefine}
+        geminiKeysCount={geminiKeysCount}
+        preferredModel={preferredModel}
       />
 
       {/* Active Daily Batch View */}
       {batch ? (
         <div className="space-y-4">
           
-          {/* Batch Status Header & Bulk Copy Action */}
+          {/* Batch Status Header & Bulk Actions */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 text-xs font-mono text-neutral-400 bg-neutral-900/40 p-3 rounded-2xl border border-neutral-800/80">
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2.5">
               <span className="flex items-center space-x-1.5 text-neutral-200 font-bold">
                 <Calendar className="w-3.5 h-3.5 text-emerald-400" />
                 <span>Date: {batch.date}</span>
@@ -122,30 +141,71 @@ ${listText}
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                 <span>Used: <strong className="text-white">{usedInCurrentBatch} / {batch.items.length}</strong></span>
               </div>
-            </div>
-
-            {/* Bulk Copy Entire Batch Button */}
-            <button
-              onClick={handleCopyAllBatch}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl font-bold transition-all shadow-sm ${
-                batchCopied
-                  ? 'bg-emerald-500 text-neutral-950 shadow-emerald-500/20'
-                  : 'bg-neutral-800 hover:bg-neutral-700 text-emerald-300 border border-neutral-700 hover:border-emerald-500/50'
-              }`}
-              title="Copy all ideas in this batch as a complete Prompt Pack"
-            >
-              {batchCopied ? (
+              {aiRefinedCount > 0 && (
                 <>
-                  <Check className="w-3.5 h-3.5" />
-                  <span>Copied All {batch.items.length} Ideas!</span>
-                </>
-              ) : (
-                <>
-                  <Copy className="w-3.5 h-3.5" />
-                  <span>Copy All Ideas (Prompt Pack)</span>
+                  <span className="text-neutral-600">•</span>
+                  <span className="flex items-center space-x-1 px-2 py-0.5 rounded bg-violet-950/60 border border-violet-700/60 text-violet-300 font-bold">
+                    <Sparkles className="w-3 h-3 text-violet-400 fill-violet-400" />
+                    <span>YouTube Angles: {aiRefinedCount}/{batch.items.length}</span>
+                  </span>
                 </>
               )}
-            </button>
+            </div>
+
+            {/* Action Buttons: Bulk Copy & Refine with Gemini */}
+            <div className="flex flex-wrap items-center gap-2">
+              {onRefineBatch && (
+                <button
+                  onClick={onRefineBatch}
+                  disabled={isRefiningBatch || (geminiKeysCount || 0) === 0}
+                  className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl font-bold transition-all shadow-sm ${
+                    (geminiKeysCount || 0) > 0
+                      ? 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-violet-900/30'
+                      : 'bg-neutral-800 text-neutral-500 cursor-not-allowed border border-neutral-700'
+                  }`}
+                  title={
+                    (geminiKeysCount || 0) > 0
+                      ? "Refine all topics in this batch into high-retention YouTube video concepts with unique curiosity angles using Gemini"
+                      : "Configure a Gemini API Key in Settings to enable YouTube angle refinement"
+                  }
+                >
+                  {isRefiningBatch ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+                      <span>Refining with Gemini...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
+                      <span>Refine Batch (Gemini)</span>
+                    </>
+                  )}
+                </button>
+              )}
+
+              {/* Bulk Copy Entire Batch Button */}
+              <button
+                onClick={handleCopyAllBatch}
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl font-bold transition-all shadow-sm ${
+                  batchCopied
+                    ? 'bg-emerald-500 text-neutral-950 shadow-emerald-500/20'
+                    : 'bg-neutral-800 hover:bg-neutral-700 text-emerald-300 border border-neutral-700 hover:border-emerald-500/50'
+                }`}
+                title="Copy all ideas in this batch as a complete Prompt Pack"
+              >
+                {batchCopied ? (
+                  <>
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Copied All {batch.items.length} Ideas!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy className="w-3.5 h-3.5" />
+                    <span>Copy All (Prompt Pack)</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Grid of Topic Cards */}

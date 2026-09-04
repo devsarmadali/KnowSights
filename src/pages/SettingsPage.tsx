@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { AppConfig } from '../types';
 import { DEFAULT_CONFIG, loadConfig, saveConfig, DEFAULT_WEB_APP_URL, api } from '../services/api';
-import { testGeminiApiKey } from '../services/gemini';
+import { testGeminiApiKey, BATCH_REFINEMENT_MODELS } from '../services/gemini';
 
 interface SettingsPageProps {
   config: AppConfig;
@@ -237,7 +237,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
 
       {/* 2. Gemini Multi-Key Auto-Rotation Engine */}
       <div className="glass-panel rounded-2xl p-6 border border-neutral-800 space-y-5 bg-neutral-950/60">
-        <div className="flex items-center justify-between border-b border-neutral-800/80 pb-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-800/80 pb-4">
           <div className="flex items-center space-x-2.5">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-cyan-500/20 to-teal-500/20 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
               <Bot className="w-4 h-4" />
@@ -249,15 +249,43 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                   3-Key Auto-Rotation
                 </span>
               </div>
-              <p className="text-xs text-neutral-400">Configure up to 3 Gemini API keys for seamless auto-failover during topic generation</p>
+              <p className="text-xs text-neutral-400">Powers YouTube Angle batch refinement (pure text-out, zero search) and Discovery Lab generation</p>
             </div>
           </div>
 
-          <div className="text-right">
-            <span className="text-[11px] font-mono text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-xl">
-              Model: gemini-2.5-flash
-            </span>
+          <div className="flex flex-wrap items-center gap-3">
+            <div className="flex items-center space-x-2">
+              <label className="text-[11px] font-mono text-neutral-400">Preferred Model:</label>
+              <select
+                value={formData.preferred_gemini_model || 'gemini-2.5-flash'}
+                onChange={(e) => setFormData({ ...formData, preferred_gemini_model: e.target.value })}
+                className="bg-neutral-900 border border-neutral-800 rounded-xl px-2.5 py-1 text-xs font-mono text-emerald-400 focus:outline-none focus:border-cyan-500"
+              >
+                {BATCH_REFINEMENT_MODELS.map((m) => (
+                  <option key={m} value={m}>
+                    {m}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
+        </div>
+
+        {/* Global Refinement Auto-Toggle */}
+        <div className="flex items-center justify-between p-3.5 rounded-xl bg-neutral-900/40 border border-neutral-800">
+          <div className="flex items-center space-x-2.5">
+            <Sparkles className="w-4 h-4 text-violet-400" />
+            <div>
+              <p className="text-xs font-bold text-white">Auto-Refine Daily Mix Batches with Gemini</p>
+              <p className="text-[11px] text-neutral-400">Automatically transforms academic taxonomy subtopics into high-retention, YouTube-optimized concepts with unique curiosity angles</p>
+            </div>
+          </div>
+          <input
+            type="checkbox"
+            checked={formData.ai_refine_batch !== false}
+            onChange={(e) => setFormData({ ...formData, ai_refine_batch: e.target.checked })}
+            className="w-4 h-4 rounded border-neutral-700 bg-neutral-800 text-violet-600 focus:ring-violet-500 cursor-pointer"
+          />
         </div>
 
         <div className="space-y-4">
@@ -386,9 +414,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
         <div className="p-3.5 rounded-xl bg-neutral-900/50 border border-neutral-800/80 text-xs text-neutral-300 flex items-start space-x-2.5">
           <ShieldCheck className="w-4 h-4 text-cyan-400 flex-shrink-0 mt-0.5" />
           <div className="space-y-1 text-[11px]">
-            <p className="font-bold text-white">How 3-Key Auto-Rotation Works:</p>
+            <p className="font-bold text-white">How 3-Key Auto-Rotation & Pure Text-Out Models Work:</p>
             <p className="text-neutral-400 leading-relaxed">
-              When searching & generating topics in the Discovery Lab, the system requests Gemini using <strong>Key 1</strong> (defaulting to <code>gemini-2.5-flash</code>). If Key 1 reaches free tier rate limits (HTTP 429) or errors, the engine automatically falls over to <strong>Key 2</strong>, and subsequently <strong>Key 3</strong>. If no keys are provided, it smoothly uses the built-in deterministic synthesis rules.
+              When a batch of topics is generated in the Daily Mix, the system dispatches all candidate topics in a single efficient prompt to Gemini using <strong>Key 1</strong> (prioritizing your selected text-out flash model like <code>{formData.preferred_gemini_model || 'gemini-2.5-flash'}</code>). It transforms dry academic statements into punchy YouTube titles, unique curiosity hooks, and visual directions without search grounding overhead. If Key 1 hits rate limits (HTTP 429), it automatically fails over to <strong>Key 2</strong> and <strong>Key 3</strong>. If all keys are empty or fail, the mixer falls back safely to the unrefined database ideas with zero disruption.
             </p>
           </div>
         </div>

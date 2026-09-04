@@ -21,6 +21,8 @@ export interface ProductionIdea {
   subtopic_seed?: string;
   visualization_direction?: string;
   source_family_guidance?: string;
+  ai_refined?: boolean;
+  original_video_idea?: string;
 }
 
 export interface BatchItem {
@@ -31,6 +33,7 @@ export interface BatchItem {
   status: 'shown' | 'replaced' | 'used';
   selected_at: string;
   idea: ProductionIdea;
+  ai_refined?: boolean;
 }
 
 export interface DailyBatch {
@@ -85,6 +88,8 @@ export interface AppConfig {
   gemini_api_key_1?: string;
   gemini_api_key_2?: string;
   gemini_api_key_3?: string;
+  ai_refine_batch?: boolean;
+  preferred_gemini_model?: string;
   theme?: 'dark' | 'sepia' | 'solarized-dark' | 'solarized-light';
 }
 
