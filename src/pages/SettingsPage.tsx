@@ -257,7 +257,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
             <div className="flex items-center space-x-2">
               <label className="text-[11px] font-mono text-neutral-400">Preferred Model:</label>
               <select
-                value={formData.preferred_gemini_model || 'gemini-2.5-flash'}
+                value={formData.preferred_gemini_model || 'gemini-3.7-flash'}
                 onChange={(e) => setFormData({ ...formData, preferred_gemini_model: e.target.value })}
                 className="bg-neutral-900 border border-neutral-800 rounded-xl px-2.5 py-1 text-xs font-mono text-emerald-400 focus:outline-none focus:border-cyan-500"
               >
@@ -416,7 +416,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
           <div className="space-y-1 text-[11px]">
             <p className="font-bold text-white">How 3-Key Auto-Rotation & Pure Text-Out Models Work:</p>
             <p className="text-neutral-400 leading-relaxed">
-              When a batch of topics is generated in the Daily Mix, the system dispatches all candidate topics in a single efficient prompt to Gemini using <strong>Key 1</strong> (prioritizing your selected text-out flash model like <code>{formData.preferred_gemini_model || 'gemini-2.5-flash'}</code>). It transforms dry academic statements into punchy YouTube titles, unique curiosity hooks, and visual directions without search grounding overhead. If Key 1 hits rate limits (HTTP 429), it automatically fails over to <strong>Key 2</strong> and <strong>Key 3</strong>. If all keys are empty or fail, the mixer falls back safely to the unrefined database ideas with zero disruption.
+              When a batch of topics is generated in the Daily Mix, the system dispatches all candidate topics in a single efficient prompt to Gemini using <strong>Key 1</strong> (prioritizing text-out flash models in descending capability order starting with <code>{formData.preferred_gemini_model || 'gemini-3.7-flash'}</code>). It transforms dry academic statements into punchy YouTube titles, unique curiosity hooks, and visual directions without search grounding overhead. If Key 1 hits rate limits (HTTP 429), it automatically fails over to <strong>Key 2</strong> and <strong>Key 3</strong>. If all keys are empty or fail, the mixer falls back safely to the unrefined database ideas with zero disruption.
             </p>
           </div>
         </div>

@@ -39,7 +39,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   gemini_api_key_2: '',
   gemini_api_key_3: '',
   ai_refine_batch: true,
-  preferred_gemini_model: 'gemini-2.5-flash',
+  preferred_gemini_model: 'gemini-3.7-flash',
   theme: 'dark'
 };
 
@@ -162,8 +162,11 @@ export function loadConfig(): AppConfig {
       const parsed = JSON.parse(raw);
       if (!parsed.google_web_app_url || parsed.google_web_app_url.includes('example') || parsed.google_web_app_url.includes('script.google.com')) {
         parsed.google_web_app_url = CLOUDFLARE_EDGE_API_URL;
-        saveConfig({ ...DEFAULT_CONFIG, ...parsed });
       }
+      if (!parsed.preferred_gemini_model || parsed.preferred_gemini_model === 'gemini-2.5-flash') {
+        parsed.preferred_gemini_model = 'gemini-3.7-flash';
+      }
+      saveConfig({ ...DEFAULT_CONFIG, ...parsed });
       return { ...DEFAULT_CONFIG, ...parsed };
     }
   } catch (e) {

@@ -32,30 +32,42 @@ export function getConfiguredGeminiKeys(config?: AppConfig): { index: number; ke
  * Pure Text-Out Flash Models list (ranked by quota & capability)
  * Note: Batch refinement does NOT require search grounding tools.
  */
+/**
+ * Pure Text-Out Flash Models list in strict descending version order:
+ * 1. gemini-3.7-flash (tried first)
+ * 2. gemini-3.6-flash
+ * 3. gemini-3.5-flash
+ * 4. gemini-3.5-flash-lite
+ * 5. gemini-3-flash
+ * 6. gemini-2.5-flash
+ * 7. gemini-2.0-flash
+ * 8. gemini-1.5-flash
+ * Note: Batch refinement does NOT require search grounding tools.
+ */
 export const PREFERRED_GEMINI_MODELS = [
-  'gemini-2.5-flash',
-  'gemini-3.5-flash',
   'gemini-3.7-flash',
-  'gemini-3-flash',
   'gemini-3.6-flash',
+  'gemini-3.5-flash',
   'gemini-3.5-flash-lite',
+  'gemini-3-flash',
+  'gemini-2.5-flash',
   'gemini-2.0-flash',
   'gemini-1.5-flash'
 ];
 
 export const BATCH_REFINEMENT_MODELS = [
-  'gemini-2.5-flash',
-  'gemini-3.5-flash',
   'gemini-3.7-flash',
-  'gemini-3-flash',
   'gemini-3.6-flash',
+  'gemini-3.5-flash',
   'gemini-3.5-flash-lite',
+  'gemini-3-flash',
+  'gemini-2.5-flash',
   'gemini-2.0-flash',
   'gemini-1.5-flash'
 ];
 
 /**
- * Test a specific Gemini API Key for validity
+ * Test a specific Gemini API Key for validity across models in descending order
  */
 export async function testGeminiApiKey(apiKey: string): Promise<{ valid: boolean; model?: string; error?: string }> {
   if (!apiKey || !apiKey.trim()) {
@@ -89,10 +101,16 @@ export async function testGeminiApiKey(apiKey: string): Promise<{ valid: boolean
       const msg = errData?.error?.message || `HTTP ${res.status}: ${res.statusText}`;
       lastError = msg;
 
-      // If key is invalid (400 or 403 API key error), stop trying other models
-      if (res.status === 400 || res.status === 403 || msg.toLowerCase().includes('api_key_invalid') || msg.toLowerCase().includes('api key not valid')) {
+      // Only stop trying models if the key itself is invalid or expired
+      const isKeyInvalid = msg.toLowerCase().includes('api_key_invalid') || 
+                           msg.toLowerCase().includes('api key not valid') ||
+                           msg.toLowerCase().includes('api key expired') ||
+                           (res.status === 400 && msg.toLowerCase().includes('key'));
+      if (isKeyInvalid) {
         return { valid: false, error: msg };
       }
+
+      // If model not found or unsupported, continue down the descending list
     } catch (err: any) {
       lastError = err.message || "Network error testing key";
     }
@@ -164,14 +182,22 @@ Return a strictly valid JSON object matching this schema with NO markdown code f
 
         if (!res.ok) {
           const errJson = await res.json().catch(() => ({}));
-          const errorMsg = errJson?.error?.message || `HTTP ${res.status}`;
-          // If model not found (404), try next model in PREFERRED_GEMINI_MODELS
-          if (res.status === 404) {
-            continue;
+          const errorMsg = errJson?.error?.message || `HTTP ${res.status}: ${res.statusText}`;
+          lastError = `Key #${index} (${model}): ${errorMsg}`;
+
+          // Only break to next key if the key itself is invalid
+          const isKeyInvalid = errorMsg.toLowerCase().includes('api_key_invalid') || 
+                               errorMsg.toLowerCase().includes('api key not valid') ||
+                               errorMsg.toLowerCase().includes('api key expired') ||
+                               (res.status === 400 && errorMsg.toLowerCase().includes('api key'));
+          if (isKeyInvalid) {
+            console.warn(`Gemini Key #${index} is invalid (${errorMsg}), rotating to next available key...`);
+            break; // Key failed, move to next key
           }
-          console.warn(`Gemini Key #${index} failed (${errorMsg}), rotating to next available key...`);
-          lastError = `Key #${index}: ${errorMsg}`;
-          break; // Key failed, move to next key
+
+          // Otherwise continue down PREFERRED_GEMINI_MODELS in descending order
+          console.warn(`Model ${model} unavailable on Key #${index} (${errorMsg}), trying next descending model...`);
+          continue;
         }
 
         const data = await res.json();
@@ -251,11 +277,17 @@ export async function refineBatchWithGeminiRotation(
     return { success: false, refinedItems: items, error: "No Gemini API keys configured" };
   }
 
-  // Pure text-out models, prioritized by user preference or default list
-  const preferredModel = config?.preferred_gemini_model;
-  const modelsToTry = preferredModel && BATCH_REFINEMENT_MODELS.includes(preferredModel)
-    ? [preferredModel, ...BATCH_REFINEMENT_MODELS.filter(m => m !== preferredModel)]
-    : BATCH_REFINEMENT_MODELS;
+  // Pure text-out models in strict descending version order:
+  // 1. gemini-3.7-flash (tried first)
+  // 2. gemini-3.6-flash
+  // 3. gemini-3.5-flash
+  // 4. gemini-3.5-flash-lite
+  // 5. gemini-3-flash
+  // 6. gemini-2.5-flash
+  // 7. gemini-2.0-flash
+  // 8. gemini-1.5-flash
+  // Batch refinement strictly attempts models in descending capability order, never prioritizing 2.5 Flash over 3.7 / 3.6
+  const modelsToTry = [...BATCH_REFINEMENT_MODELS];
 
   const promptItems = items.map((it, idx) => ({
     position: it.position || idx + 1,
@@ -321,20 +353,39 @@ Return a strictly valid JSON array of objects with the exact same length (${item
 
         if (!res.ok) {
           const errJson = await res.json().catch(() => ({}));
-          const errorMsg = errJson?.error?.message || `HTTP ${res.status}`;
-          // If model not found (404), try next model in preferred list
-          if (res.status === 404) {
-            continue;
-          }
-          console.warn(`Gemini Key #${index} failed with model ${model} (${errorMsg}), rotating to next available key...`);
+          const errorMsg = errJson?.error?.message || `HTTP ${res.status}: ${res.statusText}`;
           lastError = `Key #${index} (${model}): ${errorMsg}`;
-          break; // Try next key
+
+          // Only break to next key if the key itself is invalid or revoked
+          const isKeyInvalid = errorMsg.toLowerCase().includes('api_key_invalid') || 
+                               errorMsg.toLowerCase().includes('api key not valid') ||
+                               errorMsg.toLowerCase().includes('api key expired') ||
+                               (res.status === 400 && errorMsg.toLowerCase().includes('api key'));
+
+          if (isKeyInvalid) {
+            console.warn(`Gemini Key #${index} is invalid (${errorMsg}), rotating to next key...`);
+            break; // Try next key
+          }
+
+          // Otherwise (404 not found, 400 model unsupported, 503 high demand spike, 429 rate limit, 500 error),
+          // continue down the descending model list (3.7 -> 3.6 -> 3.5 -> 3.5-lite -> 3.0 -> 2.5 -> 2.0 -> 1.5)
+          console.warn(`Model ${model} unavailable on Key #${index} (${errorMsg}), trying next descending model...`);
+          continue;
         }
 
         const data = await res.json();
         const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text || "";
-        const cleaned = rawText.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
-        const parsedArray = JSON.parse(cleaned);
+        const cleaned = rawText.replace(/^```json\s*/i, '').replace(/^```\s*/i, '').replace(/\s*```$/, '').trim();
+        
+        let parsedArray: any[] = [];
+        try {
+          parsedArray = JSON.parse(cleaned);
+        } catch {
+          const bracketMatch = cleaned.match(/\[[\s\S]*\]/);
+          if (bracketMatch) {
+            parsedArray = JSON.parse(bracketMatch[0]);
+          }
+        }
 
         if (!Array.isArray(parsedArray) || parsedArray.length === 0) {
           throw new Error("Gemini response was not a valid array of refined topics");
