@@ -16,6 +16,7 @@ import {
   Check
 } from 'lucide-react';
 import { SystemStats } from '../types';
+import { DISCOVERY_SOURCES } from '../data/discoverySources';
 
 export type ThemeOption = 'dark' | 'sepia' | 'solarized-dark' | 'solarized-light';
 
@@ -53,7 +54,7 @@ export const Header: React.FC<HeaderProps> = ({
   const tabs: { id: 'mix' | 'browse' | 'discovery' | 'settings'; label: string; icon: any; badge?: string }[] = [
     { id: 'mix', label: "Today's Ideas", icon: Compass },
     { id: 'browse', label: "Production Pool", icon: Search },
-    { id: 'discovery', label: "Discovery Lab", icon: Radio, badge: "54 Sources" },
+    { id: 'discovery', label: "Discovery Lab", icon: Radio, badge: `${DISCOVERY_SOURCES.length} Sources` },
     { id: 'settings', label: "Settings", icon: Settings },
   ];
 

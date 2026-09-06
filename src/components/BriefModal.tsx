@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { IdeaBrief } from '../types';
 import { api } from '../services/api';
+import { formatBriefModalCopyText } from '../utils/researchPrompt';
 
 interface BriefModalProps {
   isOpen: boolean;
@@ -28,24 +29,35 @@ export const BriefModal: React.FC<BriefModalProps> = ({
 }) => {
   const [brief, setBrief] = useState<IdeaBrief | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    if (isOpen && ideaId) {
-      setLoading(true);
-      api.getBrief(ideaId)
-        .then((res) => {
-          if (res && res.success && res.brief) {
-            setBrief(res.brief);
-          } else {
-            setBrief(null);
-          }
-        })
-        .catch(() => setBrief(null))
-        .finally(() => setLoading(false));
-    } else {
+    if (!isOpen || !ideaId) {
       setBrief(null);
+      setError(null);
+      return;
     }
+
+    const fetchBrief = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await api.getBrief(ideaId);
+        if (res && res.success && res.brief) {
+          setBrief(res.brief);
+        } else {
+          setBrief(null);
+        }
+      } catch (err: any) {
+        console.error("Failed to load brief", err);
+        setError("Could not load brief details from server.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBrief();
   }, [isOpen, ideaId]);
 
   if (!isOpen || !ideaId) return null;
@@ -60,20 +72,14 @@ export const BriefModal: React.FC<BriefModalProps> = ({
     `Peer-reviewed academic research, verified statistical datasets, historical archives, and authoritative institutional publications.`;
 
   const handleCopyFullBrief = async () => {
-    const fullMarkdown = `📑 KNOWSIGHTS RESEARCH BRIEF
-======================================================
-Idea ID: ${ideaId}
-Topic / Video Idea: ${brief?.title || videoIdea}
-Research Status: ${brief?.ready_status || 'Ready for Production'}
-
-1. EXECUTIVE OVERVIEW
-${overviewText}
-
-2. KEY SCRIPT BEATS, FACTS & DATA
-${keyPointsText}
-
-3. DATA SOURCES & REFERENCES
-${sourcesText}`.trim();
+    const fullMarkdown = formatBriefModalCopyText({
+      ideaId,
+      title: brief?.title || videoIdea,
+      overview: overviewText,
+      keyPoints: keyPointsText,
+      sources: sourcesText,
+      readyStatus: brief?.ready_status
+    });
 
     try {
       await navigator.clipboard.writeText(fullMarkdown);

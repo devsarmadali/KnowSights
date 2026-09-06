@@ -60,6 +60,7 @@ import {
   AppConfig,
   ResearchCycleState
 } from '../types';
+import { formatDiscoveryIdeaCopyText } from '../utils/researchPrompt';
 import { 
   api, 
   loadConfig, 
@@ -454,42 +455,14 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
     }
   };
 
-  // Copy Topic Concept, Inquiry Questions & Reference Links to Clipboard
+  // Copy Topic Concept, Inquiry Questions, Reference Links & Standardized AI Research Prompt to Clipboard
   const handleCopyPrompt = async (idea: GeneratedTopicIdea) => {
-    const articleTitle = idea.source_article_title || idea.video_idea;
-    const primaryUrl = idea.source_url || idea.source_official_url || '';
-    const officialUrl = idea.source_official_url || (idea.source_url ? new URL(idea.source_url).origin : '');
-
-    const promptText = `🎬 VIDEO CONCEPT: ${idea.video_idea}
-📌 Curiosity Hook: "${idea.curiosity_hook}"
-🏷️ Category: ${idea.subject} / ${idea.topic_family}
-✨ Signature Format: ${idea.signature_format}
-⭐ Production Score: ${idea.production_score} (${idea.priority_tier})
-🎨 Visual Direction: ${idea.visualization_direction || 'Exploded diagrams, motion graphics, and contextual archival footage.'}
-
-📚 RESEARCH RESOURCES & REFERENCE CITATIONS:
-• 📰 Primary Discovery Article: "${articleTitle}"
-  🔗 Direct Article URL: ${primaryUrl}
-• 🏛️ Publishing Authority: ${idea.source_name} (${idea.source_category})
-  🔗 Official Publication: ${officialUrl || primaryUrl}
-• 📅 Published / Documented Date: ${idea.source_published_date || 'Recent Finding'}
-• 🛡️ Research Guidance: ${idea.source_family_guidance || `Refer to verified reporting from ${idea.source_name}.`}
-
----
-❓ 3 CORE INQUIRY QUESTIONS:
-1. 🔍 Evidence & Discovery:
-   ${idea.core_questions[0]}
-
-2. ⚙️ Underlying Mechanism & Context:
-   ${idea.core_questions[1]}
-
-3. 🌐 Broader Implications & Paradigm Shift:
-   ${idea.core_questions[2]}`.trim();
+    const promptText = formatDiscoveryIdeaCopyText(idea);
 
     try {
       await navigator.clipboard.writeText(promptText);
       setCopiedId(idea.id);
-      showToast("Copied topic concept & research brief to clipboard!", 'success');
+      showToast("Copied topic concept & AI research prompt to clipboard!", 'success');
       setTimeout(() => setCopiedId(null), 2500);
     } catch (e) {
       showToast("Failed to copy topic to clipboard", 'error');
@@ -890,8 +863,8 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
             </h1>
             <p className="text-neutral-400 text-sm mt-1 leading-relaxed">
               {activeView === 'generator' && `Search breaking articles, museum reports, and excavations across ${DISCOVERY_SOURCES.length} elite publications. Automatically classified by subject section with 3-tier deep dive questions and optional 3-Key Gemini rotation.`}
-              {activeView === 'publications' && `Browse all ${DISCOVERY_SOURCES.length} publications visually classified across 5 thematic sections: World History, Archaeology, Academic Essays, Hidden Curiosities, and Science Discoveries.`}
-              {activeView === 'archives' && `Explore 36 authoritative repositories classified into sections 14 through 18, with Evidence Verification Tiers for primary ground truth verification.`}
+              {activeView === 'publications' && `Browse all ${DISCOVERY_SOURCES.length} publications visually classified across thematic research sections including World History, Archaeology, Mysteries, Curiosities, and Science.`}
+              {activeView === 'archives' && `Explore ${INSTITUTIONAL_REPOSITORIES.length} authoritative repositories and national archives classified across primary research domains, with Evidence Verification Tiers for ground truth verification.`}
             </p>
           </div>
 

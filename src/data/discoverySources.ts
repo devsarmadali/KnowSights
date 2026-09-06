@@ -2,7 +2,7 @@ import { DiscoverySource, DiscoveryArticle, GeneratedTopicIdea } from '../types'
 
 export const DISCOVERY_SOURCES: DiscoverySource[] = [
   // --------------------------------------------------------------------------
-  // 1. WORLD HISTORY & CIVILIZATIONS (7 Sources)
+  // 1. WORLD HISTORY & CIVILIZATIONS (14 Sources)
   // --------------------------------------------------------------------------
   {
     id: 'history-com',
@@ -109,9 +109,114 @@ export const DISCOVERY_SOURCES: DiscoverySource[] = [
     defaultFormat: 'SF04 — Case Study Breakdown',
     badgeColor: 'emerald'
   },
+  {
+    id: 'medievalists-net',
+    name: 'Medievalists.net',
+    type: 'Scholarly history publication',
+    category: 'Medieval & Byzantine history',
+    group: 'history',
+    bestFor: 'Medieval warfare, castle architecture, manuscript discoveries, Black Death records, and Viking trade',
+    officialUrl: 'https://www.medievalists.net/',
+    feedUrl: 'https://www.medievalists.net/feed/',
+    searchFeedPattern: 'https://news.google.com/rss/search?q=site:medievalists.net+{query}&hl=en-US&gl=US&ceid=US:en',
+    subjectMapping: 'History & Civilizations',
+    topicFamily: 'Medieval Warfare & Manuscript Chronicles',
+    defaultFormat: 'SF04 — Case Study Breakdown',
+    badgeColor: 'emerald'
+  },
+  {
+    id: 'past-and-present',
+    name: 'Past & Present',
+    type: 'Peer-reviewed historical journal (OUP)',
+    category: 'Deep historical sociology & transformation',
+    group: 'history',
+    bestFor: 'Structural historical revolutions, peasant rebellions, pre-industrial economies, and societal shifts',
+    officialUrl: 'https://academic.oup.com/past',
+    feedUrl: 'https://news.google.com/rss/search?q=site:academic.oup.com/past+OR+"Past+and+Present"+history&hl=en-US&gl=US&ceid=US:en',
+    searchFeedPattern: 'https://news.google.com/rss/search?q=site:academic.oup.com/past+{query}&hl=en-US&gl=US&ceid=US:en',
+    subjectMapping: 'History & Civilizations',
+    topicFamily: 'Societal Revolutions & Structural History',
+    defaultFormat: 'SF01 — Hidden System',
+    badgeColor: 'emerald'
+  },
+  {
+    id: 'historic-mysteries',
+    name: 'Historic Mysteries',
+    type: 'Historical mystery publication',
+    category: 'Unsolved historical enigmas',
+    group: 'history',
+    bestFor: 'Lost expeditions, unexplained ship disappearances, cryptids in historical accounts, and ancient tomb enigmas',
+    officialUrl: 'https://www.historicmysteries.com/',
+    feedUrl: 'https://www.historicmysteries.com/feed/',
+    searchFeedPattern: 'https://news.google.com/rss/search?q=site:historicmysteries.com+{query}&hl=en-US&gl=US&ceid=US:en',
+    subjectMapping: 'History & Civilizations',
+    topicFamily: 'Lost Expeditions & Unsolved Historical Puzzles',
+    defaultFormat: 'SF02 — Counterintuitive Mechanism',
+    badgeColor: 'emerald'
+  },
+  {
+    id: 'royal-historical-society',
+    name: 'Royal Historical Society',
+    type: 'Historical society journal',
+    category: 'Scholarly historical discourse',
+    group: 'history',
+    bestFor: 'Archival reassessments, state diplomacy, colonial encounters, and historiographical debates',
+    officialUrl: 'https://royalhistsoc.org/',
+    feedUrl: 'https://royalhistsoc.org/feed/',
+    searchFeedPattern: 'https://news.google.com/rss/search?q=site:royalhistsoc.org+{query}&hl=en-US&gl=US&ceid=US:en',
+    subjectMapping: 'History & Civilizations',
+    topicFamily: 'Archival Reassessments & Historiography',
+    defaultFormat: 'SF05 — Historical Analogy',
+    badgeColor: 'emerald'
+  },
+  {
+    id: 'military-history-matters',
+    name: 'Military History Matters',
+    type: 'Military history publication',
+    category: 'Historical battles & siegecraft',
+    group: 'history',
+    bestFor: 'Tactical battlefield reconstructions, ancient sieges, naval engagements, and logistics triumphs',
+    officialUrl: 'https://www.military-history.org/',
+    feedUrl: 'https://www.military-history.org/feed/',
+    searchFeedPattern: 'https://news.google.com/rss/search?q=site:military-history.org+{query}&hl=en-US&gl=US&ceid=US:en',
+    subjectMapping: 'History & Civilizations',
+    topicFamily: 'Tactical Battlefield Reconstructions',
+    defaultFormat: 'SF04 — Case Study Breakdown',
+    badgeColor: 'emerald'
+  },
+  {
+    id: 'american-historical-review',
+    name: 'American Historical Review (AHA)',
+    type: 'Journal of record (AHA / OUP)',
+    category: 'World & comparative history',
+    group: 'history',
+    bestFor: 'Deep archival analyses, trans-imperial trade, intellectual history, and global historical connections',
+    officialUrl: 'https://www.historians.org/research-and-publications/the-american-historical-review',
+    feedUrl: 'https://news.google.com/rss/search?q=site:academic.oup.com/ahr+OR+"American+Historical+Review"&hl=en-US&gl=US&ceid=US:en',
+    searchFeedPattern: 'https://news.google.com/rss/search?q=site:academic.oup.com/ahr+{query}&hl=en-US&gl=US&ceid=US:en',
+    subjectMapping: 'History & Civilizations',
+    topicFamily: 'Global Historical Connections & Archives',
+    defaultFormat: 'SF03 — Evolution Over Time',
+    badgeColor: 'emerald'
+  },
+  {
+    id: 'ancient-history-magazine',
+    name: 'Ancient History Magazine',
+    type: 'Illustrated historical journal',
+    category: 'Greco-Roman & ancient world',
+    group: 'history',
+    bestFor: 'Hellenistic politics, Roman senate intrigues, Persian satrapies, and everyday ancient life',
+    officialUrl: 'https://www.karwansaraypublishers.com/',
+    feedUrl: 'https://news.google.com/rss/search?q=site:karwansaraypublishers.com+"ancient"+OR+"Ancient+History+Magazine"&hl=en-US&gl=US&ceid=US:en',
+    searchFeedPattern: 'https://news.google.com/rss/search?q=site:karwansaraypublishers.com+{query}&hl=en-US&gl=US&ceid=US:en',
+    subjectMapping: 'History & Civilizations',
+    topicFamily: 'Greco-Roman Intrigues & Ancient Governance',
+    defaultFormat: 'SF08 — Visualized Rules & Quirks',
+    badgeColor: 'emerald'
+  },
 
   // --------------------------------------------------------------------------
-  // 2. ARCHAEOLOGY & ANCIENT MYSTERIES (7 Sources)
+  // 2. ARCHAEOLOGY & ANCIENT MYSTERIES (14 Sources)
   // --------------------------------------------------------------------------
   {
     id: 'smithsonian-archaeology',
@@ -216,6 +321,111 @@ export const DISCOVERY_SOURCES: DiscoverySource[] = [
     subjectMapping: 'Archaeology & Ancient Mysteries',
     topicFamily: 'Disputed Artifacts & Antiquity Hoaxes',
     defaultFormat: 'SF02 — Counterintuitive Mechanism',
+    badgeColor: 'amber'
+  },
+  {
+    id: 'antiquity-journal',
+    name: 'Antiquity Journal',
+    type: 'Peer-reviewed archaeological journal',
+    category: 'Global archaeological research',
+    group: 'archaeology',
+    bestFor: 'Peer-reviewed breakthrough excavations, radiocarbon dating re-evaluations, ancient DNA and artifact analyses',
+    officialUrl: 'https://www.antiquity.ac.uk/',
+    feedUrl: 'https://news.google.com/rss/search?q=site:antiquity.ac.uk+OR+"Antiquity+journal"+archaeology&hl=en-US&gl=US&ceid=US:en',
+    searchFeedPattern: 'https://news.google.com/rss/search?q=site:antiquity.ac.uk+{query}&hl=en-US&gl=US&ceid=US:en',
+    subjectMapping: 'Archaeology & Ancient Mysteries',
+    topicFamily: 'Peer-Reviewed Excavation Reports',
+    defaultFormat: 'SF04 — Case Study Breakdown',
+    badgeColor: 'amber'
+  },
+  {
+    id: 'current-world-archaeology',
+    name: 'Current World Archaeology',
+    type: 'Archaeology publication',
+    category: 'International excavations & discoveries',
+    group: 'archaeology',
+    bestFor: 'Global archaeological explorations, lost settlements, underwater wrecks, and ancient monuments',
+    officialUrl: 'https://www.world-archaeology.com/',
+    feedUrl: 'https://www.world-archaeology.com/feed/',
+    searchFeedPattern: 'https://news.google.com/rss/search?q=site:world-archaeology.com+{query}&hl=en-US&gl=US&ceid=US:en',
+    subjectMapping: 'Archaeology & Ancient Mysteries',
+    topicFamily: 'Global Excavations & Lost Settlements',
+    defaultFormat: 'SF01 — Hidden System',
+    badgeColor: 'amber'
+  },
+  {
+    id: 'biblical-archaeology-review',
+    name: 'Biblical Archaeology Review',
+    type: 'Archaeological society publication',
+    category: 'Near Eastern & biblical archaeology',
+    group: 'archaeology',
+    bestFor: 'Dead Sea Scrolls, Levant excavations, ancient inscriptions, and Near Eastern civilizational origins',
+    officialUrl: 'https://www.biblicalarchaeology.org/',
+    feedUrl: 'https://www.biblicalarchaeology.org/feed/',
+    searchFeedPattern: 'https://news.google.com/rss/search?q=site:biblicalarchaeology.org+{query}&hl=en-US&gl=US&ceid=US:en',
+    subjectMapping: 'Archaeology & Ancient Mysteries',
+    topicFamily: 'Near Eastern Inscriptions & Scrolls',
+    defaultFormat: 'SF05 — Historical Analogy',
+    badgeColor: 'amber'
+  },
+  {
+    id: 'heritagedaily',
+    name: 'HeritageDaily',
+    type: 'Archaeology & paleoanthropology publisher',
+    category: 'Archaeological field discoveries',
+    group: 'archaeology',
+    bestFor: 'LiDAR mapping of jungle ruins, Roman forts, megalithic monuments, and fossil hominin discoveries',
+    officialUrl: 'https://www.heritagedaily.com/',
+    feedUrl: 'https://www.heritagedaily.com/feed',
+    searchFeedPattern: 'https://news.google.com/rss/search?q=site:heritagedaily.com+{query}&hl=en-US&gl=US&ceid=US:en',
+    subjectMapping: 'Archaeology & Ancient Mysteries',
+    topicFamily: 'LiDAR Mapping & Remote Sensing Finds',
+    defaultFormat: 'SF17 — Under the Hood',
+    badgeColor: 'amber'
+  },
+  {
+    id: 'phys-org-archaeology',
+    name: 'Phys.org – Archaeology & Fossils',
+    type: 'Science news wire',
+    category: 'Archaeological science & paleontology',
+    group: 'archaeology',
+    bestFor: 'Isotope analysis, ancient DNA sequencing, bone forensics, and new dating technologies',
+    officialUrl: 'https://phys.org/archaeology-news/',
+    feedUrl: 'https://phys.org/rss-feed/archaeology-news/',
+    searchFeedPattern: 'https://news.google.com/rss/search?q=site:phys.org/archaeology-news+{query}&hl=en-US&gl=US&ceid=US:en',
+    subjectMapping: 'Archaeology & Ancient Mysteries',
+    topicFamily: 'Archaeogenetics & Scientific Forensics',
+    defaultFormat: 'SF17 — Under the Hood',
+    badgeColor: 'amber'
+  },
+  {
+    id: 'science-news-archaeology',
+    name: 'Science News – Archaeology',
+    type: 'Science journalism (Society for Science)',
+    category: 'Anthropology & human origins',
+    group: 'archaeology',
+    bestFor: 'Neanderthal culture, ancient tool innovations, cave art decipherment, and early human migration',
+    officialUrl: 'https://www.sciencenews.org/topic/archaeology',
+    feedUrl: 'https://www.sciencenews.org/topic/archaeology/feed',
+    searchFeedPattern: 'https://news.google.com/rss/search?q=site:sciencenews.org/topic/archaeology+{query}&hl=en-US&gl=US&ceid=US:en',
+    subjectMapping: 'Archaeology & Ancient Mysteries',
+    topicFamily: 'Human Origins & Prehistoric Toolmaking',
+    defaultFormat: 'SF02 — Counterintuitive Mechanism',
+    badgeColor: 'amber'
+  },
+  {
+    id: 'current-archaeology',
+    name: 'Current Archaeology',
+    type: 'Archaeology magazine',
+    category: 'British & European archaeology',
+    group: 'archaeology',
+    bestFor: 'Roman villas, Saxon gold hoards, Viking encampments, and prehistoric ritual complexes',
+    officialUrl: 'https://archaeology.co.uk/',
+    feedUrl: 'https://archaeology.co.uk/feed',
+    searchFeedPattern: 'https://news.google.com/rss/search?q=site:archaeology.co.uk+{query}&hl=en-US&gl=US&ceid=US:en',
+    subjectMapping: 'Archaeology & Ancient Mysteries',
+    topicFamily: 'European Hoards & Encampments',
+    defaultFormat: 'SF04 — Case Study Breakdown',
     badgeColor: 'amber'
   },
 
@@ -679,7 +889,7 @@ export const DISCOVERY_SOURCES: DiscoverySource[] = [
   },
 
   // --------------------------------------------------------------------------
-  // 9. FASCINATING FACTS, MYSTERIES & DISCOVERIES (5 Sources)
+  // 9. FASCINATING FACTS, MYSTERIES & DISCOVERIES (7 Sources)
   // --------------------------------------------------------------------------
   {
     id: 'how-stuff-works',
@@ -753,6 +963,36 @@ export const DISCOVERY_SOURCES: DiscoverySource[] = [
     searchFeedPattern: 'https://news.google.com/rss/search?q=site:discovermagazine.com+{query}&hl=en-US&gl=US&ceid=US:en',
     subjectMapping: 'Science & Discoveries',
     topicFamily: 'Brain Science & Evolutionary Reversals',
+    defaultFormat: 'SF02 — Counterintuitive Mechanism',
+    badgeColor: 'orange'
+  },
+  {
+    id: 'fortean-times',
+    name: 'Fortean Times',
+    type: 'Anomalous history & mystery journal',
+    category: 'Historical anomalies & unexplained phenomena',
+    group: 'facts-mysteries',
+    bestFor: 'Historical hoaxes, bizarre medical phenomena, strange sightings in historical chronicles, and folkloric archaeology',
+    officialUrl: 'https://forteantimes.com/',
+    feedUrl: 'https://news.google.com/rss/search?q=site:forteantimes.com+OR+"Fortean+Times"+mystery&hl=en-US&gl=US&ceid=US:en',
+    searchFeedPattern: 'https://news.google.com/rss/search?q=site:forteantimes.com+{query}&hl=en-US&gl=US&ceid=US:en',
+    subjectMapping: 'History & Civilizations',
+    topicFamily: 'Historical Curiosities & Anomalous Chronicles',
+    defaultFormat: 'SF02 — Counterintuitive Mechanism',
+    badgeColor: 'orange'
+  },
+  {
+    id: 'nautilus-mysteries',
+    name: 'Nautilus – Historical Discoveries',
+    type: 'Literary science & history publication',
+    category: 'Scientific history & deep enigmas',
+    group: 'facts-mysteries',
+    bestFor: 'The history of scientific paradoxes, ancient astronomy alignments, forgotten early natural philosophers, and cognitive enigmas',
+    officialUrl: 'https://nautil.us/',
+    feedUrl: 'https://nautil.us/feed/',
+    searchFeedPattern: 'https://news.google.com/rss/search?q=site:nautil.us+{query}&hl=en-US&gl=US&ceid=US:en',
+    subjectMapping: 'Science & Discoveries',
+    topicFamily: 'Scientific Paradoxes & Historical Enigmas',
     defaultFormat: 'SF02 — Counterintuitive Mechanism',
     badgeColor: 'orange'
   },
@@ -853,16 +1093,16 @@ export const DISCOVERY_SOURCES: DiscoverySource[] = [
 ];
 
 export const SOURCE_GROUPS = [
-  { id: 'all', label: `All Curated Publications (54)`, icon: 'Sparkles', color: 'emerald' },
-  { id: 'history', label: '📜 World History (7)', icon: 'Scroll', color: 'emerald' },
-  { id: 'archaeology', label: '🏺 Archaeology & Mysteries (7)', icon: 'Landmark', color: 'amber' },
+  { id: 'all', label: `All Curated Publications (70)`, icon: 'Sparkles', color: 'emerald' },
+  { id: 'history', label: '📜 World History (14)', icon: 'Scroll', color: 'emerald' },
+  { id: 'archaeology', label: '🏺 Archaeology & Mysteries (14)', icon: 'Landmark', color: 'amber' },
   { id: 'academic', label: '🎓 Academic & Ideas (5)', icon: 'BookOpen', color: 'indigo' },
   { id: 'curiosities', label: '🗺️ Curiosities & Lore (4)', icon: 'Compass', color: 'purple' },
   { id: 'science', label: '🔬 Science & Nature (4)', icon: 'Atom', color: 'cyan' },
   { id: 'space', label: '🚀 Space Exploration (5)', icon: 'Rocket', color: 'sky' },
   { id: 'ai-tech', label: '🤖 AI & Future Tech (6)', icon: 'Cpu', color: 'violet' },
   { id: 'data-stats', label: '📊 World in Data (5)', icon: 'BarChart2', color: 'rose' },
-  { id: 'facts-mysteries', label: '🔮 Facts & Mysteries (5)', icon: 'Zap', color: 'orange' },
+  { id: 'facts-mysteries', label: '🔮 Facts & Mysteries (7)', icon: 'Zap', color: 'orange' },
   { id: 'deep-science', label: '🧬 Deep Science Journals (6)', icon: 'FlaskConical', color: 'teal' },
 ] as const;
 
@@ -887,8 +1127,8 @@ function cleanText(raw: string): string {
 function deriveVideoConcept(rawTitle: string): string {
   let title = cleanText(rawTitle);
   title = title
-    .replace(/\s*\|\s*(History\.com|BBC History|Smithsonian|Live Science|ScienceAlert|Atlas Obscura|Archaeology Magazine|Ancient Origins|National Geographic|Popular Mechanics|HistoryExtra|History Today|The Conversation|JSTOR Daily|Mental Floss|Amusing Planet|World History Encyclopedia|The Collector|ThoughtCo|Aeon|Lapham's Quarterly|MIT Technology Review|WIRED|New Scientist|IEEE Spectrum|Futurism|Singularity Hub|NASA|Space\.com|Astronomy|ESA|Sky & Telescope|Our World in Data|Statista|Pew Research|Gapminder|HowStuffWorks|Ripley's|Popular Science|Discover|Nature|Science|PNAS|Phys\.org|Quanta).*$/i, '')
-    .replace(/\s*-\s*(History\.com|BBC History|Smithsonian|Live Science|ScienceAlert|Atlas Obscura|Archaeology Magazine|Ancient Origins|National Geographic|Popular Mechanics|HistoryExtra|History Today|The Conversation|JSTOR Daily|Mental Floss|Amusing Planet|World History Encyclopedia|The Collector|ThoughtCo|Aeon|Lapham's Quarterly|MIT Technology Review|WIRED|New Scientist|IEEE Spectrum|Futurism|Singularity Hub|NASA|Space\.com|Astronomy|ESA|Sky & Telescope|Our World in Data|Statista|Pew Research|Gapminder|HowStuffWorks|Ripley's|Popular Science|Discover|Nature|Science|PNAS|Phys\.org|Quanta).*$/i, '')
+    .replace(/\s*\|\s*(History\.com|BBC History|Smithsonian|Live Science|ScienceAlert|Atlas Obscura|Archaeology Magazine|Ancient Origins|National Geographic|Popular Mechanics|HistoryExtra|History Today|The Conversation|JSTOR Daily|Mental Floss|Amusing Planet|World History Encyclopedia|The Collector|ThoughtCo|Aeon|Lapham's Quarterly|MIT Technology Review|WIRED|New Scientist|IEEE Spectrum|Futurism|Singularity Hub|NASA|Space\.com|Astronomy|ESA|Sky & Telescope|Our World in Data|Statista|Pew Research|Gapminder|HowStuffWorks|Ripley's|Popular Science|Discover|Nature|Science|PNAS|Phys\.org|Quanta|Antiquity|Current World Archaeology|Biblical Archaeology Review|HeritageDaily|Current Archaeology|Medievalists\.net|Past & Present|Historic Mysteries|Royal Historical Society|Military History Matters|American Historical Review|Ancient History Magazine|Fortean Times|Nautilus).*$/i, '')
+    .replace(/\s*-\s*(History\.com|BBC History|Smithsonian|Live Science|ScienceAlert|Atlas Obscura|Archaeology Magazine|Ancient Origins|National Geographic|Popular Mechanics|HistoryExtra|History Today|The Conversation|JSTOR Daily|Mental Floss|Amusing Planet|World History Encyclopedia|The Collector|ThoughtCo|Aeon|Lapham's Quarterly|MIT Technology Review|WIRED|New Scientist|IEEE Spectrum|Futurism|Singularity Hub|NASA|Space\.com|Astronomy|ESA|Sky & Telescope|Our World in Data|Statista|Pew Research|Gapminder|HowStuffWorks|Ripley's|Popular Science|Discover|Nature|Science|PNAS|Phys\.org|Quanta|Antiquity|Current World Archaeology|Biblical Archaeology Review|HeritageDaily|Current Archaeology|Medievalists\.net|Past & Present|Historic Mysteries|Royal Historical Society|Military History Matters|American Historical Review|Ancient History Magazine|Fortean Times|Nautilus).*$/i, '')
     .replace(/^(Watch|Photos|Video|Audio|Podcast):\s*/i, '')
     .trim();
 

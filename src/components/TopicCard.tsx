@@ -10,6 +10,7 @@ import {
   Copy
 } from 'lucide-react';
 import { BatchItem } from '../types';
+import { formatTopicCardCopyText } from '../utils/researchPrompt';
 
 interface TopicCardProps {
   item: BatchItem;
@@ -35,21 +36,7 @@ export const TopicCard: React.FC<TopicCardProps> = ({
   const isReplaced = item.status === 'replaced';
 
   const handleCopyPrompt = async () => {
-    const hookLine = idea.curiosity_hook ? `\n📌 Curiosity Hook: "${idea.curiosity_hook}"` : '';
-    const seedLine = idea.parent_sr ? `\n🌱 Taxonomy Seed: Master Taxonomy Sr. #${idea.parent_sr}` : '';
-    const origSeedLine = (idea.original_video_idea && idea.original_video_idea !== idea.video_idea) 
-      ? `\n📖 Original Subtopic Seed: "${idea.original_video_idea}"` 
-      : '';
-    const aiLine = idea.ai_refined ? '\n✨ Refined Angle: AI Curated YouTube Concept (Gemini)' : '';
-    const visLine = idea.visualization_direction ? `\n🎨 Visual Direction: ${idea.visualization_direction}` : '';
-    const srcLine = idea.source_family_guidance ? `\n📚 Source Guidance: ${idea.source_family_guidance}` : '';
-    const notesLine = idea.notes ? `\n📝 Notes: ${idea.notes}` : '';
-
-    const textToCopy = `🎬 TOPIC: ${idea.video_idea}${hookLine}
-🏷️ Category: ${idea.subject} / ${idea.topic_family}
-✨ Format Style: ${idea.signature_format || 'Standard Explainer'}
-⭐ Production Score: ${idea.production_score} (${idea.priority_tier || 'Tier 2'})
-🆔 Idea ID: ${idea.idea_id}${seedLine}${origSeedLine}${aiLine}${visLine}${srcLine}${notesLine}`.trim();
+    const textToCopy = formatTopicCardCopyText(idea);
 
     try {
       await navigator.clipboard.writeText(textToCopy);

@@ -18,6 +18,7 @@ import {
 import { ProductionIdea } from '../types';
 import { api, normalizeToProductionIdea } from '../services/api';
 import { BriefModal } from '../components/BriefModal';
+import { formatTopicCardCopyText } from '../utils/researchPrompt';
 
 interface BrowsePageProps {
   onRefreshStats: () => Promise<void>;
@@ -49,21 +50,7 @@ export const BrowsePage: React.FC<BrowsePageProps> = ({ onRefreshStats }) => {
   });
 
   const handleCopyRow = async (it: ProductionIdea) => {
-    const hookLine = it.curiosity_hook ? `\n📌 Curiosity Hook: "${it.curiosity_hook}"` : '';
-    const seedLine = it.parent_sr ? `\n🌱 Taxonomy Seed: Master Taxonomy Sr. #${it.parent_sr}` : '';
-    const origSeedLine = (it.original_video_idea && it.original_video_idea !== it.video_idea)
-      ? `\n📖 Original Subtopic Seed: "${it.original_video_idea}"`
-      : '';
-    const aiLine = it.ai_refined ? '\n✨ Refined Angle: AI Curated YouTube Concept (Gemini)' : '';
-    const visLine = it.visualization_direction ? `\n🎨 Visual Direction: ${it.visualization_direction}` : '';
-    const srcLine = it.source_family_guidance ? `\n📚 Source Guidance: ${it.source_family_guidance}` : '';
-    const notesLine = it.notes ? `\n📝 Notes: ${it.notes}` : '';
-
-    const text = `🎬 TOPIC: ${it.video_idea}${hookLine}
-🏷️ Category: ${it.subject} / ${it.topic_family}
-✨ Format Style: ${it.signature_format || 'Standard Explainer'}
-⭐ Production Score: ${it.production_score} (${it.priority_tier || 'Tier 2'})
-🆔 Idea ID: ${it.idea_id}${seedLine}${origSeedLine}${aiLine}${visLine}${srcLine}${notesLine}`.trim();
+    const text = formatTopicCardCopyText(it);
 
     try {
       await navigator.clipboard.writeText(text);
