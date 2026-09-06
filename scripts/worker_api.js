@@ -77,7 +77,7 @@ export default {
       }
     }
 
-    const action = body.action || params.action || url.pathname.replace(/^\/api\//, '').replace(/\//g, '_');
+    const action = body.action || params.action || url.pathname.replace(/^\/api\//, '').replace(/^\/+/, '').replace(/\//g, '_');
     const requestId = body.request_id || params.request_id || `req_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     const db = env.DB;
 
@@ -584,6 +584,231 @@ export default {
             used: false,
             times_shown: 0,
             active: true
+          });
+        }
+
+        case "get_notes": {
+          const category = (body.category || params.category || "").trim();
+          const search = (body.search || params.search || "").trim().toLowerCase();
+          
+          let querySql = "SELECT * FROM user_notes WHERE 1=1";
+          const bindings = [];
+
+          if (category && category !== "all" && category !== "All Notes") {
+            querySql += " AND LOWER(category) = LOWER(?)";
+            bindings.push(category);
+          }
+
+          if (search) {
+            querySql += " AND (LOWER(title) LIKE ? OR LOWER(content) LIKE ? OR LOWER(tags) LIKE ? OR LOWER(badge) LIKE ?)";
+            const term = `%${search}%`;
+            bindings.push(term, term, term, term);
+          }
+
+          querySql += " ORDER BY is_pinned DESC, updated_at DESC";
+
+          const rowsRes = await db.prepare(querySql).bind(...bindings).all();
+          const notes = (rowsRes.results || []).map(r => {
+            let parsedTags = [];
+            try {
+              parsedTags = typeof r.tags === 'string' ? JSON.parse(r.tags) : (r.tags || []);
+            } catch (e) {
+              parsedTags = [];
+            }
+            return {
+              id: r.id,
+              title: r.title,
+              content: r.content,
+              category: r.category || "General",
+              tags: Array.isArray(parsedTags) ? parsedTags : [],
+              badge: r.badge || "Note",
+              is_pinned: !!r.is_pinned,
+              version: r.version || 1,
+              created_at: r.created_at,
+              updated_at: r.updated_at
+            };
+          });
+
+          return jsonResponse({
+            success: true,
+            total: notes.length,
+            notes
+          });
+        }
+
+        case "save_note": {
+          const noteData = body.note || body;
+          let noteId = (noteData.id || params.id || "").trim();
+          const title = (noteData.title || params.title || "Untitled Note").trim();
+          const content = (noteData.content || params.content || "").trim();
+          const category = (noteData.category || params.category || "General").trim();
+          const badge = (noteData.badge || params.badge || "Note").trim();
+          const isPinned = (noteData.is_pinned === true || noteData.is_pinned === 1 || params.is_pinned === "true") ? 1 : 0;
+          const changeSummary = (noteData.change_summary || params.change_summary || "").trim();
+          
+          let tags = noteData.tags || params.tags || [];
+          if (typeof tags === 'string') {
+            try {
+              tags = JSON.parse(tags);
+            } catch (e) {
+              tags = tags.split(',').map(t => t.trim()).filter(Boolean);
+            }
+          }
+          const tagsJson = JSON.stringify(Array.isArray(tags) ? tags : []);
+          const now = new Date().toISOString();
+
+          let currentVersion = 1;
+          const existingNote = noteId ? await db.prepare("SELECT * FROM user_notes WHERE id = ?").bind(noteId).first() : null;
+
+          if (!noteId) {
+            noteId = `note_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+          }
+
+          if (existingNote) {
+            currentVersion = (existingNote.version || 1) + 1;
+            const versionId = `nver_${noteId}_v${currentVersion}_${Date.now()}`;
+            const summary = changeSummary || `Update version ${currentVersion}`;
+
+            await db.batch([
+              db.prepare(`
+                UPDATE user_notes 
+                SET title = ?, content = ?, category = ?, tags = ?, badge = ?, is_pinned = ?, version = ?, updated_at = ?
+                WHERE id = ?
+              `).bind(title, content, category, tagsJson, badge, isPinned, currentVersion, now, noteId),
+              db.prepare(`
+                INSERT INTO user_note_versions (version_id, note_id, version_number, title, content, category, tags, badge, change_summary, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              `).bind(versionId, noteId, currentVersion, title, content, category, tagsJson, badge, summary, now)
+            ]);
+          } else {
+            // New Note
+            const versionId = `nver_${noteId}_v1_${Date.now()}`;
+            const summary = changeSummary || "Initial creation";
+
+            await db.batch([
+              db.prepare(`
+                INSERT INTO user_notes (id, title, content, category, tags, badge, is_pinned, version, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+              `).bind(noteId, title, content, category, tagsJson, badge, isPinned, now, now),
+              db.prepare(`
+                INSERT INTO user_note_versions (version_id, note_id, version_number, title, content, category, tags, badge, change_summary, created_at)
+                VALUES (?, ?, 1, ?, ?, ?, ?, ?, ?, ?)
+              `).bind(versionId, noteId, title, content, category, tagsJson, badge, summary, now)
+            ]);
+          }
+
+          return jsonResponse({
+            success: true,
+            note: {
+              id: noteId,
+              title,
+              content,
+              category,
+              tags: Array.isArray(tags) ? tags : [],
+              badge,
+              is_pinned: !!isPinned,
+              version: currentVersion,
+              created_at: existingNote ? existingNote.created_at : now,
+              updated_at: now
+            }
+          });
+        }
+
+        case "delete_note": {
+          const noteId = (body.id || params.id || "").trim();
+          if (!noteId) return jsonResponse({ success: false, error: "Note id is required" }, 400);
+
+          await db.batch([
+            db.prepare("DELETE FROM user_note_versions WHERE note_id = ?").bind(noteId),
+            db.prepare("DELETE FROM user_notes WHERE id = ?").bind(noteId)
+          ]);
+
+          return jsonResponse({ success: true, id: noteId });
+        }
+
+        case "get_note_versions": {
+          const noteId = (body.note_id || params.note_id || body.id || params.id || "").trim();
+          if (!noteId) return jsonResponse({ success: false, error: "note_id is required" }, 400);
+
+          const versionsRes = await db.prepare("SELECT * FROM user_note_versions WHERE note_id = ? ORDER BY version_number DESC").bind(noteId).all();
+          const versions = (versionsRes.results || []).map(v => {
+            let parsedTags = [];
+            try {
+              parsedTags = typeof v.tags === 'string' ? JSON.parse(v.tags) : (v.tags || []);
+            } catch (e) {
+              parsedTags = [];
+            }
+            return {
+              version_id: v.version_id,
+              note_id: v.note_id,
+              version_number: v.version_number,
+              title: v.title,
+              content: v.content,
+              category: v.category,
+              tags: Array.isArray(parsedTags) ? parsedTags : [],
+              badge: v.badge,
+              change_summary: v.change_summary,
+              created_at: v.created_at
+            };
+          });
+
+          return jsonResponse({
+            success: true,
+            note_id: noteId,
+            total: versions.length,
+            versions
+          });
+        }
+
+        case "restore_note_version": {
+          const noteId = (body.note_id || params.note_id || "").trim();
+          const versionNum = parseInt(body.version_number || params.version_number || "0", 10);
+          if (!noteId || !versionNum) return jsonResponse({ success: false, error: "note_id and version_number are required" }, 400);
+
+          const targetVer = await db.prepare("SELECT * FROM user_note_versions WHERE note_id = ? AND version_number = ?").bind(noteId, versionNum).first();
+          if (!targetVer) return jsonResponse({ success: false, error: `Version ${versionNum} not found for note ${noteId}` }, 404);
+
+          const currentNote = await db.prepare("SELECT * FROM user_notes WHERE id = ?").bind(noteId).first();
+          if (!currentNote) return jsonResponse({ success: false, error: "Note not found" }, 404);
+
+          const newVersion = (currentNote.version || 1) + 1;
+          const now = new Date().toISOString();
+          const versionId = `nver_${noteId}_v${newVersion}_${Date.now()}`;
+          const summary = `Restored from version ${versionNum}`;
+
+          await db.batch([
+            db.prepare(`
+              UPDATE user_notes 
+              SET title = ?, content = ?, category = ?, tags = ?, badge = ?, version = ?, updated_at = ?
+              WHERE id = ?
+            `).bind(targetVer.title, targetVer.content, targetVer.category || "General", targetVer.tags || "[]", targetVer.badge || "Note", newVersion, now, noteId),
+            db.prepare(`
+              INSERT INTO user_note_versions (version_id, note_id, version_number, title, content, category, tags, badge, change_summary, created_at)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `).bind(versionId, noteId, newVersion, targetVer.title, targetVer.content, targetVer.category || "General", targetVer.tags || "[]", targetVer.badge || "Note", summary, now)
+          ]);
+
+          let parsedTags = [];
+          try {
+            parsedTags = typeof targetVer.tags === 'string' ? JSON.parse(targetVer.tags) : (targetVer.tags || []);
+          } catch (e) {
+            parsedTags = [];
+          }
+
+          return jsonResponse({
+            success: true,
+            note: {
+              id: noteId,
+              title: targetVer.title,
+              content: targetVer.content,
+              category: targetVer.category || "General",
+              tags: Array.isArray(parsedTags) ? parsedTags : [],
+              badge: targetVer.badge || "Note",
+              is_pinned: !!currentNote.is_pinned,
+              version: newVersion,
+              created_at: currentNote.created_at,
+              updated_at: now
+            }
           });
         }
 

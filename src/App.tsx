@@ -15,6 +15,7 @@ import { Header, ThemeOption } from './components/Header';
 import { DailyMixPage } from './pages/DailyMixPage';
 import { BrowsePage } from './pages/BrowsePage';
 import { DiscoveryLabPage } from './pages/DiscoveryLabPage';
+import { NotesPage } from './pages/NotesPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { 
   Loader2, 
@@ -27,7 +28,7 @@ import {
 export const SPREADSHEET_ID = '1HB4Zxg9qXzWVKyjAzSoTPHadPIVNZitojfaR0qd601w';
 
 export const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'mix' | 'browse' | 'discovery' | 'settings'>('mix');
+  const [activeTab, setActiveTab] = useState<'mix' | 'browse' | 'discovery' | 'notes' | 'settings'>('mix');
   const [config, setConfig] = useState<AppConfig>(loadConfig());
   const [currentBatch, setCurrentBatch] = useState<DailyBatch | null>(null);
   const [stats, setStats] = useState<SystemStats | null>(null);
@@ -358,6 +359,10 @@ export const App: React.FC = () => {
                 onRefreshStats={refreshStats} 
                 showToast={showToast} 
               />
+            )}
+
+            {activeTab === 'notes' && (
+              <NotesPage showToast={showToast} />
             )}
 
             {activeTab === 'settings' && (

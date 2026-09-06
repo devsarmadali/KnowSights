@@ -1,0 +1,1307 @@
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { 
+  Plus, 
+  Search, 
+  Copy, 
+  Check, 
+  Pin, 
+  Trash2, 
+  History, 
+  Sparkles, 
+  Clock, 
+  Eye, 
+  Edit3, 
+  Tag, 
+  Folder, 
+  Bookmark, 
+  RotateCcw, 
+  X, 
+  ChevronDown, 
+  ArrowUpDown, 
+  LayoutGrid, 
+  Columns, 
+  Maximize2, 
+  Minimize2, 
+  Loader2, 
+  Cloud, 
+  CloudCheck,
+  FileText,
+  AlertCircle,
+  Hash,
+  BookOpen,
+  Share2
+} from 'lucide-react';
+import { UserNote, UserNoteVersion, NoteBadge, NoteCategory } from '../types';
+import { api, getLocalNotes, saveLocalNotes } from '../services/api';
+
+interface NotesPageProps {
+  showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
+}
+
+type ViewMode = 'grid' | 'split';
+type SortOption = 'updated_desc' | 'created_desc' | 'created_asc' | 'title_asc' | 'word_count' | 'versions_desc';
+
+const CATEGORIES: { id: NoteCategory; label: string }[] = [
+  { id: 'all', label: 'All Notes & Prompts' },
+  { id: 'prompts', label: 'AI Search Prompts' },
+  { id: 'research', label: 'Research Notes' },
+  { id: 'scripts', label: 'Script Hooks' },
+  { id: 'templates', label: 'Templates' },
+  { id: 'general', label: 'General' },
+];
+
+const BADGE_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  Prompt: { bg: 'bg-indigo-500/15', text: 'text-indigo-300', border: 'border-indigo-500/30' },
+  Research: { bg: 'bg-emerald-500/15', text: 'text-emerald-300', border: 'border-emerald-500/30' },
+  Script: { bg: 'bg-amber-500/15', text: 'text-amber-300', border: 'border-amber-500/30' },
+  Hook: { bg: 'bg-rose-500/15', text: 'text-rose-300', border: 'border-rose-500/30' },
+  Template: { bg: 'bg-sky-500/15', text: 'text-sky-300', border: 'border-sky-500/30' },
+  Draft: { bg: 'bg-neutral-800', text: 'text-neutral-300', border: 'border-neutral-700' },
+  Idea: { bg: 'bg-purple-500/15', text: 'text-purple-300', border: 'border-purple-500/30' }
+};
+
+const DEFAULT_STARTER_NOTES: Partial<UserNote>[] = [
+  {
+    title: 'Elite Archaeological Investigative Scholar Prompt',
+    content: `Act as an elite investigative research scholar and documentary fact-checker specializing in Archaeology & Ancient Civilizations. Conduct an exhaustive, open-web, evidence-backed deep-dive search on the following topic and inquiry angle:
+
+• TARGET TOPIC: [Insert archaeological site, lost civilization, or artifact]
+• UNIQUE ANGLE & HOOK: [Insert the counterintuitive paradox or recent excavation finding]
+• PRIMARY EVIDENCE REQUIRED: Excavation monographs, artifact serial numbers, carbon-14 dating intervals, and stratigraphy reports.
+
+SEARCH PROTOCOL:
+1. Search peer-reviewed publications across Antiquity Journal, British Museum Research, and JSTOR.
+2. Identify the exact primary discoverers, excavation dates, and field notebook citations.
+3. Contrast conventional textbook narrative with verified empirical ground truth.
+4. Output a structured 5-part research dossier with annotated citable links.`,
+    category: 'prompts',
+    badge: 'Prompt',
+    tags: ['Archaeology', 'Deep Research', 'Perplexity'],
+    is_pinned: true,
+  },
+  {
+    title: '30-Second Pattern Interrupt Hook Formula',
+    content: `Engineered framework for opening YouTube documentary scripts with instant cognitive pattern interruption:
+
+1. THE CONVENTIONAL BELIEF (0:00 - 0:08):
+"For nearly a century, every standard history textbook claimed that [Conventional Fact] was settled science."
+
+2. THE ANOMALOUS ARTIFACT (0:09 - 0:18):
+"Until a team of excavators in [Location] recovered [Specific Artifact]—and discovered a microscopic layer of [Evidence] that shouldn't exist."
+
+3. THE STAKES & PARADIGM SHIFT (0:19 - 0:30):
+"It wasn't an anomaly. It was proof that our entire timeline of ancient global trade was wrong."`,
+    category: 'scripts',
+    badge: 'Hook',
+    tags: ['YouTube', 'Scriptwriting', 'Retention'],
+    is_pinned: false,
+  },
+  {
+    title: 'Cross-Archive Verification & Primary Source Checklist',
+    content: `Standard verification protocol before scripting or citing historical claims:
+
+• ARCHIVAL GROUND TRUTH:
+  [ ] Has this claim been confirmed by at least two independent primary excavation or archival logs?
+  [ ] Does the institutional museum catalog (e.g. British Museum, Louvre, Bodleian) have physical custody of the cited object?
+  [ ] Are the carbon dating or spectral analysis methodologies explicitly published with error margins?
+
+• RED FLAGS TO ELIMINATE:
+  [ ] Speculative sensationalist blogs quoting secondary news aggregators without primary DOIs.
+  [ ] Outdated 19th-century colonial interpretations debunked by modern stratigraphy.`,
+    category: 'research',
+    badge: 'Research',
+    tags: ['Fact-Checking', 'Methodology', 'Archives'],
+    is_pinned: false,
+  }
+];
+
+export const NotesPage: React.FC<NotesPageProps> = ({ showToast }) => {
+  const [notes, setNotes] = useState<UserNote[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
+  
+  // Filtering & Sorting State
+  const [selectedCategory, setSelectedCategory] = useState<NoteCategory>('all');
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<SortOption>('updated_desc');
+  const [viewMode, setViewMode] = useState<ViewMode>('grid');
+
+  // Editor State
+  const [editorTitle, setEditorTitle] = useState('');
+  const [editorContent, setEditorContent] = useState('');
+  const [editorCategory, setEditorCategory] = useState('prompts');
+  const [editorBadge, setEditorBadge] = useState<NoteBadge>('Prompt');
+  const [editorTags, setEditorTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState('');
+  const [editorIsPinned, setEditorIsPinned] = useState(false);
+  const [editorVersion, setEditorVersion] = useState(1);
+  const [isEditorFullscreen, setIsEditorFullscreen] = useState(false);
+  const [showMarkdownPreview, setShowMarkdownPreview] = useState(false);
+
+  // Sync & Auto-save State
+  const [syncStatus, setSyncStatus] = useState<'synced' | 'saving' | 'offline'>('synced');
+  const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
+  const [copiedNoteId, setCopiedNoteId] = useState<string | null>(null);
+  const autoSaveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isDirtyRef = useRef<boolean>(false);
+
+  // Version History Drawer State
+  const [versionDrawerOpen, setVersionDrawerOpen] = useState(false);
+  const [versionHistory, setVersionHistory] = useState<UserNoteVersion[]>([]);
+  const [loadingVersions, setLoadingVersions] = useState(false);
+  const [previewVersion, setPreviewVersion] = useState<UserNoteVersion | null>(null);
+
+  // 1. Initial Load from Cloudflare D1 (with local fallback)
+  useEffect(() => {
+    loadNotes();
+  }, []);
+
+  const loadNotes = async () => {
+    setLoading(true);
+    try {
+      const res = await api.getNotes();
+      if (res && res.success && Array.isArray(res.notes)) {
+        if (res.notes.length === 0) {
+          // Initialize starter notes if completely empty
+          await initializeStarterNotes();
+        } else {
+          setNotes(res.notes);
+          saveLocalNotes(res.notes);
+          if (!selectedNoteId && res.notes.length > 0) {
+            loadNoteIntoEditor(res.notes[0]);
+          }
+        }
+      } else {
+        const local = getLocalNotes();
+        if (local.length > 0) {
+          setNotes(local);
+          if (!selectedNoteId) loadNoteIntoEditor(local[0]);
+        } else {
+          await initializeStarterNotes();
+        }
+      }
+    } catch (err) {
+      console.warn("Failed to load notes from API, using local storage:", err);
+      const local = getLocalNotes();
+      setNotes(local);
+      if (local.length > 0 && !selectedNoteId) {
+        loadNoteIntoEditor(local[0]);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const initializeStarterNotes = async () => {
+    const createdNotes: UserNote[] = [];
+    for (const starter of DEFAULT_STARTER_NOTES) {
+      try {
+        const res = await api.saveNote(starter, "Starter Template");
+        if (res && res.success && res.note) {
+          createdNotes.push(res.note);
+        }
+      } catch (e) {
+        console.error("Error creating starter note", e);
+      }
+    }
+    if (createdNotes.length > 0) {
+      setNotes(createdNotes);
+      saveLocalNotes(createdNotes);
+      loadNoteIntoEditor(createdNotes[0]);
+    }
+  };
+
+  // 2. Load Selected Note into Editor
+  const loadNoteIntoEditor = (note: UserNote) => {
+    setSelectedNoteId(note.id);
+    setEditorTitle(note.title);
+    setEditorContent(note.content);
+    setEditorCategory(note.category);
+    setEditorBadge((note.badge as NoteBadge) || 'Prompt');
+    setEditorTags(note.tags || []);
+    setEditorIsPinned(note.is_pinned);
+    setEditorVersion(note.version || 1);
+    setLastSavedAt(new Date(note.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+    setSyncStatus('synced');
+    isDirtyRef.current = false;
+  };
+
+  // 3. Create New Note Handler
+  const handleCreateNew = (category: string = 'prompts', badge: NoteBadge = 'Prompt') => {
+    const newNote: UserNote = {
+      id: `note_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+      title: 'Untitled ' + (badge === 'Prompt' ? 'Research Prompt' : 'Note'),
+      content: '',
+      category,
+      tags: [],
+      badge,
+      is_pinned: false,
+      version: 1,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+
+    setNotes(prev => [newNote, ...prev]);
+    loadNoteIntoEditor(newNote);
+    setViewMode('split');
+    showToast(`Created new ${badge.toLowerCase()}`, 'info');
+  };
+
+  // 4. Auto-save Engine (Debounced 800ms)
+  const triggerAutoSave = (updatedFields: Partial<UserNote>) => {
+    if (!selectedNoteId) return;
+    isDirtyRef.current = true;
+    setSyncStatus('saving');
+
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+
+    autoSaveTimerRef.current = setTimeout(async () => {
+      await executeSave(updatedFields, "Auto-saved edit");
+    }, 800);
+  };
+
+  const executeSave = async (extraFields: Partial<UserNote> = {}, summary?: string) => {
+    if (!selectedNoteId) return;
+
+    const notePayload: Partial<UserNote> = {
+      id: selectedNoteId,
+      title: editorTitle.trim() || 'Untitled Note',
+      content: editorContent,
+      category: editorCategory,
+      badge: editorBadge,
+      tags: editorTags,
+      is_pinned: editorIsPinned,
+      ...extraFields
+    };
+
+    try {
+      const res = await api.saveNote(notePayload, summary || "Content revision");
+      if (res && res.success && res.note) {
+        setEditorVersion(res.note.version);
+        setNotes(prev => prev.map(n => n.id === selectedNoteId ? res.note : n));
+        saveLocalNotes(notes.map(n => n.id === selectedNoteId ? res.note : n));
+        setSyncStatus('synced');
+        setLastSavedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+        isDirtyRef.current = false;
+      } else {
+        setSyncStatus('offline');
+      }
+    } catch (err) {
+      console.warn("Save note API error, saving to local storage:", err);
+      setSyncStatus('offline');
+    }
+  };
+
+  // 5. Delete Note Handler
+  const handleDeleteNote = async (id: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    if (!window.confirm("Are you sure you want to permanently delete this note and all its revision versions?")) {
+      return;
+    }
+
+    try {
+      await api.deleteNote(id);
+      const updated = notes.filter(n => n.id !== id);
+      setNotes(updated);
+      saveLocalNotes(updated);
+      showToast("Note deleted successfully.", 'info');
+
+      if (selectedNoteId === id) {
+        if (updated.length > 0) {
+          loadNoteIntoEditor(updated[0]);
+        } else {
+          setSelectedNoteId(null);
+          setEditorTitle('');
+          setEditorContent('');
+        }
+      }
+    } catch (err) {
+      showToast("Failed to delete note", 'error');
+    }
+  };
+
+  // 6. Copy Full Note / Prompt to Clipboard
+  const handleCopyNote = async (text: string, id?: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(text);
+      if (id) {
+        setCopiedNoteId(id);
+        setTimeout(() => setCopiedNoteId(null), 2000);
+      }
+      showToast("Copied note & prompt to clipboard!", 'success');
+    } catch (err) {
+      showToast("Failed to copy note", 'error');
+    }
+  };
+
+  // 7. Pin / Unpin Toggle
+  const handleTogglePin = async (note: UserNote, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    const newPinned = !note.is_pinned;
+    const updated = { ...note, is_pinned: newPinned };
+
+    setNotes(prev => prev.map(n => n.id === note.id ? updated : n));
+    if (selectedNoteId === note.id) {
+      setEditorIsPinned(newPinned);
+    }
+
+    try {
+      await api.saveNote({ id: note.id, is_pinned: newPinned }, newPinned ? "Pinned note" : "Unpinned note");
+      showToast(newPinned ? "Pinned to top" : "Unpinned", 'info');
+    } catch (err) {
+      console.error("Failed to toggle pin", err);
+    }
+  };
+
+  // 8. Version History Inspection & Restore
+  const handleOpenVersions = async (noteId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setVersionDrawerOpen(true);
+    setLoadingVersions(true);
+    setPreviewVersion(null);
+
+    try {
+      const res = await api.getNoteVersions(noteId);
+      if (res && res.success && Array.isArray(res.versions)) {
+        setVersionHistory(res.versions);
+      } else {
+        setVersionHistory([]);
+      }
+    } catch (err) {
+      console.error("Failed to load note versions", err);
+      showToast("Could not load revision history", 'error');
+    } finally {
+      setLoadingVersions(false);
+    }
+  };
+
+  const handleRestoreVersion = async (v: UserNoteVersion) => {
+    if (!selectedNoteId) return;
+    if (!window.confirm(`Restore this note to Version ${v.version_number}? This will save a new restored version.`)) {
+      return;
+    }
+
+    try {
+      const res = await api.restoreNoteVersion(selectedNoteId, v.version_number);
+      if (res && res.success && res.note) {
+        loadNoteIntoEditor(res.note);
+        setNotes(prev => prev.map(n => n.id === selectedNoteId ? res.note : n));
+        saveLocalNotes(notes.map(n => n.id === selectedNoteId ? res.note : n));
+        setVersionDrawerOpen(false);
+        showToast(`Restored to Version ${v.version_number} (Now v${res.note.version})`, 'success');
+      }
+    } catch (err) {
+      showToast("Failed to restore version", 'error');
+    }
+  };
+
+  // 9. Tag Management
+  const handleAddTag = () => {
+    const trimmed = tagInput.trim().replace(/^#/, '');
+    if (trimmed && !editorTags.includes(trimmed)) {
+      const updated = [...editorTags, trimmed];
+      setEditorTags(updated);
+      setTagInput('');
+      triggerAutoSave({ tags: updated });
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    const updated = editorTags.filter(t => t !== tagToRemove);
+    setEditorTags(updated);
+    triggerAutoSave({ tags: updated });
+  };
+
+  // 10. Filtered & Sorted Notes
+  const allUniqueTags = useMemo(() => {
+    const tagSet = new Set<string>();
+    notes.forEach(n => {
+      if (Array.isArray(n.tags)) {
+        n.tags.forEach(t => tagSet.add(t));
+      }
+    });
+    return Array.from(tagSet).sort();
+  }, [notes]);
+
+  const filteredNotes = useMemo(() => {
+    return notes.filter(note => {
+      // Category filter
+      if (selectedCategory !== 'all' && note.category.toLowerCase() !== selectedCategory.toLowerCase()) {
+        return false;
+      }
+      // Tag filter
+      if (selectedTag && (!note.tags || !note.tags.includes(selectedTag))) {
+        return false;
+      }
+      // Search query
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const titleMatch = note.title.toLowerCase().includes(q);
+        const contentMatch = note.content.toLowerCase().includes(q);
+        const tagMatch = note.tags && note.tags.some(t => t.toLowerCase().includes(q));
+        const badgeMatch = note.badge && note.badge.toLowerCase().includes(q);
+        if (!titleMatch && !contentMatch && !tagMatch && !badgeMatch) return false;
+      }
+      return true;
+    }).sort((a, b) => {
+      // Pinned notes always surface to the top
+      if (a.is_pinned && !b.is_pinned) return -1;
+      if (!a.is_pinned && b.is_pinned) return 1;
+
+      switch (sortBy) {
+        case 'updated_desc':
+          return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
+        case 'created_desc':
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        case 'created_asc':
+          return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+        case 'title_asc':
+          return a.title.localeCompare(b.title);
+        case 'word_count':
+          return (b.content.split(/\s+/).filter(Boolean).length) - (a.content.split(/\s+/).filter(Boolean).length);
+        case 'versions_desc':
+          return (b.version || 1) - (a.version || 1);
+        default:
+          return 0;
+      }
+    });
+  }, [notes, selectedCategory, selectedTag, searchQuery, sortBy]);
+
+  // Metrics calculation
+  const wordCount = useMemo(() => {
+    return editorContent.trim() ? editorContent.trim().split(/\s+/).length : 0;
+  }, [editorContent]);
+
+  const charCount = editorContent.length;
+  const readingTime = Math.ceil(wordCount / 200);
+
+  return (
+    <div className="space-y-5 animate-in fade-in duration-200">
+      
+      {/* 1. Top Header & Action Controls Bar */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-neutral-800">
+        <div>
+          <div className="flex items-center space-x-2.5">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-600 to-indigo-600 p-[1px] shadow-lg shadow-sky-950/40">
+              <div className="w-full h-full bg-neutral-950 rounded-[11px] flex items-center justify-center">
+                <FileText className="w-5 h-5 text-sky-400" />
+              </div>
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <h1 className="text-xl font-display font-black text-white tracking-tight">Notes & Prompts Vault</h1>
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                  Cloudflare D1 Synced
+                </span>
+              </div>
+              <p className="text-xs text-neutral-400 mt-0.5">
+                Save, organize, version, and 1-click copy your personal AI search prompts and deep research dossiers.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons: New Note, New Prompt, View Mode Toggle */}
+        <div className="flex items-center space-x-2 flex-wrap gap-y-2">
+          {/* New Prompt Button */}
+          <button
+            onClick={() => handleCreateNew('prompts', 'Prompt')}
+            className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white shadow-md shadow-sky-600/30 active:scale-95 transition-all cursor-pointer"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>New Prompt</span>
+          </button>
+
+          {/* New General Note Button */}
+          <button
+            onClick={() => handleCreateNew('research', 'Research')}
+            className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-neutral-200 transition-all cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5 text-neutral-400" />
+            <span>New Note</span>
+          </button>
+
+          {/* View Toggle */}
+          <div className="flex items-center rounded-xl bg-neutral-900 border border-neutral-800 p-1">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={`p-1.5 rounded-lg transition-all ${
+                viewMode === 'grid' ? 'bg-neutral-800 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'
+              }`}
+              title="Card Grid View"
+            >
+              <LayoutGrid className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => setViewMode('split')}
+              className={`p-1.5 rounded-lg transition-all ${
+                viewMode === 'split' ? 'bg-neutral-800 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'
+              }`}
+              title="Split Master-Detail Editor View"
+            >
+              <Columns className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. Category Tabs */}
+      <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 border-b border-neutral-800/80">
+        {CATEGORIES.map(cat => {
+          const isActive = selectedCategory === cat.id;
+          const count = cat.id === 'all' 
+            ? notes.length 
+            : notes.filter(n => n.category.toLowerCase() === cat.id.toLowerCase()).length;
+
+          return (
+            <button
+              key={cat.id}
+              onClick={() => setSelectedCategory(cat.id)}
+              className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${
+                isActive
+                  ? 'bg-sky-500/15 border border-sky-500/30 text-sky-300 shadow-sm'
+                  : 'bg-neutral-900/60 hover:bg-neutral-800/80 text-neutral-400 hover:text-neutral-200 border border-neutral-800/60'
+              }`}
+            >
+              <span>{cat.label}</span>
+              <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${
+                isActive ? 'bg-sky-500/30 text-sky-200' : 'bg-neutral-800 text-neutral-500'
+              }`}>
+                {count}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* 3. Search, Tag Filters & Sort Controls Bar */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
+        {/* Search Input */}
+        <div className="relative flex-1 max-w-md">
+          <Search className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-500" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search notes, prompts, tags, or badges..."
+            className="w-full pl-9 pr-3.5 py-2 rounded-xl bg-neutral-900/90 border border-neutral-800 text-white placeholder-neutral-500 focus:outline-none focus:border-sky-500 transition-colors"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery('')}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-300"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
+
+        {/* Right side: Tag Filter & Sort Dropdown */}
+        <div className="flex items-center space-x-2.5 flex-wrap gap-y-2">
+          {/* Tag Filter Pills */}
+          {allUniqueTags.length > 0 && (
+            <div className="flex items-center space-x-1 overflow-x-auto max-w-xs">
+              <Tag className="w-3 h-3 text-neutral-500 shrink-0 mr-0.5" />
+              {selectedTag && (
+                <button
+                  onClick={() => setSelectedTag(null)}
+                  className="px-2 py-0.5 rounded-md bg-neutral-800 text-neutral-400 hover:text-white text-[11px] font-mono"
+                >
+                  Clear #{selectedTag}
+                </button>
+              )}
+              {allUniqueTags.slice(0, 4).map(t => (
+                <button
+                  key={t}
+                  onClick={() => setSelectedTag(selectedTag === t ? null : t)}
+                  className={`px-2 py-0.5 rounded-md text-[11px] font-mono transition-colors ${
+                    selectedTag === t
+                      ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                      : 'bg-neutral-900 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200 border border-neutral-800'
+                  }`}
+                >
+                  #{t}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Sort Dropdown */}
+          <div className="flex items-center space-x-1.5 bg-neutral-900/90 border border-neutral-800 rounded-xl px-2.5 py-1.5">
+            <ArrowUpDown className="w-3 h-3 text-neutral-500" />
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortOption)}
+              className="bg-transparent text-neutral-300 text-xs focus:outline-none cursor-pointer"
+            >
+              <option value="updated_desc" className="bg-neutral-900">Recently Updated</option>
+              <option value="created_desc" className="bg-neutral-900">Newest First</option>
+              <option value="created_asc" className="bg-neutral-900">Oldest First</option>
+              <option value="title_asc" className="bg-neutral-900">Title A-Z</option>
+              <option value="word_count" className="bg-neutral-900">Word Count (Longest)</option>
+              <option value="versions_desc" className="bg-neutral-900">Most Revisions</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* 4. Main Body: Grid View OR Split View */}
+      {loading ? (
+        <div className="py-24 text-center text-neutral-400 space-y-3">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto text-sky-400" />
+          <p className="text-sm font-medium">Syncing personal vault with Cloudflare D1...</p>
+        </div>
+      ) : filteredNotes.length === 0 ? (
+        <div className="py-20 text-center glass-panel rounded-2xl p-8 border border-neutral-800 space-y-4 max-w-lg mx-auto">
+          <div className="w-12 h-12 rounded-2xl bg-neutral-900 border border-neutral-800 flex items-center justify-center mx-auto text-neutral-400">
+            <FileText className="w-6 h-6" />
+          </div>
+          <div>
+            <h3 className="text-base font-bold text-white">No Notes Found</h3>
+            <p className="text-xs text-neutral-400 mt-1">
+              {searchQuery || selectedCategory !== 'all' || selectedTag
+                ? "No notes match your active filters or search query."
+                : "Your personal prompt and notes vault is empty."}
+            </p>
+          </div>
+          <div className="pt-2 flex items-center justify-center space-x-2">
+            {(searchQuery || selectedCategory !== 'all' || selectedTag) ? (
+              <button
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedCategory('all');
+                  setSelectedTag(null);
+                }}
+                className="px-4 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-xs font-semibold text-neutral-200 border border-neutral-800 transition-colors cursor-pointer"
+              >
+                Clear All Filters
+              </button>
+            ) : (
+              <button
+                onClick={() => handleCreateNew('prompts', 'Prompt')}
+                className="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-xs font-bold text-white shadow-md shadow-sky-600/30 transition-all cursor-pointer"
+              >
+                Create Your First Prompt
+              </button>
+            )}
+          </div>
+        </div>
+      ) : viewMode === 'grid' ? (
+        
+        /* ================= CARD GRID VIEW ================= */
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredNotes.map(note => {
+            const isSelected = selectedNoteId === note.id;
+            const badgeStyle = BADGE_COLORS[note.badge] || BADGE_COLORS.Draft;
+            const noteWordCount = note.content.trim() ? note.content.trim().split(/\s+/).length : 0;
+            const isCopied = copiedNoteId === note.id;
+
+            return (
+              <div
+                key={note.id}
+                onClick={() => {
+                  loadNoteIntoEditor(note);
+                  setViewMode('split');
+                }}
+                className={`glass-panel rounded-2xl p-5 border transition-all duration-150 flex flex-col justify-between group cursor-pointer relative ${
+                  isSelected 
+                    ? 'border-sky-500/50 bg-neutral-900/90 shadow-lg shadow-sky-950/20 ring-1 ring-sky-500/30' 
+                    : note.is_pinned
+                      ? 'border-amber-500/30 bg-neutral-900/60 hover:border-neutral-700'
+                      : 'border-neutral-800/80 bg-neutral-900/40 hover:border-neutral-700 hover:bg-neutral-900/70'
+                }`}
+              >
+                {/* Card Top: Badges & Pin */}
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-2.5">
+                    <div className="flex items-center space-x-1.5 flex-wrap gap-y-1">
+                      {/* Badge */}
+                      <span className={`px-2 py-0.5 rounded-md text-[10px] font-mono font-bold border uppercase tracking-wider ${badgeStyle.bg} ${badgeStyle.text} ${badgeStyle.border}`}>
+                        {note.badge || 'Note'}
+                      </span>
+
+                      {/* Version Pill */}
+                      <span 
+                        onClick={(e) => {
+                          loadNoteIntoEditor(note);
+                          handleOpenVersions(note.id, e);
+                        }}
+                        className="px-1.5 py-0.5 rounded bg-neutral-800/90 hover:bg-neutral-700 text-neutral-400 hover:text-white font-mono text-[10px] font-bold border border-neutral-700/60 transition-colors"
+                        title="Click to view full revision history"
+                      >
+                        v{note.version || 1}
+                      </span>
+
+                      {/* Pinned Indicator */}
+                      {note.is_pinned && (
+                        <span className="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[10px] font-mono">
+                          <Pin className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />
+                          <span>Pinned</span>
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Pin Toggle Button */}
+                    <button
+                      onClick={(e) => handleTogglePin(note, e)}
+                      className={`p-1 rounded-lg transition-colors cursor-pointer ${
+                        note.is_pinned 
+                          ? 'text-amber-400 hover:text-amber-300' 
+                          : 'text-neutral-600 hover:text-neutral-300 opacity-0 group-hover:opacity-100'
+                      }`}
+                      title={note.is_pinned ? "Unpin note" : "Pin note to top"}
+                    >
+                      <Pin className={`w-3.5 h-3.5 ${note.is_pinned ? 'fill-amber-400' : ''}`} />
+                    </button>
+                  </div>
+
+                  {/* Title */}
+                  <h3 className="text-sm font-bold text-white group-hover:text-sky-300 transition-colors line-clamp-2 leading-snug">
+                    {note.title || "Untitled Note"}
+                  </h3>
+
+                  {/* Multi-paragraph snippet */}
+                  <p className="text-xs text-neutral-400 mt-2 line-clamp-4 leading-relaxed font-normal">
+                    {note.content ? note.content : <span className="italic text-neutral-600">Empty note...</span>}
+                  </p>
+                </div>
+
+                {/* Card Footer: Tags, Metrics & Actions */}
+                <div className="mt-4 pt-3 border-t border-neutral-800/80 space-y-2.5">
+                  {/* Tags */}
+                  {note.tags && note.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1">
+                      {note.tags.map(tag => (
+                        <span key={tag} className="text-[10px] font-mono text-neutral-400 bg-neutral-950 px-1.5 py-0.5 rounded border border-neutral-800/80">
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between text-[11px] font-mono text-neutral-500">
+                    <div className="flex items-center space-x-2">
+                      <span>{noteWordCount} words</span>
+                      <span>•</span>
+                      <span>{new Date(note.updated_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                    </div>
+
+                    {/* Toolbar on Card */}
+                    <div className="flex items-center space-x-1">
+                      {/* Copy Button */}
+                      <button
+                        onClick={(e) => handleCopyNote(note.content, note.id, e)}
+                        className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
+                          isCopied 
+                            ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300' 
+                            : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-800 text-neutral-400 hover:text-white'
+                        }`}
+                        title="Copy note content to clipboard"
+                      >
+                        {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+                      </button>
+
+                      {/* Versions Button */}
+                      <button
+                        onClick={(e) => {
+                          loadNoteIntoEditor(note);
+                          handleOpenVersions(note.id, e);
+                        }}
+                        className="p-1.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-neutral-400 hover:text-white transition-all cursor-pointer"
+                        title="View revision versions"
+                      >
+                        <History className="w-3.5 h-3.5" />
+                      </button>
+
+                      {/* Delete Button */}
+                      <button
+                        onClick={(e) => handleDeleteNote(note.id, e)}
+                        className="p-1.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-neutral-500 hover:text-rose-400 transition-all cursor-pointer"
+                        title="Delete note"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            );
+          })}
+        </div>
+
+      ) : (
+
+        /* ================= SPLIT MASTER-DETAIL VIEW ================= */
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 min-h-[600px]">
+          
+          {/* Left Side: Notes List (4 columns) */}
+          <div className="lg:col-span-4 space-y-2.5 max-h-[800px] overflow-y-auto pr-1">
+            {filteredNotes.map(note => {
+              const isSelected = selectedNoteId === note.id;
+              const badgeStyle = BADGE_COLORS[note.badge] || BADGE_COLORS.Draft;
+              const isCopied = copiedNoteId === note.id;
+
+              return (
+                <div
+                  key={note.id}
+                  onClick={() => loadNoteIntoEditor(note)}
+                  className={`p-3.5 rounded-xl border transition-all cursor-pointer relative ${
+                    isSelected
+                      ? 'border-sky-500/50 bg-neutral-900 shadow-md shadow-sky-950/20 ring-1 ring-sky-500/30'
+                      : 'border-neutral-800/80 bg-neutral-950/60 hover:bg-neutral-900/60 hover:border-neutral-700'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-1 mb-1">
+                    <div className="flex items-center space-x-1.5 min-w-0">
+                      <span className={`px-1.5 py-0.2 rounded text-[9px] font-mono font-bold uppercase tracking-wider ${badgeStyle.bg} ${badgeStyle.text}`}>
+                        {note.badge}
+                      </span>
+                      <span className="text-[10px] font-mono text-neutral-500">v{note.version}</span>
+                    </div>
+
+                    <div className="flex items-center space-x-1 shrink-0">
+                      {note.is_pinned && <Pin className="w-3 h-3 fill-amber-400 text-amber-400" />}
+                      <button
+                        onClick={(e) => handleCopyNote(note.content, note.id, e)}
+                        className="p-1 text-neutral-500 hover:text-white"
+                        title="Copy note"
+                      >
+                        {isCopied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                      </button>
+                    </div>
+                  </div>
+
+                  <h4 className="text-xs font-bold text-white truncate">{note.title || "Untitled Note"}</h4>
+                  <p className="text-[11px] text-neutral-400 line-clamp-2 mt-1 leading-snug">
+                    {note.content || "Empty note content..."}
+                  </p>
+                  
+                  <div className="flex items-center justify-between text-[10px] font-mono text-neutral-500 mt-2 pt-1.5 border-t border-neutral-900">
+                    <span>{note.content.split(/\s+/).filter(Boolean).length} words</span>
+                    <span>{new Date(note.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Right Side: Full Multi-Paragraph Editor (8 columns) */}
+          <div className={`lg:col-span-8 flex flex-col glass-panel rounded-2xl border border-neutral-800 p-5 ${
+            isEditorFullscreen ? 'fixed inset-4 z-50 bg-neutral-950/95 backdrop-blur-xl border-neutral-700 shadow-2xl overflow-y-auto' : ''
+          }`}>
+            
+            {selectedNoteId ? (
+              <div className="flex-1 flex flex-col space-y-4">
+                
+                {/* Editor Header: Controls & Sync Status */}
+                <div className="flex items-center justify-between pb-3 border-b border-neutral-800 gap-2 flex-wrap">
+                  {/* Left: Badge & Category Selector */}
+                  <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                    {/* Badge Picker */}
+                    <select
+                      value={editorBadge}
+                      onChange={(e) => {
+                        const newBadge = e.target.value as NoteBadge;
+                        setEditorBadge(newBadge);
+                        triggerAutoSave({ badge: newBadge });
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-neutral-900 border border-neutral-800 text-xs font-mono font-bold text-sky-300 focus:outline-none cursor-pointer"
+                    >
+                      <option value="Prompt">Badge: Prompt</option>
+                      <option value="Research">Badge: Research</option>
+                      <option value="Script">Badge: Script</option>
+                      <option value="Hook">Badge: Hook</option>
+                      <option value="Template">Badge: Template</option>
+                      <option value="Draft">Badge: Draft</option>
+                      <option value="Idea">Badge: Idea</option>
+                    </select>
+
+                    {/* Category Picker */}
+                    <select
+                      value={editorCategory}
+                      onChange={(e) => {
+                        const newCat = e.target.value;
+                        setEditorCategory(newCat);
+                        triggerAutoSave({ category: newCat });
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-neutral-900 border border-neutral-800 text-xs text-neutral-300 focus:outline-none cursor-pointer"
+                    >
+                      <option value="prompts">Category: Prompts</option>
+                      <option value="research">Category: Research</option>
+                      <option value="scripts">Category: Script Hooks</option>
+                      <option value="templates">Category: Templates</option>
+                      <option value="general">Category: General</option>
+                    </select>
+
+                    {/* Pin Toggle */}
+                    <button
+                      onClick={() => {
+                        const newPin = !editorIsPinned;
+                        setEditorIsPinned(newPin);
+                        triggerAutoSave({ is_pinned: newPin });
+                      }}
+                      className={`flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-mono border transition-colors cursor-pointer ${
+                        editorIsPinned
+                          ? 'bg-amber-500/15 border-amber-500/30 text-amber-300'
+                          : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:text-white'
+                      }`}
+                    >
+                      <Pin className={`w-3 h-3 ${editorIsPinned ? 'fill-amber-400' : ''}`} />
+                      <span>{editorIsPinned ? 'Pinned' : 'Pin'}</span>
+                    </button>
+                  </div>
+
+                  {/* Right: Sync Status, Versions & Fullscreen */}
+                  <div className="flex items-center space-x-2 font-mono text-xs">
+                    {/* Auto-save Status Indicator */}
+                    <div className="flex items-center space-x-1.5 text-neutral-400 pr-1">
+                      {syncStatus === 'saving' ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-amber-400" />
+                          <span className="text-[11px] text-amber-300">Saving...</span>
+                        </>
+                      ) : syncStatus === 'synced' ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-400" />
+                          <span className="text-[11px] text-emerald-400">Synced to D1 {lastSavedAt ? `(${lastSavedAt})` : ''}</span>
+                        </>
+                      ) : (
+                        <>
+                          <AlertCircle className="w-3.5 h-3.5 text-neutral-500" />
+                          <span className="text-[11px] text-neutral-400">Local Draft</span>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Version History Button */}
+                    <button
+                      onClick={() => selectedNoteId && handleOpenVersions(selectedNoteId)}
+                      className="flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-sky-400 text-xs transition-colors cursor-pointer"
+                      title="View all past versions"
+                    >
+                      <History className="w-3.5 h-3.5" />
+                      <span>v{editorVersion} Revisions</span>
+                    </button>
+
+                    {/* 1-Click Copy Full Editor Content */}
+                    <button
+                      onClick={() => handleCopyNote(editorContent, selectedNoteId)}
+                      className="flex items-center space-x-1 px-3 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs transition-all shadow-sm shadow-sky-600/30 active:scale-95 cursor-pointer"
+                      title="Copy complete prompt / note to clipboard"
+                    >
+                      <Copy className="w-3.5 h-3.5" />
+                      <span>Copy</span>
+                    </button>
+
+                    {/* Fullscreen Toggle */}
+                    <button
+                      onClick={() => setIsEditorFullscreen(!isEditorFullscreen)}
+                      className="p-1 rounded-lg bg-neutral-900 hover:bg-neutral-800 text-neutral-400 hover:text-white transition-colors"
+                      title={isEditorFullscreen ? "Exit Fullscreen" : "Expand to Fullscreen"}
+                    >
+                      {isEditorFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Note Title Input */}
+                <div>
+                  <input
+                    type="text"
+                    value={editorTitle}
+                    onChange={(e) => {
+                      setEditorTitle(e.target.value);
+                      triggerAutoSave({ title: e.target.value });
+                    }}
+                    placeholder="Note or Prompt Title..."
+                    className="w-full text-lg font-display font-bold text-white bg-transparent border-b border-neutral-800/80 pb-2 focus:outline-none focus:border-sky-500 placeholder-neutral-600 transition-colors"
+                  />
+                </div>
+
+                {/* Tags Management Row */}
+                <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                  <div className="flex items-center space-x-1 text-neutral-500 text-xs">
+                    <Tag className="w-3 h-3" />
+                    <span>Tags:</span>
+                  </div>
+                  {editorTags.map(tag => (
+                    <span key={tag} className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-neutral-900 border border-neutral-800 text-xs font-mono text-neutral-300">
+                      <span>#{tag}</span>
+                      <button
+                        onClick={() => handleRemoveTag(tag)}
+                        className="text-neutral-500 hover:text-rose-400 ml-1"
+                      >
+                        <X className="w-2.5 h-2.5" />
+                      </button>
+                    </span>
+                  ))}
+                  
+                  {/* Tag Input */}
+                  <div className="flex items-center space-x-1">
+                    <input
+                      type="text"
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ',') {
+                          e.preventDefault();
+                          handleAddTag();
+                        }
+                      }}
+                      placeholder="+ tag (Enter)"
+                      className="px-2 py-0.5 rounded bg-neutral-900/60 border border-neutral-800 text-xs text-neutral-300 placeholder-neutral-600 focus:outline-none focus:border-sky-500 w-24"
+                    />
+                  </div>
+                </div>
+
+                {/* Editor Mode Bar: Markdown Preview Toggle & Metrics */}
+                <div className="flex items-center justify-between text-xs text-neutral-400 pt-1">
+                  <div className="flex items-center space-x-2 font-mono text-[11px]">
+                    <span>{wordCount} words</span>
+                    <span>•</span>
+                    <span>{charCount} chars</span>
+                    <span>•</span>
+                    <span>~{readingTime} min read</span>
+                  </div>
+
+                  <button
+                    onClick={() => setShowMarkdownPreview(!showMarkdownPreview)}
+                    className={`flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
+                      showMarkdownPreview
+                        ? 'bg-sky-500/20 border-sky-500/30 text-sky-300'
+                        : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:text-white'
+                    }`}
+                  >
+                    <Eye className="w-3 h-3" />
+                    <span>{showMarkdownPreview ? 'Edit Source' : 'Markdown Preview'}</span>
+                  </button>
+                </div>
+
+                {/* Multi-Paragraph Textarea OR Markdown Preview */}
+                <div className="flex-1 min-h-[360px] flex flex-col">
+                  {showMarkdownPreview ? (
+                    <div className="p-4 rounded-xl bg-neutral-950 border border-neutral-800 text-neutral-200 text-xs leading-relaxed whitespace-pre-line overflow-y-auto flex-1 font-sans">
+                      {editorContent || <span className="italic text-neutral-600">Nothing to preview...</span>}
+                    </div>
+                  ) : (
+                    <textarea
+                      value={editorContent}
+                      onChange={(e) => {
+                        setEditorContent(e.target.value);
+                        triggerAutoSave({ content: e.target.value });
+                      }}
+                      placeholder="Write your long research prompt, investigative notes, video hooks, or source citations here..."
+                      className="w-full flex-1 min-h-[380px] p-4 rounded-xl bg-neutral-950/80 border border-neutral-800 text-neutral-200 text-xs leading-relaxed focus:outline-none focus:border-sky-500 placeholder-neutral-600 font-mono resize-y"
+                    />
+                  )}
+                </div>
+
+                {/* Editor Bottom Footer: Manual Save Version Milestone & Delete */}
+                <div className="flex items-center justify-between pt-2 border-t border-neutral-800">
+                  <button
+                    onClick={() => selectedNoteId && handleDeleteNote(selectedNoteId)}
+                    className="flex items-center space-x-1.5 text-xs text-neutral-500 hover:text-rose-400 transition-colors cursor-pointer"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Delete Note</span>
+                  </button>
+
+                  <button
+                    onClick={async () => {
+                      await executeSave({}, `Manual milestone v${editorVersion + 1}`);
+                      showToast(`Saved version milestone v${editorVersion + 1}!`, 'success');
+                    }}
+                    className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-xs font-semibold text-neutral-300 hover:text-white transition-all cursor-pointer"
+                  >
+                    <History className="w-3.5 h-3.5 text-sky-400" />
+                    <span>Save Version Milestone</span>
+                  </button>
+                </div>
+
+              </div>
+            ) : (
+              <div className="py-24 text-center text-neutral-500 space-y-2">
+                <FileText className="w-8 h-8 mx-auto text-neutral-600" />
+                <p>Select a note from the left to view or edit.</p>
+              </div>
+            )}
+
+          </div>
+
+        </div>
+      )}
+
+      {/* ================= 5. VERSION HISTORY DRAWER / MODAL ================= */}
+      {versionDrawerOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="glass-panel w-full max-w-3xl rounded-2xl p-6 border border-neutral-800 shadow-2xl relative max-h-[90vh] flex flex-col">
+            
+            {/* Modal Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-neutral-800">
+              <div className="flex items-center space-x-2.5">
+                <div className="w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
+                  <History className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-white">Revision & Version History</h3>
+                  <p className="text-xs text-neutral-400">Inspect past snapshots, compare changes, and 1-click restore.</p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setVersionDrawerOpen(false)}
+                className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto py-4 space-y-4">
+              {loadingVersions ? (
+                <div className="py-12 text-center text-neutral-400 space-y-2">
+                  <Loader2 className="w-6 h-6 animate-spin mx-auto text-sky-400" />
+                  <p className="text-xs">Loading revision snapshots from Cloudflare D1...</p>
+                </div>
+              ) : versionHistory.length === 0 ? (
+                <p className="text-xs text-neutral-500 text-center py-12">No previous versions found for this note.</p>
+              ) : previewVersion ? (
+                /* Version Preview View */
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between bg-neutral-900 p-3 rounded-xl border border-neutral-800">
+                    <div>
+                      <span className="text-xs font-mono font-bold text-sky-400">Previewing Version {previewVersion.version_number}</span>
+                      <p className="text-[11px] text-neutral-400 font-mono mt-0.5">
+                        Saved: {new Date(previewVersion.created_at).toLocaleString()} • {previewVersion.change_summary || 'Revision'}
+                      </p>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handleCopyNote(previewVersion.content)}
+                        className="px-3 py-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-xs text-white font-medium flex items-center space-x-1"
+                      >
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Copy</span>
+                      </button>
+
+                      <button
+                        onClick={() => handleRestoreVersion(previewVersion)}
+                        className="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-xs font-bold text-white flex items-center space-x-1 shadow-sm"
+                      >
+                        <RotateCcw className="w-3.5 h-3.5" />
+                        <span>Restore This Version</span>
+                      </button>
+
+                      <button
+                        onClick={() => setPreviewVersion(null)}
+                        className="p-1.5 rounded-lg text-neutral-400 hover:text-white"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-neutral-950 border border-neutral-800 font-mono text-xs text-neutral-200 whitespace-pre-line max-h-96 overflow-y-auto">
+                    {previewVersion.content}
+                  </div>
+                </div>
+              ) : (
+                /* Version List */
+                <div className="space-y-2">
+                  {versionHistory.map((ver, idx) => {
+                    const isLatest = idx === 0;
+                    const words = ver.content ? ver.content.split(/\s+/).filter(Boolean).length : 0;
+
+                    return (
+                      <div
+                        key={ver.version_id}
+                        className="p-3.5 rounded-xl bg-neutral-900/70 border border-neutral-800 hover:border-neutral-700 transition-all flex items-center justify-between gap-3"
+                      >
+                        <div className="flex items-center space-x-3 min-w-0">
+                          <span className={`w-8 h-8 rounded-lg flex items-center justify-center font-mono text-xs font-bold shrink-0 ${
+                            isLatest ? 'bg-sky-500/20 text-sky-300 border border-sky-500/30' : 'bg-neutral-800 text-neutral-400'
+                          }`}>
+                            v{ver.version_number}
+                          </span>
+
+                          <div className="min-w-0">
+                            <div className="flex items-center space-x-2">
+                              <h4 className="text-xs font-bold text-white truncate">{ver.title || "Untitled"}</h4>
+                              {isLatest && (
+                                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                  Current
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[11px] text-neutral-400 font-mono mt-0.5 flex items-center space-x-2">
+                              <span>{new Date(ver.created_at).toLocaleString()}</span>
+                              <span>•</span>
+                              <span>{words} words</span>
+                              {ver.change_summary && (
+                                <>
+                                  <span>•</span>
+                                  <span className="italic text-neutral-500 truncate">{ver.change_summary}</span>
+                                </>
+                              )}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Actions on this version */}
+                        <div className="flex items-center space-x-1.5 shrink-0">
+                          <button
+                            onClick={() => setPreviewVersion(ver)}
+                            className="px-2.5 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white text-xs font-medium cursor-pointer"
+                          >
+                            Preview
+                          </button>
+
+                          <button
+                            onClick={() => handleCopyNote(ver.content)}
+                            className="p-1.5 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white text-xs cursor-pointer"
+                            title="Copy this version"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </button>
+
+                          {!isLatest && (
+                            <button
+                              onClick={() => handleRestoreVersion(ver)}
+                              className="flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-sky-600/20 hover:bg-sky-600 border border-sky-500/30 hover:border-sky-500 text-sky-300 hover:text-white text-xs font-semibold transition-all cursor-pointer"
+                              title="Restore note to this version"
+                            >
+                              <RotateCcw className="w-3 h-3" />
+                              <span>Restore</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="pt-3 border-t border-neutral-800 flex justify-end">
+              <button
+                onClick={() => setVersionDrawerOpen(false)}
+                className="px-4 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-xs font-semibold text-neutral-300 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+    </div>
+  );
+};

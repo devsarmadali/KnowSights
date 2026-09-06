@@ -13,7 +13,8 @@ import {
   Moon,
   Sun,
   BookOpen,
-  Check
+  Check,
+  FileText
 } from 'lucide-react';
 import { SystemStats } from '../types';
 import { DISCOVERY_SOURCES } from '../data/discoverySources';
@@ -21,12 +22,13 @@ import { DISCOVERY_SOURCES } from '../data/discoverySources';
 export type ThemeOption = 'dark' | 'sepia' | 'solarized-dark' | 'solarized-light';
 
 interface HeaderProps {
-  activeTab: 'mix' | 'browse' | 'discovery' | 'settings';
-  setActiveTab: (tab: 'mix' | 'browse' | 'discovery' | 'settings') => void;
+  activeTab: 'mix' | 'browse' | 'discovery' | 'notes' | 'settings';
+  setActiveTab: (tab: 'mix' | 'browse' | 'discovery' | 'notes' | 'settings') => void;
   stats: SystemStats | null;
   spreadsheetId: string;
   currentTheme?: ThemeOption;
   onThemeChange?: (theme: ThemeOption) => void;
+  notesCount?: number;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -35,7 +37,8 @@ export const Header: React.FC<HeaderProps> = ({
   stats,
   spreadsheetId,
   currentTheme = 'dark',
-  onThemeChange
+  onThemeChange,
+  notesCount
 }) => {
   const sheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`;
   const [showThemeMenu, setShowThemeMenu] = useState(false);
@@ -51,10 +54,11 @@ export const Header: React.FC<HeaderProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const tabs: { id: 'mix' | 'browse' | 'discovery' | 'settings'; label: string; icon: any; badge?: string }[] = [
+  const tabs: { id: 'mix' | 'browse' | 'discovery' | 'notes' | 'settings'; label: string; icon: any; badge?: string }[] = [
     { id: 'mix', label: "Today's Ideas", icon: Compass },
     { id: 'browse', label: "Production Pool", icon: Search },
     { id: 'discovery', label: "Discovery Lab", icon: Radio, badge: `${DISCOVERY_SOURCES.length} Sources` },
+    { id: 'notes', label: "Notes & Prompts", icon: FileText, badge: notesCount !== undefined && notesCount > 0 ? `${notesCount}` : undefined },
     { id: 'settings', label: "Settings", icon: Settings },
   ];
 

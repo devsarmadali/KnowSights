@@ -9,13 +9,35 @@ import {
   DiscoverySource,
   DiscoveryArticle,
   GeneratedTopicIdea,
-  ResearchCycleState
+  ResearchCycleState,
+  UserNote,
+  UserNoteVersion
 } from '../types';
 
 const STORAGE_KEY_CONFIG = 'knowsights_config_v2';
 const STORAGE_KEY_LOCAL_POOL = 'knowsights_local_pool_v2';
 const STORAGE_KEY_GENERATED_IDEAS = 'knowsights_generated_ideas_v1';
 const STORAGE_KEY_RESEARCH_CYCLE = 'knowsights_research_cycle_v1';
+export const STORAGE_KEY_USER_NOTES = 'knowsights_user_notes_v1';
+export const STORAGE_KEY_NOTE_VERSIONS = 'knowsights_note_versions_v1';
+
+export function getLocalNotes(): UserNote[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY_USER_NOTES);
+    if (!raw) return [];
+    return JSON.parse(raw);
+  } catch (e) {
+    return [];
+  }
+}
+
+export function saveLocalNotes(notes: UserNote[]): void {
+  try {
+    localStorage.setItem(STORAGE_KEY_USER_NOTES, JSON.stringify(notes));
+  } catch (e) {
+    console.error("Failed to save local notes cache", e);
+  }
+}
 
 export const CLOUDFLARE_EDGE_API_URL = 'https://knowsights-api.excisetools.workers.dev';
 export const GOOGLE_SHEETS_FALLBACK_URL = 'https://script.google.com/macros/s/AKfycbzrJo3mT73UlHp5EbXwzteWdebFzMQunRIV0YY_44j_OvVhDhXRcvFqMieE2FrsL4kK_g/exec';
@@ -758,6 +780,70 @@ function executeLocalEngine(action: string, payload: Record<string, any>, config
     };
   }
 
+  if (action === 'get_notes') {
+    const notes = getLocalNotes();
+    const cat = (payload.category || '').toLowerCase().trim();
+    const search = (payload.search || '').toLowerCase().trim();
+    let filtered = notes;
+    if (cat && cat !== 'all' && cat !== 'all notes') {
+      filtered = filtered.filter(n => n.category.toLowerCase() === cat);
+    }
+    if (search) {
+      filtered = filtered.filter(n => 
+        n.title.toLowerCase().includes(search) || 
+        n.content.toLowerCase().includes(search) || 
+        (n.tags && n.tags.some(t => t.toLowerCase().includes(search))) ||
+        (n.badge && n.badge.toLowerCase().includes(search))
+      );
+    }
+    return { success: true, notes: filtered, total: filtered.length };
+  }
+
+  if (action === 'save_note') {
+    const noteData = payload.note || payload;
+    const notes = getLocalNotes();
+    const id = noteData.id || `note_local_${Date.now()}`;
+    const now = new Date().toISOString();
+    const existingIdx = notes.findIndex(n => n.id === id);
+    let savedNote: UserNote;
+
+    if (existingIdx >= 0) {
+      const existing = notes[existingIdx];
+      const newVersion = (existing.version || 1) + 1;
+      savedNote = {
+        ...existing,
+        ...noteData,
+        id,
+        version: newVersion,
+        updated_at: now
+      };
+      notes[existingIdx] = savedNote;
+    } else {
+      savedNote = {
+        id,
+        title: noteData.title || 'Untitled Note',
+        content: noteData.content || '',
+        category: noteData.category || 'General',
+        tags: Array.isArray(noteData.tags) ? noteData.tags : [],
+        badge: noteData.badge || 'Note',
+        is_pinned: !!noteData.is_pinned,
+        version: 1,
+        created_at: now,
+        updated_at: now
+      };
+      notes.unshift(savedNote);
+    }
+    saveLocalNotes(notes);
+    return { success: true, note: savedNote };
+  }
+
+  if (action === 'delete_note') {
+    const id = payload.id;
+    const notes = getLocalNotes().filter(n => n.id !== id);
+    saveLocalNotes(notes);
+    return { success: true, id };
+  }
+
   return { success: false, error: "Unknown action" };
 }
 
@@ -899,6 +985,16 @@ export const api = {
       visualization_direction: idea.visualization_direction,
       source_family_guidance: idea.source_family_guidance,
       request_id: generateRequestId()
-    })
+    }),
+  getNotes: (params?: { category?: string; search?: string }) => 
+    callApi('get_notes', params || {}),
+  saveNote: (note: Partial<UserNote>, changeSummary?: string) => 
+    callApi('save_note', { note, change_summary: changeSummary, request_id: generateRequestId() }),
+  deleteNote: (id: string) => 
+    callApi('delete_note', { id, request_id: generateRequestId() }),
+  getNoteVersions: (noteId: string) => 
+    callApi('get_note_versions', { note_id: noteId, request_id: generateRequestId() }),
+  restoreNoteVersion: (noteId: string, versionNumber: number) => 
+    callApi('restore_note_version', { note_id: noteId, version_number: versionNumber, request_id: generateRequestId() })
 };
 

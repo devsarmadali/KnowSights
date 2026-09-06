@@ -172,3 +172,32 @@ export interface InstitutionalRepository {
   badgeColor?: string;
 }
 
+export type NoteBadge = 'Prompt' | 'Research' | 'Script' | 'Hook' | 'Template' | 'Draft' | 'Idea';
+
+export type NoteCategory = 'all' | 'prompts' | 'research' | 'scripts' | 'templates' | 'general';
+
+export interface UserNote {
+  id: string;
+  title: string;
+  content: string;
+  category: string;
+  tags: string[];
+  badge: string;
+  is_pinned: boolean;
+  version: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserNoteVersion {
+  version_id: string;
+  note_id: string;
+  version_number: number;
+  title: string;
+  content: string;
+  category: string;
+  tags: string[];
+  badge: string;
+  change_summary: string;
+  created_at: string;
+}
