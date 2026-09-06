@@ -74,38 +74,38 @@ export const TopicCard: React.FC<TopicCardProps> = ({
     <div 
       className={`glass-panel glass-panel-hover rounded-2xl p-5 relative flex flex-col justify-between transition-all duration-200 border ${
         isUsed 
-          ? 'border-emerald-500/50 bg-emerald-950/20 shadow-lg shadow-emerald-950/30' 
+          ? 'border-emerald-500/40 bg-emerald-950/20 shadow-glow-emerald' 
           : isReplaced 
-            ? 'opacity-50 grayscale border-neutral-800' 
-            : 'border-neutral-800/90 hover:border-neutral-700 bg-neutral-900/50'
+            ? 'opacity-40 grayscale border-white/[0.05]' 
+            : 'border-white/[0.08] hover:border-emerald-500/30 bg-[#0d1118]/70 hover:bg-[#111722]/80 shadow-tactile'
       }`}
     >
       {/* 1. Header: Position Pill, Idea ID & Signature Format */}
-      <div className="flex items-center justify-between gap-2 mb-3">
+      <div className="flex items-center justify-between gap-2 mb-3.5">
         <div className="flex items-center space-x-1.5 flex-wrap gap-y-1">
-          <span className="w-6 h-6 rounded-md bg-neutral-900 border border-neutral-700 flex items-center justify-center font-mono text-xs font-bold text-neutral-300">
+          <span className="w-6 h-6 rounded-lg bg-white/[0.04] border border-white/[0.1] flex items-center justify-center font-mono text-xs font-bold text-neutral-200">
             #{item.position}
           </span>
-          <span className="text-[11px] font-mono font-bold text-emerald-400/90 bg-neutral-900 px-2 py-0.5 rounded border border-neutral-800">
+          <span className="text-[11px] font-mono font-bold text-emerald-300 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/25">
             {idea.idea_id}
           </span>
           {idea.parent_sr && (
             <span 
-              className="text-[10px] font-mono text-neutral-400 bg-neutral-900/90 px-1.5 py-0.5 rounded border border-neutral-800"
+              className="text-[10px] font-mono text-neutral-300 bg-white/[0.04] px-1.5 py-0.5 rounded-md border border-white/[0.08]"
               title={`Taxonomy Lineage: Master Taxonomy Sr. #${idea.parent_sr}`}
             >
               Seed #{idea.parent_sr}
             </span>
           )}
           {idea.production_score > 0 && (
-            <span className="inline-flex items-center space-x-1 text-[11px] font-mono text-amber-400 font-bold bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/20">
+            <span className="inline-flex items-center space-x-1 text-[11px] font-mono text-amber-300 font-bold bg-amber-500/10 px-1.5 py-0.5 rounded-md border border-amber-500/25">
               <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
               <span>{idea.production_score}</span>
             </span>
           )}
           {idea.ai_refined && (
             <span 
-              className="inline-flex items-center space-x-1 text-[10px] font-mono text-violet-300 font-bold bg-violet-500/15 px-1.5 py-0.5 rounded border border-violet-500/30"
+              className="inline-flex items-center space-x-1 text-[10px] font-mono text-violet-300 font-bold bg-violet-500/15 px-2 py-0.5 rounded-md border border-violet-500/30"
               title="Refined by Gemini AI for high-retention YouTube video framing"
             >
               <Sparkles className="w-2.5 h-2.5 text-violet-400 fill-violet-400" />
@@ -115,7 +115,7 @@ export const TopicCard: React.FC<TopicCardProps> = ({
         </div>
 
         {idea.signature_format && (
-          <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-300 text-[11px] font-medium shrink-0 max-w-[170px] truncate">
+          <span className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-full bg-sky-500/10 border border-sky-500/25 text-sky-300 text-[11px] font-medium shrink-0 max-w-[170px] truncate">
             <Sparkles className="w-3 h-3 text-sky-400 shrink-0" />
             <span className="truncate">{idea.signature_format}</span>
           </span>
@@ -123,7 +123,7 @@ export const TopicCard: React.FC<TopicCardProps> = ({
       </div>
 
       {/* 2. Main Content Area */}
-      <div className="space-y-3 flex-1 flex flex-col justify-start">
+      <div className="space-y-3.5 flex-1 flex flex-col justify-start">
         {/* Prominent Video Idea Headline */}
         <div>
           <h3 className="text-base font-display font-bold text-white leading-snug tracking-tight">
@@ -132,27 +132,27 @@ export const TopicCard: React.FC<TopicCardProps> = ({
           {idea.original_video_idea && idea.original_video_idea !== idea.video_idea && (
             <p className="text-[11px] text-neutral-400 mt-1 font-mono flex items-center space-x-1 truncate" title={`Original Curriculum Subtopic: ${idea.original_video_idea}`}>
               <span className="text-neutral-500">Seed:</span>
-              <span className="truncate italic">"{idea.original_video_idea}"</span>
+              <span className="truncate italic text-neutral-300">"{idea.original_video_idea}"</span>
             </p>
           )}
         </div>
 
-        {/* Curiosity Hook */}
-        <div className="p-3 rounded-xl bg-neutral-950/70 border border-neutral-800/80 text-xs text-neutral-300 italic leading-relaxed">
+        {/* Curiosity Hook with High-Contrast Editorial Styling */}
+        <div className="p-3.5 rounded-xl editorial-hook border-t border-r border-b border-white/[0.06] text-xs text-neutral-200 italic leading-relaxed">
           "{idea.curiosity_hook || `Core underlying mechanisms, surprising facts, and real-world dynamics of ${idea.video_idea}.`}"
         </div>
 
         {/* Subject & Topic Family Taxonomy Chips */}
         <div className="flex flex-wrap items-center gap-1.5 text-xs pt-0.5">
-          <span className="px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/25 text-emerald-300 font-medium text-[11px]">
+          <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 font-semibold text-[11px]">
             {idea.subject}
           </span>
           <span className="text-neutral-600 text-xs">/</span>
-          <span className="px-2 py-0.5 rounded-md bg-neutral-800/90 text-neutral-300 font-normal text-[11px]">
+          <span className="px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.06] text-neutral-300 font-medium text-[11px]">
             {idea.topic_family}
           </span>
           {idea.freshness_class && (
-            <span className="px-1.5 py-0.5 rounded bg-neutral-900 text-neutral-400 text-[10px] font-mono border border-neutral-800/60">
+            <span className="px-1.5 py-0.5 rounded bg-white/[0.03] text-neutral-400 text-[10px] font-mono border border-white/[0.06]">
               {idea.freshness_class}
             </span>
           )}
@@ -160,45 +160,45 @@ export const TopicCard: React.FC<TopicCardProps> = ({
       </div>
 
       {/* 3. Metadata & Actions Footer (2-Row Balanced Layout) */}
-      <div className="mt-4 pt-3 border-t border-neutral-800/80 space-y-2.5">
+      <div className="mt-4 pt-3.5 border-t border-white/[0.08] space-y-2.5">
         
         {/* Row 1: Exposure Stats & Tier */}
         <div className="flex items-center justify-between text-[11px] font-mono text-neutral-400">
           <div className="flex items-center space-x-1.5">
-            <Eye className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
-            <span className="whitespace-nowrap">Exposure: <strong className="text-neutral-200">{idea.times_shown}x</strong></span>
+            <Eye className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+            <span className="whitespace-nowrap">Exposure: <strong className="text-white">{idea.times_shown}x</strong></span>
             {idea.last_shown && (
               <>
-                <span className="text-neutral-700">•</span>
-                <span className="text-neutral-400">{new Date(idea.last_shown).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
+                <span className="text-neutral-600">•</span>
+                <span className="text-neutral-300">{new Date(idea.last_shown).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}</span>
               </>
             )}
           </div>
-          <span className="text-[10px] text-neutral-500 font-bold uppercase tracking-wider">
+          <span className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">
             {idea.priority_tier || 'Tier 1'}
           </span>
         </div>
 
         {/* Row 2: Action Buttons Toolbar */}
-        <div className="flex items-center justify-between gap-2 pt-1">
+        <div className="flex items-center justify-between gap-2 pt-0.5">
           
-          {/* Secondary Actions Group (Copy, Brief, Swap) */}
+          {/* Secondary Actions Group (Copy Prompt, Brief, Swap) */}
           <div className="flex items-center space-x-1.5">
             
             {/* Copy Research Prompt Button */}
             <button
               onClick={handleCopyPrompt}
-              className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer ${
+              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
                 isCopied
-                  ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
-                  : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-800 text-neutral-300 hover:text-white'
+                  ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-200'
+                  : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/[0.08] text-neutral-200 hover:text-white'
               }`}
-              title="Copy AI Research Prompt"
+              title="Copy pure AI Research Prompt to clipboard"
             >
               {isCopied ? (
                 <>
                   <Check className="w-3.5 h-3.5 text-emerald-400" />
-                  <span className="text-[11px]">Copied!</span>
+                  <span className="text-[11px] font-bold">Copied!</span>
                 </>
               ) : (
                 <>
@@ -211,7 +211,7 @@ export const TopicCard: React.FC<TopicCardProps> = ({
             {/* Brief Button */}
             <button
               onClick={() => onOpenBrief(idea)}
-              className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-neutral-800 bg-neutral-900 hover:bg-neutral-800 text-sky-400 hover:text-sky-300 transition-all cursor-pointer"
+              className="flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold border border-sky-500/20 bg-sky-500/10 hover:bg-sky-500/20 text-sky-300 hover:text-sky-200 transition-all cursor-pointer"
               title="Open Research Brief"
             >
               <BookOpen className="w-3.5 h-3.5 text-sky-400" />
@@ -223,10 +223,10 @@ export const TopicCard: React.FC<TopicCardProps> = ({
               <button
                 onClick={handleReplaceClick}
                 disabled={isReplacing}
-                className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg border border-neutral-800 bg-neutral-900 hover:bg-neutral-800 text-neutral-400 hover:text-white text-xs font-medium transition-all disabled:opacity-50 cursor-pointer"
+                className="flex items-center space-x-1 px-2.5 py-1.5 rounded-xl border border-white/[0.08] bg-white/[0.04] hover:bg-white/[0.08] text-neutral-300 hover:text-white text-xs font-semibold transition-all disabled:opacity-40 cursor-pointer"
                 title="Replace idea in this slot"
               >
-                <RotateCw className={`w-3.5 h-3.5 ${isReplacing ? 'animate-spin text-emerald-400' : ''}`} />
+                <RotateCw className={`w-3.5 h-3.5 ${isReplacing ? 'animate-spin text-emerald-400' : 'text-neutral-400'}`} />
                 <span className="text-[11px]">Swap</span>
               </button>
             )}
@@ -238,8 +238,8 @@ export const TopicCard: React.FC<TopicCardProps> = ({
             disabled={isMarking}
             className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 shadow-md transition-all cursor-pointer ${
               isUsed
-                ? 'bg-emerald-500 text-neutral-950 hover:bg-emerald-400 shadow-emerald-500/20'
-                : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white shadow-emerald-600/30 active:scale-95'
+                ? 'bg-emerald-400 text-neutral-950 hover:bg-emerald-300 shadow-emerald-500/30'
+                : 'bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white shadow-emerald-600/30 active:scale-95'
             }`}
             title={isUsed ? "Undo Used (makes idea eligible again)" : "Mark as Used (excludes from future batches)"}
           >
@@ -257,7 +257,6 @@ export const TopicCard: React.FC<TopicCardProps> = ({
           </button>
 
         </div>
-
       </div>
     </div>
   );

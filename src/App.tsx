@@ -300,25 +300,38 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-950 text-neutral-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-neutral-950">
+    <div className="min-h-screen bg-[#07090e] text-[#f1f5f9] flex flex-col font-sans selection:bg-emerald-500/25 selection:text-emerald-200 relative overflow-x-hidden">
+      
+      {/* Subtle Ambient Radial Lighting for Visual Depth */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div className="absolute -top-[25%] left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-gradient-to-b from-emerald-500/5 via-teal-500/[0.02] to-transparent blur-3xl rounded-full" />
+        <div className="absolute top-[40%] -left-[10%] w-[600px] h-[600px] bg-sky-500/[0.02] blur-3xl rounded-full" />
+        <div className="absolute top-[60%] -right-[10%] w-[600px] h-[600px] bg-indigo-500/[0.02] blur-3xl rounded-full" />
+      </div>
       
       {/* Top Navigation & KPI Header */}
-      <Header
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        stats={stats}
-        spreadsheetId={SPREADSHEET_ID}
-        currentTheme={theme}
-        onThemeChange={handleThemeChange}
-      />
+      <div className="relative z-10">
+        <Header
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          stats={stats}
+          spreadsheetId={SPREADSHEET_ID}
+          currentTheme={theme}
+          onThemeChange={handleThemeChange}
+        />
+      </div>
 
       {/* Main Content Area */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 relative z-10">
         
         {isLoading && !currentBatch && activeTab === 'mix' ? (
-          <div className="flex flex-col items-center justify-center py-24 space-y-3">
-            <Loader2 className="w-8 h-8 animate-spin text-emerald-400" />
-            <p className="text-sm font-mono text-neutral-400">Connecting to Cloudflare D1 Edge Database...</p>
+          <div className="flex flex-col items-center justify-center py-28 space-y-4">
+            <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-lg shadow-emerald-950/40">
+              <Loader2 className="w-6 h-6 animate-spin text-emerald-400" />
+            </div>
+            <p className="text-xs font-mono tracking-wider uppercase text-neutral-400 font-semibold">
+              Connecting to Cloudflare D1 Edge Database...
+            </p>
           </div>
         ) : (
           <>
@@ -380,10 +393,17 @@ export const App: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-neutral-900 bg-neutral-950 py-6 text-center text-xs font-mono text-neutral-500">
+      <footer className="border-t border-white/[0.06] bg-[#07090e]/90 backdrop-blur-md py-6 text-center text-xs font-mono text-neutral-400 relative z-10">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>KnowSights Content Engine • Schema 2.0</span>
-          <span>Primary: Cloudflare D1 (4,140 rows) • Backup: Sheet (1HB4Zxg9qXzWVKyjAzSoTPHadPIVNZitojfaR0qd601w)</span>
+          <span className="flex items-center space-x-2 font-medium">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+            <span className="text-neutral-300">KnowSights Content Engine</span>
+            <span className="text-neutral-500">•</span>
+            <span className="text-emerald-400 font-semibold">Schema 2.0</span>
+          </span>
+          <span className="text-neutral-400 text-[11px]">
+            Primary: <strong className="text-neutral-200">Cloudflare D1 (4,140 rows)</strong> • Backup: <strong className="text-neutral-300">Sheet (1HB4...0qd601w)</strong>
+          </span>
         </div>
       </footer>
 
@@ -392,18 +412,18 @@ export const App: React.FC = () => {
         <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-5 duration-200">
           <div className={`glass-panel flex items-center space-x-3 px-4 py-3 rounded-2xl shadow-2xl border text-xs font-medium ${
             toast.type === 'success' 
-              ? 'border-emerald-500/50 bg-neutral-900 text-emerald-300 shadow-emerald-950/50' 
+              ? 'border-emerald-500/40 bg-neutral-950/90 text-emerald-200 shadow-emerald-950/50' 
               : toast.type === 'error' 
-                ? 'border-rose-500/50 bg-neutral-900 text-rose-300 shadow-rose-950/50' 
-                : 'border-sky-500/50 bg-neutral-900 text-sky-300 shadow-sky-950/50'
+                ? 'border-rose-500/40 bg-neutral-950/90 text-rose-200 shadow-rose-950/50' 
+                : 'border-sky-500/40 bg-neutral-950/90 text-sky-200 shadow-sky-950/50'
           }`}>
             {toast.type === 'success' && <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />}
             {toast.type === 'error' && <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />}
             {toast.type === 'info' && <Info className="w-4 h-4 text-sky-400 flex-shrink-0" />}
-            <span>{toast.message}</span>
+            <span className="font-semibold">{toast.message}</span>
             <button 
               onClick={() => setToast(null)}
-              className="text-neutral-500 hover:text-white ml-2"
+              className="text-neutral-400 hover:text-white ml-2 transition-colors"
             >
               <X className="w-3.5 h-3.5" />
             </button>

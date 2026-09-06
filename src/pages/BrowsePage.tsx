@@ -113,7 +113,7 @@ export const BrowsePage: React.FC<BrowsePageProps> = ({ onRefreshStats }) => {
     <div className="space-y-6 animate-in fade-in duration-200">
       
       {/* Header & Filter Controls Bar */}
-      <div className="glass-panel rounded-2xl p-5 border border-neutral-800 space-y-4">
+      <div className="glass-panel rounded-2xl p-5 border border-white/[0.08] shadow-tactile space-y-4">
         
         {/* Search Input Bar */}
         <div className="relative">
@@ -122,13 +122,13 @@ export const BrowsePage: React.FC<BrowsePageProps> = ({ onRefreshStats }) => {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search Production Pool by Idea ID (e.g. KS-P-0054), Video Idea, Hook, or Topic Family..."
-            className="w-full bg-neutral-900/90 text-white border border-neutral-800 rounded-xl px-4 py-3 pl-10 text-sm font-sans focus:outline-none focus:border-emerald-500 placeholder:text-neutral-500"
+            className="w-full bg-[#0d1118] text-white border border-white/[0.1] rounded-xl px-4 py-3 pl-10 text-sm font-sans focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 placeholder:text-neutral-500 transition-all"
           />
           <Search className="w-4 h-4 text-neutral-400 absolute left-3.5 top-3.5 pointer-events-none" />
           {query && (
             <button
               onClick={() => setQuery('')}
-              className="absolute right-3.5 top-3.5 text-neutral-500 hover:text-neutral-300"
+              className="absolute right-3.5 top-3.5 text-neutral-400 hover:text-white transition-colors"
             >
               <X className="w-4 h-4" />
             </button>
@@ -140,14 +140,14 @@ export const BrowsePage: React.FC<BrowsePageProps> = ({ onRefreshStats }) => {
           
           {/* Subject Filter */}
           <div>
-            <label className="block font-mono uppercase text-neutral-400 mb-1">Subject</label>
+            <label className="block font-mono uppercase text-neutral-400 font-semibold mb-1.5">Subject</label>
             <select
               value={subject}
               onChange={(e) => {
                 setSubject(e.target.value);
                 setPage(1);
               }}
-              className="w-full bg-neutral-900 text-neutral-200 border border-neutral-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500"
+              className="w-full bg-[#0d1118] text-neutral-200 border border-white/[0.1] rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all cursor-pointer"
             >
               <option value="">All Subjects</option>
               {subjectsList.map((s) => (
@@ -158,14 +158,14 @@ export const BrowsePage: React.FC<BrowsePageProps> = ({ onRefreshStats }) => {
 
           {/* Signature Format Filter */}
           <div>
-            <label className="block font-mono uppercase text-neutral-400 mb-1">Signature Format</label>
+            <label className="block font-mono uppercase text-neutral-400 font-semibold mb-1.5">Signature Format</label>
             <select
               value={format}
               onChange={(e) => {
                 setFormat(e.target.value);
                 setPage(1);
               }}
-              className="w-full bg-neutral-900 text-neutral-200 border border-neutral-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500"
+              className="w-full bg-[#0d1118] text-neutral-200 border border-white/[0.1] rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all cursor-pointer"
             >
               <option value="">All Formats</option>
               {formatsList.map((f) => (
@@ -176,14 +176,14 @@ export const BrowsePage: React.FC<BrowsePageProps> = ({ onRefreshStats }) => {
 
           {/* Research Status Filter */}
           <div>
-            <label className="block font-mono uppercase text-neutral-400 mb-1">Research Status</label>
+            <label className="block font-mono uppercase text-neutral-400 font-semibold mb-1.5">Research Status</label>
             <select
               value={researchStatus}
               onChange={(e) => {
                 setResearchStatus(e.target.value);
                 setPage(1);
               }}
-              className="w-full bg-neutral-900 text-neutral-200 border border-neutral-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500"
+              className="w-full bg-[#0d1118] text-neutral-200 border border-white/[0.1] rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all cursor-pointer"
             >
               <option value="">All Statuses</option>
               <option value="Ready">Ready</option>
@@ -194,8 +194,8 @@ export const BrowsePage: React.FC<BrowsePageProps> = ({ onRefreshStats }) => {
 
           {/* Status Filter */}
           <div>
-            <label className="block font-mono uppercase text-neutral-400 mb-1">Usage Status</label>
-            <div className="flex rounded-xl bg-neutral-900 p-1 border border-neutral-800">
+            <label className="block font-mono uppercase text-neutral-400 font-semibold mb-1.5">Usage Status</label>
+            <div className="flex rounded-xl bg-white/[0.03] p-1 border border-white/[0.08]">
               {(['all', 'available', 'used'] as const).map((st) => (
                 <button
                   key={st}
@@ -203,10 +203,10 @@ export const BrowsePage: React.FC<BrowsePageProps> = ({ onRefreshStats }) => {
                     setStatus(st);
                     setPage(1);
                   }}
-                  className={`flex-1 py-1 rounded-lg text-xs font-semibold capitalize transition-all ${
+                  className={`flex-1 py-1 rounded-lg text-xs font-semibold capitalize transition-all cursor-pointer ${
                     status === st
-                      ? 'bg-emerald-600 text-white shadow-sm'
-                      : 'text-neutral-400 hover:text-neutral-200'
+                      ? 'bg-emerald-500 text-neutral-950 font-bold shadow-sm'
+                      : 'text-neutral-400 hover:text-white'
                   }`}
                 >
                   {st === 'available' ? 'Available' : st === 'used' ? 'Used' : 'All'}
@@ -218,9 +218,9 @@ export const BrowsePage: React.FC<BrowsePageProps> = ({ onRefreshStats }) => {
         </div>
 
         {/* Results Count & Active Filter Reset */}
-        <div className="flex items-center justify-between pt-2 border-t border-neutral-900 text-xs font-mono text-neutral-400">
+        <div className="flex items-center justify-between pt-3 border-t border-white/[0.06] text-xs font-mono text-neutral-400">
           <div>
-            Found <strong className="text-white">{total.toLocaleString()}</strong> curated ideas in Production Pool
+            Found <strong className="text-white">{(total ?? 0).toLocaleString()}</strong> curated ideas in Production Pool
           </div>
           {(subject || format || researchStatus || query || status !== 'all' || minScore > 0) && (
             <button
@@ -233,7 +233,7 @@ export const BrowsePage: React.FC<BrowsePageProps> = ({ onRefreshStats }) => {
                 setMinScore(0);
                 setPage(1);
               }}
-              className="text-emerald-400 hover:text-emerald-300 underline"
+              className="text-emerald-400 hover:text-emerald-300 underline font-medium cursor-pointer"
             >
               Reset Filters
             </button>
@@ -243,10 +243,10 @@ export const BrowsePage: React.FC<BrowsePageProps> = ({ onRefreshStats }) => {
       </div>
 
       {/* Results Table */}
-      <div className="glass-panel rounded-2xl border border-neutral-800 overflow-hidden">
+      <div className="glass-panel rounded-2xl border border-white/[0.08] shadow-tactile overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-neutral-900/90 text-neutral-400 font-mono uppercase border-b border-neutral-800">
+            <thead className="bg-[#0d1118]/95 text-neutral-400 font-mono uppercase border-b border-white/[0.08]">
               <tr>
                 <th className="py-3 px-4 w-24">Idea ID</th>
                 <th className="py-3 px-4 min-w-[280px]">Video Idea & Hook</th>
@@ -258,17 +258,17 @@ export const BrowsePage: React.FC<BrowsePageProps> = ({ onRefreshStats }) => {
                 <th className="py-3 px-4 w-28 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-neutral-900">
+            <tbody className="divide-y divide-white/[0.04]">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-neutral-400">
-                    <Loader2 className="w-6 h-6 animate-spin mx-auto text-emerald-400 mb-2" />
-                    <p>Loading Production Pool from Google Sheets...</p>
+                  <td colSpan={8} className="py-14 text-center text-neutral-400">
+                    <Loader2 className="w-7 h-7 animate-spin mx-auto text-emerald-400 mb-2" />
+                    <p className="font-medium text-xs">Loading Production Pool from Cloudflare D1 Edge...</p>
                   </td>
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-neutral-400">
+                  <td colSpan={8} className="py-14 text-center text-neutral-400">
                     No ideas matching your filter criteria in Production Pool.
                   </td>
                 </tr>
@@ -276,15 +276,15 @@ export const BrowsePage: React.FC<BrowsePageProps> = ({ onRefreshStats }) => {
                 items.map((it) => (
                   <tr 
                     key={it.idea_id} 
-                    className={`hover:bg-neutral-900/50 transition-colors ${
-                      it.used ? 'bg-emerald-950/10' : ''
+                    className={`hover:bg-white/[0.03] transition-colors ${
+                      it.used ? 'bg-emerald-950/15' : ''
                     }`}
                   >
                     {/* Idea ID & Taxonomy Seed Lineage */}
                     <td className="py-3 px-4 font-mono">
-                      <span className="font-bold text-emerald-400 block">{it.idea_id}</span>
+                      <span className="font-bold text-emerald-300 block">{it.idea_id}</span>
                       {it.parent_sr && (
-                        <span className="text-[10px] text-neutral-500 block font-normal" title={`Taxonomy Seed: Master Taxonomy Sr. #${it.parent_sr}`}>
+                        <span className="text-[10px] text-neutral-400 block font-normal" title={`Taxonomy Seed: Master Taxonomy Sr. #${it.parent_sr}`}>
                           Seed #{it.parent_sr}
                         </span>
                       )}
@@ -293,9 +293,9 @@ export const BrowsePage: React.FC<BrowsePageProps> = ({ onRefreshStats }) => {
                     {/* Video Idea & Hook */}
                     <td className="py-3 px-4 font-medium text-white">
                       <div className="space-y-1">
-                        <span className="font-semibold text-sm leading-snug">{it.video_idea}</span>
+                        <span className="font-semibold text-sm leading-snug text-neutral-100">{it.video_idea}</span>
                         {it.curiosity_hook && (
-                          <p className="text-[11px] text-neutral-400 italic">
+                          <p className="text-[11px] text-neutral-300 italic leading-relaxed">
                             "{it.curiosity_hook}"
                           </p>
                         )}
@@ -305,10 +305,10 @@ export const BrowsePage: React.FC<BrowsePageProps> = ({ onRefreshStats }) => {
                     {/* Subject / Topic Family */}
                     <td className="py-3 px-4">
                       <div className="space-y-0.5">
-                        <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[11px] font-medium block w-fit">
+                        <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[11px] font-semibold block w-fit">
                           {it.subject}
                         </span>
-                        <span className="text-neutral-400 text-[11px] block truncate max-w-[130px]">
+                        <span className="text-neutral-300 text-[11px] block truncate max-w-[130px]">
                           {it.topic_family}
                         </span>
                       </div>
@@ -316,34 +316,34 @@ export const BrowsePage: React.FC<BrowsePageProps> = ({ onRefreshStats }) => {
 
                     {/* Signature Format */}
                     <td className="py-3 px-4">
-                      <span className="px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-300 border border-sky-500/20 text-[11px] font-medium">
+                      <span className="px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-300 border border-sky-500/25 text-[11px] font-medium">
                         {it.signature_format || 'Standard'}
                       </span>
                     </td>
 
                     {/* Production Score & Priority Tier */}
                     <td className="py-3 px-4 text-center font-mono">
-                      <div className="inline-flex items-center space-x-1 font-bold text-amber-400">
+                      <div className="inline-flex items-center space-x-1 font-bold text-amber-300">
                         <Star className="w-3 h-3 fill-amber-400" />
                         <span>{it.production_score}</span>
                       </div>
-                      <span className="block text-[10px] text-neutral-500">{it.priority_tier}</span>
+                      <span className="block text-[10px] text-neutral-400">{it.priority_tier}</span>
                     </td>
 
                     {/* Times Shown */}
                     <td className="py-3 px-4 text-center font-mono text-[11px] text-neutral-400">
-                      <strong className="text-neutral-200">{it.times_shown}x</strong>
+                      <strong className="text-white">{it.times_shown}x</strong>
                     </td>
 
                     {/* Status Pill */}
                     <td className="py-3 px-4">
                       {it.used ? (
-                        <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-semibold text-[11px]">
+                        <span className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 font-semibold text-[11px]">
                           <CheckCircle2 className="w-3 h-3" />
                           <span>Used</span>
                         </span>
                       ) : (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-neutral-800 text-neutral-400 font-normal text-[11px]">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-white/[0.04] text-neutral-300 font-normal text-[11px]">
                           Available
                         </span>
                       )}
@@ -354,12 +354,12 @@ export const BrowsePage: React.FC<BrowsePageProps> = ({ onRefreshStats }) => {
                       {/* Copy Prompt Button */}
                       <button
                         onClick={() => handleCopyRow(it)}
-                        className={`p-1.5 rounded-lg border transition-all ${
+                        className={`p-1.5 rounded-xl border transition-all cursor-pointer ${
                           copiedId === it.idea_id
-                            ? 'border-emerald-500/50 bg-emerald-950/40 text-emerald-300'
-                            : 'border-neutral-800 bg-neutral-900 text-neutral-400 hover:text-white'
+                            ? 'border-emerald-500/50 bg-emerald-950/40 text-emerald-200'
+                            : 'border-white/[0.08] bg-white/[0.03] hover:bg-white/[0.08] text-neutral-300 hover:text-white'
                         }`}
-                        title="Copy AI Research Prompt"
+                        title="Copy pure AI Research Prompt"
                       >
                         {copiedId === it.idea_id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                       </button>
@@ -367,7 +367,7 @@ export const BrowsePage: React.FC<BrowsePageProps> = ({ onRefreshStats }) => {
                       {it.brief_available && (
                         <button
                           onClick={() => setBriefModal({ isOpen: true, idea: it })}
-                          className="p-1.5 rounded-lg border border-neutral-800 bg-neutral-900 text-sky-400 hover:text-white transition-all cursor-pointer"
+                          className="p-1.5 rounded-xl border border-sky-500/25 bg-sky-500/10 text-sky-300 hover:text-white hover:bg-sky-500/20 transition-all cursor-pointer"
                           title="Open Research Brief"
                         >
                           <BookOpen className="w-3.5 h-3.5" />
@@ -376,10 +376,10 @@ export const BrowsePage: React.FC<BrowsePageProps> = ({ onRefreshStats }) => {
 
                       <button
                         onClick={() => handleMarkToggle(it)}
-                        className={`px-2.5 py-1.5 rounded-lg font-semibold text-xs transition-all ${
+                        className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${
                           it.used
-                            ? 'bg-neutral-800 hover:bg-neutral-700 text-neutral-300'
-                            : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm'
+                            ? 'bg-white/[0.06] hover:bg-white/[0.1] text-neutral-200'
+                            : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm shadow-emerald-600/30'
                         }`}
                         title={it.used ? "Undo Used" : "Mark Used"}
                       >
@@ -395,7 +395,7 @@ export const BrowsePage: React.FC<BrowsePageProps> = ({ onRefreshStats }) => {
         </div>
 
         {/* Pagination Bar */}
-        <div className="p-4 border-t border-neutral-800 bg-neutral-950/80 flex items-center justify-between text-xs font-mono">
+        <div className="p-4 border-t border-white/[0.08] bg-[#07090e]/90 flex items-center justify-between text-xs font-mono text-neutral-300">
           <span className="text-neutral-400">
             Page <strong className="text-white">{page}</strong> of <strong className="text-white">{totalPages}</strong>
           </span>
@@ -404,7 +404,7 @@ export const BrowsePage: React.FC<BrowsePageProps> = ({ onRefreshStats }) => {
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page <= 1 || loading}
-              className="flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-neutral-300 disabled:opacity-40"
+              className="flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.08] text-neutral-200 disabled:opacity-30 cursor-pointer"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
               <span>Prev</span>
@@ -413,7 +413,7 @@ export const BrowsePage: React.FC<BrowsePageProps> = ({ onRefreshStats }) => {
             <button
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages || loading}
-              className="flex items-center space-x-1 px-3 py-1.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-neutral-300 disabled:opacity-40"
+              className="flex items-center space-x-1 px-3 py-1.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.08] text-neutral-200 disabled:opacity-30 cursor-pointer"
             >
               <span>Next</span>
               <ChevronRight className="w-3.5 h-3.5" />

@@ -480,25 +480,25 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast }) => {
   const readingTime = Math.ceil(wordCount / 200);
 
   return (
-    <div className="space-y-5 animate-in fade-in duration-200">
+    <div className="space-y-6 animate-in fade-in duration-200">
       
       {/* 1. Top Header & Action Controls Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-neutral-800">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-white/[0.08]">
         <div>
-          <div className="flex items-center space-x-2.5">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-sky-600 to-indigo-600 p-[1px] shadow-lg shadow-sky-950/40">
-              <div className="w-full h-full bg-neutral-950 rounded-[11px] flex items-center justify-center">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-600 via-indigo-600 to-teal-500 p-[1.5px] shadow-lg shadow-sky-500/20">
+              <div className="w-full h-full bg-[#07090e] rounded-[10px] flex items-center justify-center">
                 <FileText className="w-5 h-5 text-sky-400" />
               </div>
             </div>
             <div>
               <div className="flex items-center space-x-2">
-                <h1 className="text-xl font-display font-black text-white tracking-tight">Notes & Prompts Vault</h1>
-                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/20">
+                <h1 className="text-xl font-display font-extrabold text-white tracking-tight">Notes & Prompts Vault</h1>
+                <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-300 border border-sky-500/25">
                   Cloudflare D1 Synced
                 </span>
               </div>
-              <p className="text-xs text-neutral-400 mt-0.5">
+              <p className="text-xs text-neutral-400 font-medium mt-0.5">
                 Save, organize, version, and 1-click copy your personal AI search prompts and deep research dossiers.
               </p>
             </div>
@@ -510,27 +510,27 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast }) => {
           {/* New Prompt Button */}
           <button
             onClick={() => handleCreateNew('prompts', 'Prompt')}
-            className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white shadow-md shadow-sky-600/30 active:scale-95 transition-all cursor-pointer"
+            className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-sky-600 via-indigo-600 to-teal-500 hover:from-sky-500 hover:to-teal-400 text-white shadow-md shadow-sky-600/30 active:scale-95 transition-all cursor-pointer"
           >
-            <Sparkles className="w-3.5 h-3.5" />
+            <Sparkles className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
             <span>New Prompt</span>
           </button>
 
           {/* New General Note Button */}
           <button
             onClick={() => handleCreateNew('research', 'Research')}
-            className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-neutral-200 transition-all cursor-pointer"
+            className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-neutral-200 hover:text-white transition-all cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5 text-neutral-400" />
             <span>New Note</span>
           </button>
 
           {/* View Toggle */}
-          <div className="flex items-center rounded-xl bg-neutral-900 border border-neutral-800 p-1">
+          <div className="flex items-center rounded-xl bg-white/[0.03] border border-white/[0.08] p-1">
             <button
               onClick={() => setViewMode('grid')}
-              className={`p-1.5 rounded-lg transition-all ${
-                viewMode === 'grid' ? 'bg-neutral-800 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'
+              className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                viewMode === 'grid' ? 'bg-white/[0.1] text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'
               }`}
               title="Card Grid View"
             >
@@ -538,8 +538,8 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast }) => {
             </button>
             <button
               onClick={() => setViewMode('split')}
-              className={`p-1.5 rounded-lg transition-all ${
-                viewMode === 'split' ? 'bg-neutral-800 text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'
+              className={`p-1.5 rounded-lg transition-all cursor-pointer ${
+                viewMode === 'split' ? 'bg-white/[0.1] text-white shadow-sm' : 'text-neutral-500 hover:text-neutral-300'
               }`}
               title="Split Master-Detail Editor View"
             >
@@ -550,7 +550,7 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast }) => {
       </div>
 
       {/* 2. Category Tabs */}
-      <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 border-b border-neutral-800/80">
+      <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 border-b border-white/[0.06]">
         {CATEGORIES.map(cat => {
           const isActive = selectedCategory === cat.id;
           const count = cat.id === 'all' 
@@ -561,15 +561,15 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast }) => {
             <button
               key={cat.id}
               onClick={() => setSelectedCategory(cat.id)}
-              className={`flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${
+              className={`flex items-center space-x-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all whitespace-nowrap cursor-pointer ${
                 isActive
                   ? 'bg-sky-500/15 border border-sky-500/30 text-sky-300 shadow-sm'
-                  : 'bg-neutral-900/60 hover:bg-neutral-800/80 text-neutral-400 hover:text-neutral-200 border border-neutral-800/60'
+                  : 'bg-white/[0.03] hover:bg-white/[0.06] text-neutral-400 hover:text-neutral-200 border border-white/[0.06]'
               }`}
             >
               <span>{cat.label}</span>
-              <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full ${
-                isActive ? 'bg-sky-500/30 text-sky-200' : 'bg-neutral-800 text-neutral-500'
+              <span className={`text-[10px] font-mono px-1.5 py-0.2 rounded-full font-bold ${
+                isActive ? 'bg-sky-500/30 text-sky-200' : 'bg-white/[0.06] text-neutral-400'
               }`}>
                 {count}
               </span>
@@ -582,18 +582,18 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast }) => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs">
         {/* Search Input */}
         <div className="relative flex-1 max-w-md">
-          <Search className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-500" />
+          <Search className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-neutral-400 pointer-events-none" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search notes, prompts, tags, or badges..."
-            className="w-full pl-9 pr-3.5 py-2 rounded-xl bg-neutral-900/90 border border-neutral-800 text-white placeholder-neutral-500 focus:outline-none focus:border-sky-500 transition-colors"
+            className="w-full pl-9 pr-3.5 py-2.5 rounded-xl bg-[#0d1118] border border-white/[0.1] text-white placeholder-neutral-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 transition-all text-xs"
           />
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-500 hover:text-neutral-300"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white"
             >
               <X className="w-3.5 h-3.5" />
             </button>
@@ -605,11 +605,11 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast }) => {
           {/* Tag Filter Pills */}
           {allUniqueTags.length > 0 && (
             <div className="flex items-center space-x-1 overflow-x-auto max-w-xs">
-              <Tag className="w-3 h-3 text-neutral-500 shrink-0 mr-0.5" />
+              <Tag className="w-3 h-3 text-neutral-400 shrink-0 mr-0.5" />
               {selectedTag && (
                 <button
                   onClick={() => setSelectedTag(null)}
-                  className="px-2 py-0.5 rounded-md bg-neutral-800 text-neutral-400 hover:text-white text-[11px] font-mono"
+                  className="px-2 py-0.5 rounded-md bg-white/[0.06] text-sky-300 hover:text-white text-[11px] font-mono cursor-pointer"
                 >
                   Clear #{selectedTag}
                 </button>
@@ -618,10 +618,10 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast }) => {
                 <button
                   key={t}
                   onClick={() => setSelectedTag(selectedTag === t ? null : t)}
-                  className={`px-2 py-0.5 rounded-md text-[11px] font-mono transition-colors ${
+                  className={`px-2 py-0.5 rounded-md text-[11px] font-mono transition-colors cursor-pointer ${
                     selectedTag === t
                       ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
-                      : 'bg-neutral-900 text-neutral-400 hover:bg-neutral-800 hover:text-neutral-200 border border-neutral-800'
+                      : 'bg-white/[0.03] text-neutral-400 hover:bg-white/[0.06] hover:text-neutral-200 border border-white/[0.06]'
                   }`}
                 >
                   #{t}
@@ -631,19 +631,19 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast }) => {
           )}
 
           {/* Sort Dropdown */}
-          <div className="flex items-center space-x-1.5 bg-neutral-900/90 border border-neutral-800 rounded-xl px-2.5 py-1.5">
-            <ArrowUpDown className="w-3 h-3 text-neutral-500" />
+          <div className="flex items-center space-x-1.5 bg-[#0d1118] border border-white/[0.1] rounded-xl px-3 py-1.5 shadow-sm">
+            <ArrowUpDown className="w-3 h-3 text-neutral-400" />
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortOption)}
-              className="bg-transparent text-neutral-300 text-xs focus:outline-none cursor-pointer"
+              className="bg-transparent text-neutral-200 text-xs focus:outline-none cursor-pointer"
             >
-              <option value="updated_desc" className="bg-neutral-900">Recently Updated</option>
-              <option value="created_desc" className="bg-neutral-900">Newest First</option>
-              <option value="created_asc" className="bg-neutral-900">Oldest First</option>
-              <option value="title_asc" className="bg-neutral-900">Title A-Z</option>
-              <option value="word_count" className="bg-neutral-900">Word Count (Longest)</option>
-              <option value="versions_desc" className="bg-neutral-900">Most Revisions</option>
+              <option value="updated_desc" className="bg-[#0d1118]">Recently Updated</option>
+              <option value="created_desc" className="bg-[#0d1118]">Newest First</option>
+              <option value="created_asc" className="bg-[#0d1118]">Oldest First</option>
+              <option value="title_asc" className="bg-[#0d1118]">Title A-Z</option>
+              <option value="word_count" className="bg-[#0d1118]">Word Count (Longest)</option>
+              <option value="versions_desc" className="bg-[#0d1118]">Most Revisions</option>
             </select>
           </div>
         </div>
@@ -653,15 +653,15 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast }) => {
       {loading ? (
         <div className="py-24 text-center text-neutral-400 space-y-3">
           <Loader2 className="w-8 h-8 animate-spin mx-auto text-sky-400" />
-          <p className="text-sm font-medium">Syncing personal vault with Cloudflare D1...</p>
+          <p className="text-xs font-mono uppercase tracking-wider font-semibold">Syncing personal vault with Cloudflare D1...</p>
         </div>
       ) : filteredNotes.length === 0 ? (
-        <div className="py-20 text-center glass-panel rounded-2xl p-8 border border-neutral-800 space-y-4 max-w-lg mx-auto">
-          <div className="w-12 h-12 rounded-2xl bg-neutral-900 border border-neutral-800 flex items-center justify-center mx-auto text-neutral-400">
+        <div className="py-20 text-center glass-panel rounded-3xl p-8 border border-white/[0.08] space-y-4 max-w-lg mx-auto shadow-tactile">
+          <div className="w-12 h-12 rounded-2xl bg-white/[0.04] border border-white/[0.08] flex items-center justify-center mx-auto text-neutral-300">
             <FileText className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-white">No Notes Found</h3>
+            <h3 className="text-base font-display font-bold text-white">No Notes Found</h3>
             <p className="text-xs text-neutral-400 mt-1">
               {searchQuery || selectedCategory !== 'all' || selectedTag
                 ? "No notes match your active filters or search query."
@@ -676,14 +676,14 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast }) => {
                   setSelectedCategory('all');
                   setSelectedTag(null);
                 }}
-                className="px-4 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-xs font-semibold text-neutral-200 border border-neutral-800 transition-colors cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] text-xs font-semibold text-neutral-200 border border-white/[0.08] transition-colors cursor-pointer"
               >
                 Clear All Filters
               </button>
             ) : (
               <button
                 onClick={() => handleCreateNew('prompts', 'Prompt')}
-                className="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-xs font-bold text-white shadow-md shadow-sky-600/30 transition-all cursor-pointer"
+                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 via-indigo-600 to-teal-500 hover:from-sky-500 hover:to-teal-400 text-xs font-bold text-white shadow-md shadow-sky-600/30 transition-all cursor-pointer"
               >
                 Create Your First Prompt
               </button>
@@ -707,12 +707,12 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast }) => {
                   loadNoteIntoEditor(note);
                   setViewMode('split');
                 }}
-                className={`glass-panel rounded-2xl p-5 border transition-all duration-150 flex flex-col justify-between group cursor-pointer relative ${
+                className={`glass-panel rounded-2xl p-5 border transition-all duration-200 flex flex-col justify-between group cursor-pointer relative shadow-tactile ${
                   isSelected 
-                    ? 'border-sky-500/50 bg-neutral-900/90 shadow-lg shadow-sky-950/20 ring-1 ring-sky-500/30' 
+                    ? 'border-sky-500/50 bg-[#0d1118]/90 shadow-glow-sky ring-1 ring-sky-500/30' 
                     : note.is_pinned
-                      ? 'border-amber-500/30 bg-neutral-900/60 hover:border-neutral-700'
-                      : 'border-neutral-800/80 bg-neutral-900/40 hover:border-neutral-700 hover:bg-neutral-900/70'
+                      ? 'border-amber-500/30 bg-[#0d1118]/80 hover:border-amber-500/50'
+                      : 'border-white/[0.08] bg-[#0d1118]/70 hover:border-white/[0.14] hover:bg-[#111722]/80'
                 }`}
               >
                 {/* Card Top: Badges & Pin */}
@@ -730,7 +730,7 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast }) => {
                           loadNoteIntoEditor(note);
                           handleOpenVersions(note.id, e);
                         }}
-                        className="px-1.5 py-0.5 rounded bg-neutral-800/90 hover:bg-neutral-700 text-neutral-400 hover:text-white font-mono text-[10px] font-bold border border-neutral-700/60 transition-colors"
+                        className="px-1.5 py-0.5 rounded bg-white/[0.04] hover:bg-white/[0.08] text-neutral-300 hover:text-white font-mono text-[10px] font-bold border border-white/[0.08] transition-colors"
                         title="Click to view full revision history"
                       >
                         v{note.version || 1}
@@ -748,10 +748,10 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast }) => {
                     {/* Pin Toggle Button */}
                     <button
                       onClick={(e) => handleTogglePin(note, e)}
-                      className={`p-1 rounded-lg transition-colors cursor-pointer ${
+                      className={`p-1.5 rounded-lg transition-colors cursor-pointer ${
                         note.is_pinned 
                           ? 'text-amber-400 hover:text-amber-300' 
-                          : 'text-neutral-600 hover:text-neutral-300 opacity-0 group-hover:opacity-100'
+                          : 'text-neutral-500 hover:text-white opacity-0 group-hover:opacity-100'
                       }`}
                       title={note.is_pinned ? "Unpin note" : "Pin note to top"}
                     >
@@ -760,30 +760,30 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast }) => {
                   </div>
 
                   {/* Title */}
-                  <h3 className="text-sm font-bold text-white group-hover:text-sky-300 transition-colors line-clamp-2 leading-snug">
+                  <h3 className="text-sm font-display font-bold text-white group-hover:text-sky-300 transition-colors line-clamp-2 leading-snug tracking-tight">
                     {note.title || "Untitled Note"}
                   </h3>
 
                   {/* Multi-paragraph snippet */}
-                  <p className="text-xs text-neutral-400 mt-2 line-clamp-4 leading-relaxed font-normal">
-                    {note.content ? note.content : <span className="italic text-neutral-600">Empty note...</span>}
+                  <p className="text-xs text-neutral-300 mt-2 line-clamp-4 leading-relaxed font-normal">
+                    {note.content ? note.content : <span className="italic text-neutral-500">Empty note...</span>}
                   </p>
                 </div>
 
                 {/* Card Footer: Tags, Metrics & Actions */}
-                <div className="mt-4 pt-3 border-t border-neutral-800/80 space-y-2.5">
+                <div className="mt-4 pt-3.5 border-t border-white/[0.08] space-y-2.5">
                   {/* Tags */}
                   {note.tags && note.tags.length > 0 && (
                     <div className="flex flex-wrap gap-1">
                       {note.tags.map(tag => (
-                        <span key={tag} className="text-[10px] font-mono text-neutral-400 bg-neutral-950 px-1.5 py-0.5 rounded border border-neutral-800/80">
+                        <span key={tag} className="text-[10px] font-mono text-neutral-300 bg-white/[0.03] px-1.5 py-0.5 rounded border border-white/[0.06]">
                           #{tag}
                         </span>
                       ))}
                     </div>
                   )}
 
-                  <div className="flex items-center justify-between text-[11px] font-mono text-neutral-500">
+                  <div className="flex items-center justify-between text-[11px] font-mono text-neutral-400">
                     <div className="flex items-center space-x-2">
                       <span>{noteWordCount} words</span>
                       <span>•</span>
@@ -795,10 +795,10 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast }) => {
                       {/* Copy Button */}
                       <button
                         onClick={(e) => handleCopyNote(note.content, note.id, e)}
-                        className={`p-1.5 rounded-lg border transition-all cursor-pointer ${
+                        className={`p-1.5 rounded-xl border transition-all cursor-pointer ${
                           isCopied 
-                            ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300' 
-                            : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-800 text-neutral-400 hover:text-white'
+                            ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-200' 
+                            : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/[0.08] text-neutral-300 hover:text-white'
                         }`}
                         title="Copy note content to clipboard"
                       >
@@ -811,7 +811,7 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast }) => {
                           loadNoteIntoEditor(note);
                           handleOpenVersions(note.id, e);
                         }}
-                        className="p-1.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-neutral-400 hover:text-white transition-all cursor-pointer"
+                        className="p-1.5 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-neutral-300 hover:text-white transition-all cursor-pointer"
                         title="View revision versions"
                       >
                         <History className="w-3.5 h-3.5" />
@@ -820,7 +820,7 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast }) => {
                       {/* Delete Button */}
                       <button
                         onClick={(e) => handleDeleteNote(note.id, e)}
-                        className="p-1.5 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-neutral-500 hover:text-rose-400 transition-all cursor-pointer"
+                        className="p-1.5 rounded-xl bg-white/[0.04] hover:bg-rose-500/20 border border-white/[0.08] text-neutral-400 hover:text-rose-300 transition-all cursor-pointer"
                         title="Delete note"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
@@ -850,25 +850,25 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast }) => {
                 <div
                   key={note.id}
                   onClick={() => loadNoteIntoEditor(note)}
-                  className={`p-3.5 rounded-xl border transition-all cursor-pointer relative ${
+                  className={`p-3.5 rounded-2xl border transition-all cursor-pointer relative shadow-tactile ${
                     isSelected
-                      ? 'border-sky-500/50 bg-neutral-900 shadow-md shadow-sky-950/20 ring-1 ring-sky-500/30'
-                      : 'border-neutral-800/80 bg-neutral-950/60 hover:bg-neutral-900/60 hover:border-neutral-700'
+                      ? 'border-sky-500/50 bg-[#0d1118] shadow-glow-sky ring-1 ring-sky-500/30'
+                      : 'border-white/[0.08] bg-[#0d1118]/60 hover:bg-[#111722]/80 hover:border-white/[0.14]'
                   }`}
                 >
-                  <div className="flex items-center justify-between gap-1 mb-1">
+                  <div className="flex items-center justify-between gap-1 mb-1.5">
                     <div className="flex items-center space-x-1.5 min-w-0">
-                      <span className={`px-1.5 py-0.2 rounded text-[9px] font-mono font-bold uppercase tracking-wider ${badgeStyle.bg} ${badgeStyle.text}`}>
+                      <span className={`px-2 py-0.5 rounded-md text-[9px] font-mono font-bold uppercase tracking-wider ${badgeStyle.bg} ${badgeStyle.text}`}>
                         {note.badge}
                       </span>
-                      <span className="text-[10px] font-mono text-neutral-500">v{note.version}</span>
+                      <span className="text-[10px] font-mono text-neutral-400">v{note.version}</span>
                     </div>
 
                     <div className="flex items-center space-x-1 shrink-0">
                       {note.is_pinned && <Pin className="w-3 h-3 fill-amber-400 text-amber-400" />}
                       <button
                         onClick={(e) => handleCopyNote(note.content, note.id, e)}
-                        className="p-1 text-neutral-500 hover:text-white"
+                        className="p-1 text-neutral-400 hover:text-white transition-colors cursor-pointer"
                         title="Copy note"
                       >
                         {isCopied ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
@@ -876,12 +876,12 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast }) => {
                     </div>
                   </div>
 
-                  <h4 className="text-xs font-bold text-white truncate">{note.title || "Untitled Note"}</h4>
-                  <p className="text-[11px] text-neutral-400 line-clamp-2 mt-1 leading-snug">
+                  <h4 className="text-xs font-display font-bold text-white truncate">{note.title || "Untitled Note"}</h4>
+                  <p className="text-[11px] text-neutral-300 line-clamp-2 mt-1 leading-snug">
                     {note.content || "Empty note content..."}
                   </p>
                   
-                  <div className="flex items-center justify-between text-[10px] font-mono text-neutral-500 mt-2 pt-1.5 border-t border-neutral-900">
+                  <div className="flex items-center justify-between text-[10px] font-mono text-neutral-400 mt-2.5 pt-2 border-t border-white/[0.06]">
                     <span>{note.content.split(/\s+/).filter(Boolean).length} words</span>
                     <span>{new Date(note.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   </div>
@@ -891,15 +891,15 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast }) => {
           </div>
 
           {/* Right Side: Full Multi-Paragraph Editor (8 columns) */}
-          <div className={`lg:col-span-8 flex flex-col glass-panel rounded-2xl border border-neutral-800 p-5 ${
-            isEditorFullscreen ? 'fixed inset-4 z-50 bg-neutral-950/95 backdrop-blur-xl border-neutral-700 shadow-2xl overflow-y-auto' : ''
+          <div className={`lg:col-span-8 flex flex-col glass-panel rounded-3xl border border-white/[0.1] p-6 shadow-tactile ${
+            isEditorFullscreen ? 'fixed inset-4 z-50 bg-[#07090e]/95 backdrop-blur-2xl border-white/[0.15] shadow-2xl overflow-y-auto' : ''
           }`}>
             
             {selectedNoteId ? (
               <div className="flex-1 flex flex-col space-y-4">
                 
                 {/* Editor Header: Controls & Sync Status */}
-                <div className="flex items-center justify-between pb-3 border-b border-neutral-800 gap-2 flex-wrap">
+                <div className="flex items-center justify-between pb-3.5 border-b border-white/[0.08] gap-2 flex-wrap">
                   {/* Left: Badge & Category Selector */}
                   <div className="flex items-center space-x-2 flex-wrap gap-y-1">
                     {/* Badge Picker */}
@@ -910,7 +910,7 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast }) => {
                         setEditorBadge(newBadge);
                         triggerAutoSave({ badge: newBadge });
                       }}
-                      className="px-2.5 py-1 rounded-lg bg-neutral-900 border border-neutral-800 text-xs font-mono font-bold text-sky-300 focus:outline-none cursor-pointer"
+                      className="px-3 py-1.5 rounded-xl bg-[#0d1118] border border-white/[0.1] text-xs font-mono font-bold text-sky-300 focus:outline-none cursor-pointer"
                     >
                       <option value="Prompt">Badge: Prompt</option>
                       <option value="Research">Badge: Research</option>
@@ -929,7 +929,7 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast }) => {
                         setEditorCategory(newCat);
                         triggerAutoSave({ category: newCat });
                       }}
-                      className="px-2.5 py-1 rounded-lg bg-neutral-900 border border-neutral-800 text-xs text-neutral-300 focus:outline-none cursor-pointer"
+                      className="px-3 py-1.5 rounded-xl bg-[#0d1118] border border-white/[0.1] text-xs text-neutral-200 focus:outline-none cursor-pointer"
                     >
                       <option value="prompts">Category: Prompts</option>
                       <option value="research">Category: Research</option>
@@ -945,10 +945,10 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast }) => {
                         setEditorIsPinned(newPin);
                         triggerAutoSave({ is_pinned: newPin });
                       }}
-                      className={`flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-mono border transition-colors cursor-pointer ${
+                      className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-mono border transition-colors cursor-pointer ${
                         editorIsPinned
                           ? 'bg-amber-500/15 border-amber-500/30 text-amber-300'
-                          : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:text-white'
+                          : 'bg-[#0d1118] border-white/[0.1] text-neutral-400 hover:text-white'
                       }`}
                     >
                       <Pin className={`w-3 h-3 ${editorIsPinned ? 'fill-amber-400' : ''}`} />
@@ -981,7 +981,7 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast }) => {
                     {/* Version History Button */}
                     <button
                       onClick={() => selectedNoteId && handleOpenVersions(selectedNoteId)}
-                      className="flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-sky-400 text-xs transition-colors cursor-pointer"
+                      className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] border border-white/[0.1] text-sky-300 text-xs transition-colors cursor-pointer"
                       title="View all past versions"
                     >
                       <History className="w-3.5 h-3.5" />
@@ -991,7 +991,7 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast }) => {
                     {/* 1-Click Copy Full Editor Content */}
                     <button
                       onClick={() => handleCopyNote(editorContent, selectedNoteId)}
-                      className="flex items-center space-x-1 px-3 py-1 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs transition-all shadow-sm shadow-sky-600/30 active:scale-95 cursor-pointer"
+                      className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-sky-600 via-indigo-600 to-teal-500 hover:from-sky-500 hover:to-teal-400 text-white font-bold text-xs transition-all shadow-sm shadow-sky-600/30 active:scale-95 cursor-pointer"
                       title="Copy complete prompt / note to clipboard"
                     >
                       <Copy className="w-3.5 h-3.5" />
@@ -1001,7 +1001,7 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast }) => {
                     {/* Fullscreen Toggle */}
                     <button
                       onClick={() => setIsEditorFullscreen(!isEditorFullscreen)}
-                      className="p-1 rounded-lg bg-neutral-900 hover:bg-neutral-800 text-neutral-400 hover:text-white transition-colors"
+                      className="p-1.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] text-neutral-400 hover:text-white transition-colors cursor-pointer"
                       title={isEditorFullscreen ? "Exit Fullscreen" : "Expand to Fullscreen"}
                     >
                       {isEditorFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
@@ -1019,18 +1019,18 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast }) => {
                       triggerAutoSave({ title: e.target.value });
                     }}
                     placeholder="Note or Prompt Title..."
-                    className="w-full text-lg font-display font-bold text-white bg-transparent border-b border-neutral-800/80 pb-2 focus:outline-none focus:border-sky-500 placeholder-neutral-600 transition-colors"
+                    className="w-full text-xl font-display font-bold text-white bg-transparent border-b border-white/[0.08] pb-2.5 focus:outline-none focus:border-sky-500 placeholder-neutral-600 transition-colors tracking-tight"
                   />
                 </div>
 
                 {/* Tags Management Row */}
                 <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-                  <div className="flex items-center space-x-1 text-neutral-500 text-xs">
+                  <div className="flex items-center space-x-1 text-neutral-400 text-xs">
                     <Tag className="w-3 h-3" />
                     <span>Tags:</span>
                   </div>
                   {editorTags.map(tag => (
-                    <span key={tag} className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-md bg-neutral-900 border border-neutral-800 text-xs font-mono text-neutral-300">
+                    <span key={tag} className="inline-flex items-center space-x-1 px-2.5 py-0.5 rounded-lg bg-white/[0.04] border border-white/[0.08] text-xs font-mono text-neutral-300">
                       <span>#{tag}</span>
                       <button
                         onClick={() => handleRemoveTag(tag)}
@@ -1054,7 +1054,7 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast }) => {
                         }
                       }}
                       placeholder="+ tag (Enter)"
-                      className="px-2 py-0.5 rounded bg-neutral-900/60 border border-neutral-800 text-xs text-neutral-300 placeholder-neutral-600 focus:outline-none focus:border-sky-500 w-24"
+                      className="px-2.5 py-0.5 rounded-lg bg-white/[0.03] border border-white/[0.08] text-xs text-neutral-300 placeholder-neutral-600 focus:outline-none focus:border-sky-500 w-24"
                     />
                   </div>
                 </div>
@@ -1071,13 +1071,13 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast }) => {
 
                   <button
                     onClick={() => setShowMarkdownPreview(!showMarkdownPreview)}
-                    className={`flex items-center space-x-1 px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
+                    className={`flex items-center space-x-1.5 px-3 py-1 rounded-xl text-xs font-semibold border transition-colors cursor-pointer ${
                       showMarkdownPreview
                         ? 'bg-sky-500/20 border-sky-500/30 text-sky-300'
-                        : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:text-white'
+                        : 'bg-white/[0.03] border-white/[0.08] text-neutral-400 hover:text-white'
                     }`}
                   >
-                    <Eye className="w-3 h-3" />
+                    <Eye className="w-3.5 h-3.5" />
                     <span>{showMarkdownPreview ? 'Edit Source' : 'Markdown Preview'}</span>
                   </button>
                 </div>
@@ -1085,7 +1085,7 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast }) => {
                 {/* Multi-Paragraph Textarea OR Markdown Preview */}
                 <div className="flex-1 min-h-[360px] flex flex-col">
                   {showMarkdownPreview ? (
-                    <div className="p-4 rounded-xl bg-neutral-950 border border-neutral-800 text-neutral-200 text-xs leading-relaxed whitespace-pre-line overflow-y-auto flex-1 font-sans">
+                    <div className="p-4.5 rounded-2xl bg-[#07090e]/90 border border-white/[0.08] text-neutral-100 text-xs leading-relaxed whitespace-pre-line overflow-y-auto flex-1 font-sans">
                       {editorContent || <span className="italic text-neutral-600">Nothing to preview...</span>}
                     </div>
                   ) : (
@@ -1096,7 +1096,7 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast }) => {
                         triggerAutoSave({ content: e.target.value });
                       }}
                       placeholder="Write your long research prompt, investigative notes, video hooks, or source citations here..."
-                      className="w-full flex-1 min-h-[380px] p-4 rounded-xl bg-neutral-950/80 border border-neutral-800 text-neutral-200 text-xs leading-relaxed focus:outline-none focus:border-sky-500 placeholder-neutral-600 font-mono resize-y"
+                      className="w-full flex-1 min-h-[380px] p-4.5 rounded-2xl bg-[#07090e]/80 border border-white/[0.08] text-neutral-100 text-xs leading-relaxed focus:outline-none focus:border-sky-500/70 focus:ring-1 focus:ring-sky-500/30 placeholder-neutral-500 font-mono resize-y"
                     />
                   )}
                 </div>

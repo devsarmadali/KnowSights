@@ -122,28 +122,28 @@ ${listText}
 
       {/* Active Daily Batch View */}
       {batch ? (
-        <div className="space-y-4">
+        <div className="space-y-5">
           
           {/* Batch Status Header & Bulk Actions */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 text-xs font-mono text-neutral-400 bg-neutral-900/40 p-3 rounded-2xl border border-neutral-800/80">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 text-xs font-mono text-neutral-300 bg-white/[0.03] p-3.5 rounded-2xl border border-white/[0.08] shadow-tactile">
             <div className="flex flex-wrap items-center gap-2.5">
-              <span className="flex items-center space-x-1.5 text-neutral-200 font-bold">
+              <span className="flex items-center space-x-1.5 text-white font-bold">
                 <Calendar className="w-3.5 h-3.5 text-emerald-400" />
                 <span>Date: {batch.date}</span>
               </span>
-              <span className="px-2 py-0.5 rounded bg-neutral-900 border border-neutral-800 text-emerald-400">
+              <span className="px-2.5 py-0.5 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 font-bold">
                 {batch.selection_mode}
               </span>
-              <span>{batch.items.length} Ideas</span>
+              <span className="text-neutral-300">{batch.items.length} Ideas</span>
               <span className="text-neutral-600">•</span>
-              <div className="flex items-center space-x-1 text-neutral-300">
+              <div className="flex items-center space-x-1.5 text-neutral-200">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                 <span>Used: <strong className="text-white">{usedInCurrentBatch} / {batch.items.length}</strong></span>
               </div>
               {aiRefinedCount > 0 && (
                 <>
                   <span className="text-neutral-600">•</span>
-                  <span className="flex items-center space-x-1 px-2 py-0.5 rounded bg-violet-950/60 border border-violet-700/60 text-violet-300 font-bold">
+                  <span className="flex items-center space-x-1 px-2.5 py-0.5 rounded-md bg-violet-500/15 border border-violet-500/30 text-violet-300 font-bold">
                     <Sparkles className="w-3 h-3 text-violet-400 fill-violet-400" />
                     <span>YouTube Angles: {aiRefinedCount}/{batch.items.length}</span>
                   </span>
@@ -157,10 +157,10 @@ ${listText}
                 <button
                   onClick={onRefineBatch}
                   disabled={isRefiningBatch || (geminiKeysCount || 0) === 0}
-                  className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl font-bold transition-all shadow-sm ${
+                  className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl font-bold transition-all shadow-sm cursor-pointer ${
                     (geminiKeysCount || 0) > 0
-                      ? 'bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-violet-900/30'
-                      : 'bg-neutral-800 text-neutral-500 cursor-not-allowed border border-neutral-700'
+                      ? 'bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-violet-950/50'
+                      : 'bg-white/[0.04] text-neutral-500 cursor-not-allowed border border-white/[0.06]'
                   }`}
                   title={
                     (geminiKeysCount || 0) > 0
@@ -185,16 +185,16 @@ ${listText}
               {/* Bulk Copy Entire Batch Button */}
               <button
                 onClick={handleCopyAllBatch}
-                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl font-bold transition-all shadow-sm ${
+                className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl font-bold transition-all shadow-sm cursor-pointer ${
                   batchCopied
-                    ? 'bg-emerald-500 text-neutral-950 shadow-emerald-500/20'
-                    : 'bg-neutral-800 hover:bg-neutral-700 text-emerald-300 border border-neutral-700 hover:border-emerald-500/50'
+                    ? 'bg-emerald-500 text-neutral-950 shadow-emerald-500/30'
+                    : 'bg-white/[0.04] hover:bg-white/[0.08] text-emerald-300 border border-emerald-500/30 hover:border-emerald-500/50'
                 }`}
                 title="Copy all ideas in this batch as a complete Prompt Pack"
               >
                 {batchCopied ? (
                   <>
-                    <Check className="w-3.5 h-3.5" />
+                    <Check className="w-3.5 h-3.5 text-neutral-950" />
                     <span>Copied All {batch.items.length} Ideas!</span>
                   </>
                 ) : (
@@ -222,10 +222,10 @@ ${listText}
           </div>
 
           {/* Central Rule Callout Banner */}
-          <div className="mt-8 p-4 rounded-2xl bg-neutral-900/60 border border-neutral-800/80 flex items-start space-x-3 text-xs text-neutral-400">
+          <div className="mt-8 p-4 rounded-2xl bg-white/[0.02] border border-white/[0.07] flex items-start space-x-3 text-xs text-neutral-300">
             <HelpCircle className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
             <div>
-              <strong className="text-neutral-200 block mb-0.5">Continuous Inventory Rule (SHOWN != USED)</strong>
+              <strong className="text-white block mb-0.5 font-semibold">Continuous Inventory Rule (SHOWN != USED)</strong>
               <span>
                 Ideas appearing in this mix have their exposure counter updated, but are <strong className="text-emerald-300">never consumed</strong> until you explicitly click <strong>✓ Mark Used</strong>. You can safely replace or regenerate without losing ideas.
               </span>
@@ -235,18 +235,18 @@ ${listText}
         </div>
       ) : (
         /* Empty State */
-        <div className="glass-panel rounded-3xl p-12 text-center border border-neutral-800/80 my-8">
-          <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto mb-4">
+        <div className="glass-panel rounded-3xl p-14 text-center border border-white/[0.08] my-8 shadow-tactile">
+          <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-emerald-950/40">
             <Sparkles className="w-8 h-8" />
           </div>
-          <h3 className="text-xl font-display font-bold text-white mb-2">No Mix Active For Today</h3>
-          <p className="text-sm text-neutral-400 max-w-md mx-auto mb-6">
+          <h3 className="text-xl font-display font-bold text-white mb-2 tracking-tight">No Mix Active For Today</h3>
+          <p className="text-sm text-neutral-300 max-w-md mx-auto mb-6 leading-relaxed font-normal">
             Choose your preferred selection strategy above and click <strong>Generate Fresh Mix</strong> to pull curated ideas from the Production Pool.
           </p>
           <button
             onClick={onGenerate}
             disabled={isLoading}
-            className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-emerald-600/30 transition-all cursor-pointer"
+            className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white text-xs font-bold uppercase tracking-wider shadow-lg shadow-emerald-600/30 active:scale-95 transition-all cursor-pointer"
           >
             Generate Today's Mix Now
           </button>

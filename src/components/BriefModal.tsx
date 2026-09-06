@@ -118,23 +118,23 @@ export const BriefModal: React.FC<BriefModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="glass-panel w-full max-w-2xl rounded-2xl p-6 border border-neutral-800 shadow-2xl relative max-h-[90vh] flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150">
+      <div className="glass-panel w-full max-w-2xl rounded-3xl p-6 sm:p-7 border border-white/[0.1] shadow-2xl relative max-h-[90vh] flex flex-col bg-[#0d1118]/95 backdrop-blur-2xl">
         
         {/* Header */}
-        <div className="flex items-start justify-between pb-4 border-b border-neutral-800 gap-3">
-          <div className="flex items-center space-x-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400 flex-shrink-0">
+        <div className="flex items-start justify-between pb-4 border-b border-white/[0.08] gap-3">
+          <div className="flex items-center space-x-3 min-w-0">
+            <div className="w-9 h-9 rounded-xl bg-sky-500/10 border border-sky-500/25 flex items-center justify-center text-sky-400 flex-shrink-0 shadow-sm">
               <BookOpen className="w-4 h-4" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center space-x-2">
-                <h3 className="text-base font-bold text-white truncate">Source-Ready Research Brief</h3>
-                <span className="px-2 py-0.5 rounded bg-neutral-900 border border-neutral-800 text-[11px] font-mono text-sky-400 font-bold flex-shrink-0">
+                <h3 className="text-base font-display font-bold text-white tracking-tight truncate">Source-Ready Research Brief</h3>
+                <span className="px-2 py-0.5 rounded-md bg-white/[0.04] border border-white/[0.1] text-[11px] font-mono text-sky-300 font-bold flex-shrink-0">
                   {activeIdeaId}
                 </span>
               </div>
-              <p className="text-xs text-neutral-300 truncate font-medium">{activeTitle}</p>
+              <p className="text-xs text-neutral-300 truncate font-medium mt-0.5">{activeTitle}</p>
             </div>
           </div>
 
@@ -142,12 +142,12 @@ export const BriefModal: React.FC<BriefModalProps> = ({
             {/* Top 1-Click Copy Research Prompt Button */}
             <button
               onClick={handleCopyFullBrief}
-              className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-md ${
+              className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer ${
                 copied
-                  ? 'bg-emerald-500 text-neutral-950 shadow-emerald-500/20'
-                  : 'bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white shadow-sky-600/30 active:scale-95 cursor-pointer'
+                  ? 'bg-emerald-500 text-neutral-950 shadow-emerald-500/30'
+                  : 'bg-gradient-to-r from-sky-600 via-indigo-600 to-teal-600 hover:from-sky-500 hover:to-teal-500 text-white shadow-sky-600/30 active:scale-95'
               }`}
-              title="Copy AI Research Prompt to clipboard"
+              title="Copy pure AI Research Prompt to clipboard"
             >
               {copied ? (
                 <>
@@ -157,43 +157,43 @@ export const BriefModal: React.FC<BriefModalProps> = ({
               ) : (
                 <>
                   <Copy className="w-3.5 h-3.5" />
-                  <span>Copy Research Prompt</span>
+                  <span>Copy Prompt</span>
                 </>
               )}
             </button>
 
             <button 
               onClick={onClose}
-              className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors cursor-pointer"
+              className="p-2 rounded-xl text-neutral-400 hover:text-white hover:bg-white/[0.08] transition-colors cursor-pointer"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
         {/* Content Body */}
-        <div className="flex-1 overflow-y-auto py-4 space-y-4 text-xs leading-relaxed text-neutral-300">
+        <div className="flex-1 overflow-y-auto py-4 space-y-4 text-xs leading-relaxed text-neutral-200">
           {loading ? (
-            <div className="py-12 text-center text-neutral-400">
-              <Loader2 className="w-6 h-6 animate-spin mx-auto text-sky-400 mb-2" />
-              <p>Loading research brief...</p>
+            <div className="py-14 text-center text-neutral-400">
+              <Loader2 className="w-7 h-7 animate-spin mx-auto text-sky-400 mb-2.5" />
+              <p className="font-medium text-xs">Loading research brief from datastore...</p>
             </div>
           ) : (
             <div className="space-y-4">
               
               {/* Ready Status Banner */}
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-950/20 border border-emerald-500/30 text-emerald-300 text-xs">
+              <div className="flex items-center justify-between p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-200 text-xs shadow-sm">
                 <div className="flex items-center space-x-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                  <span>Status: <strong>{brief?.ready_status || (idea?.research_status ? idea.research_status : 'Verified Production Ready')}</strong></span>
+                  <span>Status: <strong className="text-white">{brief?.ready_status || (idea?.research_status ? idea.research_status : 'Verified Production Ready')}</strong></span>
                 </div>
-                <span className="text-[10px] font-mono text-emerald-400/80 bg-emerald-500/10 px-2 py-0.5 rounded">
+                <span className="text-[10px] font-mono text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded-full font-bold">
                   1-Click Ready to Script
                 </span>
               </div>
 
               {/* Title / Premise */}
-              <div className="p-3.5 rounded-xl bg-neutral-900/80 border border-neutral-800 space-y-1.5">
+              <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08] space-y-1.5">
                 <div className="flex items-center justify-between">
                   <h4 className="font-mono uppercase text-[11px] text-neutral-400 font-bold">Research Title / Core Thesis</h4>
                   {idea?.ai_refined && (
@@ -203,9 +203,9 @@ export const BriefModal: React.FC<BriefModalProps> = ({
                     </span>
                   )}
                 </div>
-                <p className="text-sm font-semibold text-white">{activeTitle}</p>
+                <p className="text-sm font-display font-bold text-white tracking-tight leading-snug">{activeTitle}</p>
                 {activeSeed && (
-                  <p className="text-[11px] text-neutral-400 font-mono pt-1.5 border-t border-neutral-800/80 mt-1 flex items-center space-x-1 truncate">
+                  <p className="text-[11px] text-neutral-400 font-mono pt-2 border-t border-white/[0.06] mt-1 flex items-center space-x-1 truncate">
                     <span className="text-neutral-500">Curriculum Seed:</span>
                     <span className="italic text-neutral-300 truncate">"{activeSeed}"</span>
                   </p>
@@ -215,7 +215,7 @@ export const BriefModal: React.FC<BriefModalProps> = ({
               {/* Overview */}
               <div className="space-y-1.5">
                 <h4 className="font-mono uppercase text-[11px] text-neutral-400 font-bold">Executive Overview</h4>
-                <div className="p-3.5 rounded-xl bg-neutral-900/60 border border-neutral-800 whitespace-pre-line text-neutral-200">
+                <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] whitespace-pre-line text-neutral-100 leading-relaxed font-normal">
                   {overviewText}
                 </div>
               </div>
@@ -223,7 +223,7 @@ export const BriefModal: React.FC<BriefModalProps> = ({
               {/* Key Points */}
               <div className="space-y-1.5">
                 <h4 className="font-mono uppercase text-[11px] text-neutral-400 font-bold">Key Facts, Data & Script Beats</h4>
-                <div className="p-3.5 rounded-xl bg-neutral-900/60 border border-neutral-800 whitespace-pre-line text-neutral-200">
+                <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] whitespace-pre-line text-neutral-100 leading-relaxed font-normal">
                   {keyPointsText}
                 </div>
               </div>
@@ -231,7 +231,7 @@ export const BriefModal: React.FC<BriefModalProps> = ({
               {/* Sources */}
               <div className="space-y-1.5">
                 <h4 className="font-mono uppercase text-[11px] text-neutral-400 font-bold">Data Sources & Citations</h4>
-                <div className="p-3 rounded-xl bg-neutral-950 border border-neutral-800 text-[11px] text-neutral-400 font-mono">
+                <div className="p-3.5 rounded-2xl bg-black/40 border border-white/[0.06] text-[11px] text-neutral-300 font-mono leading-relaxed">
                   {sourcesText}
                 </div>
               </div>
@@ -241,10 +241,10 @@ export const BriefModal: React.FC<BriefModalProps> = ({
         </div>
 
         {/* Footer */}
-        <div className="pt-3 border-t border-neutral-800 flex items-center justify-between">
+        <div className="pt-3.5 border-t border-white/[0.08] flex items-center justify-between">
           <button
             onClick={handleCopyFullBrief}
-            className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-xs font-bold text-white transition-all shadow-md shadow-sky-600/30 cursor-pointer"
+            className="flex items-center space-x-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 via-indigo-600 to-teal-600 hover:from-sky-500 hover:to-teal-500 text-xs font-bold text-white transition-all shadow-md shadow-sky-600/30 active:scale-95 cursor-pointer"
           >
             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
             <span>{copied ? 'Copied Research Prompt!' : 'Copy Research Prompt'}</span>
@@ -252,7 +252,7 @@ export const BriefModal: React.FC<BriefModalProps> = ({
 
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-xs font-semibold text-neutral-300 transition-colors cursor-pointer"
+            className="px-4 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-xs font-semibold text-neutral-300 hover:text-white transition-colors cursor-pointer"
           >
             Close
           </button>

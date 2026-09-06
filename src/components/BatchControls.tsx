@@ -87,19 +87,19 @@ export const BatchControls: React.FC<BatchControlsProps> = ({
   const hasGeminiKeys = geminiKeysCount > 0;
 
   return (
-    <div className="glass-panel rounded-2xl p-5 sm:p-6 mb-8 border border-neutral-800/90 space-y-6">
+    <div className="glass-panel rounded-2xl p-5 sm:p-6 mb-8 border border-white/[0.08] shadow-tactile space-y-6">
       
       {/* Selection Modes */}
       <div>
-        <div className="flex items-center justify-between mb-3">
-          <label className="text-xs font-mono uppercase tracking-wider text-neutral-400 font-semibold flex items-center space-x-2">
+        <div className="flex items-center justify-between mb-3.5">
+          <label className="text-xs font-mono uppercase tracking-wider text-neutral-300 font-bold flex items-center space-x-2">
             <SlidersHorizontal className="w-3.5 h-3.5 text-emerald-400" />
             <span>Selection Strategy</span>
           </label>
-          <span className="text-xs text-neutral-400 hidden sm:inline">{currentModeObj.desc}</span>
+          <span className="text-xs text-neutral-400 font-medium hidden sm:inline">{currentModeObj.desc}</span>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
           {MODES.map((m) => {
             const Icon = m.icon;
             const isSelected = mode === m.id;
@@ -107,14 +107,14 @@ export const BatchControls: React.FC<BatchControlsProps> = ({
               <button
                 key={m.id}
                 onClick={() => setMode(m.id)}
-                className={`flex flex-col items-center text-center p-3 rounded-xl border text-xs font-medium transition-all ${
+                className={`flex flex-col items-center text-center p-3 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
                   isSelected
-                    ? 'bg-neutral-900 border-emerald-500/70 text-white shadow-lg shadow-emerald-950/40 ring-1 ring-emerald-500/30'
-                    : 'bg-neutral-950/60 border-neutral-800/80 text-neutral-400 hover:text-neutral-200 hover:bg-neutral-900/60'
+                    ? 'bg-white/[0.08] border-emerald-500/50 text-white shadow-lg shadow-emerald-950/40 ring-1 ring-emerald-500/40'
+                    : 'bg-white/[0.02] border-white/[0.06] text-neutral-300 hover:text-white hover:bg-white/[0.05] hover:border-white/[0.12]'
                 }`}
               >
-                <Icon className={`w-4 h-4 mb-1.5 ${isSelected ? 'text-emerald-400' : 'text-neutral-500'}`} />
-                <span className="font-semibold">{m.label}</span>
+                <Icon className={`w-4 h-4 mb-1.5 ${isSelected ? 'text-emerald-400' : 'text-neutral-400'}`} />
+                <span className="font-semibold tracking-tight">{m.label}</span>
               </button>
             );
           })}
@@ -122,23 +122,23 @@ export const BatchControls: React.FC<BatchControlsProps> = ({
       </div>
 
       {/* Secondary Controls Bar: Count, Subject Filter, AI Refine Toggle, and Generate Action */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pt-2 border-t border-neutral-900">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pt-3.5 border-t border-white/[0.06]">
         
         <div className="flex flex-wrap items-center gap-4">
           
           {/* Idea Count Stepper */}
           <div>
-            <label className="block text-xs font-mono uppercase text-neutral-400 mb-1.5">
+            <label className="block text-xs font-mono uppercase text-neutral-400 font-semibold mb-1.5">
               Mix Size
             </label>
-            <div className="flex items-center space-x-1 bg-neutral-900 p-1 rounded-xl border border-neutral-800">
+            <div className="flex items-center space-x-1 bg-white/[0.03] p-1 rounded-xl border border-white/[0.08]">
               {[6, 12, 18, 24].map((num) => (
                 <button
                   key={num}
                   onClick={() => setSize(num)}
-                  className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all ${
+                  className={`px-3 py-1 rounded-lg text-xs font-mono font-bold transition-all cursor-pointer ${
                     size === num
-                      ? 'bg-emerald-600 text-white shadow-sm'
+                      ? 'bg-emerald-500 text-neutral-950 font-extrabold shadow-sm shadow-emerald-500/30'
                       : 'text-neutral-400 hover:text-white'
                   }`}
                 >
@@ -150,12 +150,12 @@ export const BatchControls: React.FC<BatchControlsProps> = ({
 
           {/* Subject Filter */}
           <div className="flex-1 min-w-[200px]">
-            <label className="block text-xs font-mono uppercase text-neutral-400 mb-1.5 flex items-center justify-between">
+            <label className="block text-xs font-mono uppercase text-neutral-400 font-semibold mb-1.5 flex items-center justify-between">
               <span>Subject Scope {mode === 'DEEP_DIVE' && <span className="text-indigo-400 font-bold">(Required)</span>}</span>
               {subjectFilter && (
                 <button 
                   onClick={() => setSubjectFilter('')}
-                  className="text-[10px] text-neutral-500 hover:text-neutral-300 underline"
+                  className="text-[10px] text-emerald-400 hover:text-emerald-300 underline font-medium"
                 >
                   Clear
                 </button>
@@ -165,7 +165,7 @@ export const BatchControls: React.FC<BatchControlsProps> = ({
               <select
                 value={subjectFilter}
                 onChange={(e) => setSubjectFilter(e.target.value)}
-                className="w-full bg-neutral-900 text-neutral-200 border border-neutral-800 rounded-xl px-3.5 py-2 text-xs font-medium appearance-none focus:outline-none focus:border-emerald-500 pr-8"
+                className="w-full bg-[#0d1118] text-neutral-100 border border-white/[0.1] rounded-xl px-3.5 py-2 text-xs font-medium appearance-none focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 pr-8 transition-colors cursor-pointer"
               >
                 <option value="">All Subjects {subjectsList.length > 0 ? `(${subjectsList.length} Disciplines)` : '(Broad Mix)'}</option>
                 {subjectsList.map((s) => (
@@ -174,22 +174,22 @@ export const BatchControls: React.FC<BatchControlsProps> = ({
                   </option>
                 ))}
               </select>
-              <ChevronDown className="w-4 h-4 text-neutral-500 absolute right-3 top-2.5 pointer-events-none" />
+              <ChevronDown className="w-4 h-4 text-neutral-400 absolute right-3 top-2.5 pointer-events-none" />
             </div>
           </div>
 
           {/* AI YouTube Angle Refinement Toggle (Gemini Multi-Key) */}
           <div className="flex flex-col justify-end">
-            <label className="block text-xs font-mono uppercase text-neutral-400 mb-1.5">
+            <label className="block text-xs font-mono uppercase text-neutral-400 font-semibold mb-1.5">
               Gemini AI Refinement
             </label>
             <button
               type="button"
               onClick={() => onToggleAiRefine && onToggleAiRefine(!aiRefineEnabled)}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-xl border text-xs font-semibold transition-all ${
+              className={`flex items-center space-x-2 px-3 py-2 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
                 aiRefineEnabled && hasGeminiKeys
-                  ? 'bg-gradient-to-r from-violet-950/70 to-indigo-950/70 border-violet-500/50 text-violet-200 shadow-md shadow-violet-950/40 ring-1 ring-violet-500/20'
-                  : 'bg-neutral-900/80 border-neutral-800 text-neutral-400 hover:text-neutral-200'
+                  ? 'bg-gradient-to-r from-violet-950/80 to-indigo-950/80 border-violet-500/50 text-violet-200 shadow-glow-violet ring-1 ring-violet-500/30'
+                  : 'bg-white/[0.03] border-white/[0.08] text-neutral-400 hover:text-white'
               }`}
               title={
                 hasGeminiKeys
@@ -197,12 +197,12 @@ export const BatchControls: React.FC<BatchControlsProps> = ({
                   : "Configure Gemini API keys in Settings to enable YouTube angle refinement"
               }
             >
-              <Sparkles className={`w-3.5 h-3.5 ${aiRefineEnabled && hasGeminiKeys ? 'text-amber-400 fill-amber-400 animate-pulse' : 'text-neutral-500'}`} />
+              <Sparkles className={`w-3.5 h-3.5 ${aiRefineEnabled && hasGeminiKeys ? 'text-amber-400 fill-amber-400 animate-pulse' : 'text-neutral-400'}`} />
               <span>YouTube Angles</span>
               <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono font-bold ${
                 aiRefineEnabled && hasGeminiKeys
                   ? 'bg-violet-600 text-white'
-                  : 'bg-neutral-800 text-neutral-500'
+                  : 'bg-white/[0.06] text-neutral-400'
               }`}>
                 {aiRefineEnabled && hasGeminiKeys ? 'ACTIVE' : 'OFF'}
               </span>
@@ -215,7 +215,7 @@ export const BatchControls: React.FC<BatchControlsProps> = ({
         <button
           onClick={onGenerate}
           disabled={isLoading || (mode === 'DEEP_DIVE' && !subjectFilter)}
-          className="flex items-center justify-center space-x-2 px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-display font-bold text-sm tracking-wide shadow-xl shadow-emerald-600/30 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          className="flex items-center justify-center space-x-2 px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-display font-bold text-sm tracking-wide shadow-xl shadow-emerald-600/30 active:scale-[0.98] transition-all disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
         >
           {isLoading ? (
             <>
