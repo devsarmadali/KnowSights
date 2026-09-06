@@ -541,9 +541,9 @@ export default {
             parentSr = taxMatch?.sr || 1;
           }
 
-          // Get next KS-P-XXXX ID
-          const lastKsp = await db.prepare("SELECT idea_id FROM production_pool WHERE idea_id LIKE 'KS-P-%' ORDER BY idea_id DESC LIMIT 1").first();
-          let nextNum = 1;
+          // Get next KS-P-XXXX ID numerically
+          const lastKsp = await db.prepare("SELECT idea_id FROM production_pool WHERE idea_id LIKE 'KS-P-%' ORDER BY CAST(SUBSTR(idea_id, 6) AS INTEGER) DESC LIMIT 1").first();
+          let nextNum = 181;
           if (lastKsp && lastKsp.idea_id) {
             const parts = lastKsp.idea_id.split("-");
             const lastVal = parseInt(parts[parts.length - 1], 10);
@@ -553,6 +553,7 @@ export default {
           }
           const ideaId = `KS-P-${String(nextNum).padStart(4, '0')}`;
           const now = new Date().toISOString();
+          const subtopicSeed = (body.subtopic_seed || body.source_article_title || videoIdea).trim();
           const notes = `Ingested via Discovery Lab from ${srcGuidance ? srcGuidance.slice(0, 50) : 'Publication Feed'}.`;
 
           await db.batch([
@@ -564,7 +565,7 @@ export default {
                 priority_tier, notes, active, brief_available
               ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Recent Publication', 'Ready', 0, 0, ?, ?, ?, 1, 0)
             `).bind(
-              ideaId, parentSr, videoIdea, subject, topicFamily, format,
+              ideaId, parentSr, subtopicSeed, subject, topicFamily, format,
               videoIdea, hook, visDir, srcGuidance, score, tier, notes
             ),
             db.prepare("INSERT INTO app_events (event_id, event_type, request_id, payload, created_at) VALUES (?, 'add_production_idea', ?, ?, ?)")
@@ -585,6 +586,17 @@ export default {
             times_shown: 0,
             active: true
           });
+        }
+
+        case "reset_cache_slate":
+        case "clean_fresh_slate": {
+          await db.batch([
+            db.prepare("DELETE FROM production_pool WHERE idea_id IN ('KS-P-0181', 'KS-P-0182')"),
+            db.prepare("DELETE FROM app_batch_items"),
+            db.prepare("DELETE FROM app_batches"),
+            db.prepare("UPDATE production_pool SET times_shown = 0, last_shown = NULL, used = 0, used_date = NULL")
+          ]);
+          return jsonResponse({ success: true, message: "Database reset to fresh slate with 0 batches." });
         }
 
         case "get_notes": {

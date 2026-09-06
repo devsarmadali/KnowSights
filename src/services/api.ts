@@ -980,12 +980,16 @@ export const api = {
       signature_format: idea.signature_format,
       subject: idea.subject,
       topic_family: idea.topic_family,
+      subtopic_seed: idea.source_article_title || idea.video_idea,
+      source_article_title: idea.source_article_title,
       production_score: idea.production_score,
       priority_tier: idea.priority_tier,
       visualization_direction: idea.visualization_direction,
       source_family_guidance: idea.source_family_guidance,
       request_id: generateRequestId()
     }),
+  resetFreshSlate: () =>
+    callApi('reset_cache_slate', { request_id: generateRequestId() }),
   getNotes: (params?: { category?: string; search?: string }) => 
     callApi('get_notes', params || {}),
   saveNote: (note: Partial<UserNote>, changeSummary?: string) => 

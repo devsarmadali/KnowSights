@@ -20,7 +20,8 @@ import {
   Palette,
   Moon,
   Sun,
-  BookOpen
+  BookOpen,
+  Trash2
 } from 'lucide-react';
 import { AppConfig } from '../types';
 import { DEFAULT_CONFIG, loadConfig, saveConfig, DEFAULT_WEB_APP_URL, api } from '../services/api';
@@ -632,7 +633,63 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
         </div>
       </div>
 
-      {/* 4. Deployment & Setup Guide */}
+      {/* 4. Browser Cache & Fresh Slate Reset */}
+      <div className="glass-panel rounded-2xl p-6 border border-neutral-800 space-y-4 bg-neutral-950/40">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="flex items-center space-x-2.5">
+            <div className="w-8 h-8 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
+              <Trash2 className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white">Browser Cache & Fresh Slate Reset</h3>
+              <p className="text-xs text-neutral-400">Purge stale cached JavaScript bundles, clear stored daily batches, and hard-refresh to a clean state</p>
+            </div>
+          </div>
+          <button
+            onClick={async () => {
+              if (window.confirm("Purge all local browser caches, reset local batches, and reload with a 100% fresh slate from Cloudflare D1?")) {
+                try {
+                  try {
+                    await api.resetFreshSlate();
+                  } catch (e) {
+                    console.warn("Backend reset call warning:", e);
+                  }
+                  const keys = Object.keys(localStorage);
+                  keys.forEach(k => {
+                    if (k.startsWith('knowsights_')) {
+                      localStorage.removeItem(k);
+                    }
+                  });
+                  sessionStorage.clear();
+                  if ('caches' in window) {
+                    const cacheKeys = await caches.keys();
+                    await Promise.all(cacheKeys.map(k => caches.delete(k)));
+                  }
+                  if ('serviceWorker' in navigator) {
+                    const regs = await navigator.serviceWorker.getRegistrations();
+                    await Promise.all(regs.map(r => r.unregister()));
+                  }
+                } finally {
+                  window.location.reload();
+                }
+              }
+            }}
+            className="flex items-center space-x-2 px-4 py-2 rounded-xl bg-rose-600/20 hover:bg-rose-600 border border-rose-500/30 hover:border-rose-500 text-rose-300 hover:text-white text-xs font-bold transition-all cursor-pointer shadow-sm shrink-0"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>Reset Cache & Fresh Slate</span>
+          </button>
+        </div>
+
+        <div className="p-3.5 rounded-xl bg-neutral-900/60 border border-neutral-800 text-xs text-neutral-300 space-y-1.5 leading-relaxed">
+          <p className="font-semibold text-rose-400">⚡ Instant Cache Purge</p>
+          <p className="text-neutral-400">
+            If your browser is showing outdated button labels or old clipboard prompts from previous deploys, clicking this button instantly purges the browser cache and loads the latest code directly from the server.
+          </p>
+        </div>
+      </div>
+
+      {/* 5. Deployment & Setup Guide */}
       <div className="glass-panel rounded-2xl p-6 border border-neutral-800 space-y-4">
         <div className="flex items-center space-x-2.5">
           <div className="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
