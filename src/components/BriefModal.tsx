@@ -80,14 +80,15 @@ export const BriefModal: React.FC<BriefModalProps> = ({
 
   const overviewText = (!isGenericBackendBrief && !idea?.ai_refined && brief?.title === activeTitle)
     ? brief.overview
-    : `Curated research outline for ${activeSubject || 'Knowledge & Civilizations'} / ${activeTopicFamily || 'Core Dynamics'}.\n📌 Active Angle & Hook: "${activeHook || activeTitle}".${activeSeed ? `\n🌱 Baseline Curriculum Seed: "${activeSeed}"` : ''}`;
+    : (idea?.visualization_direction 
+        ? idea.visualization_direction 
+        : `Investigative exploration into ${activeSubject || 'historical & scientific breakthroughs'} focusing on "${activeTitle}".`);
 
   const keyPointsText = (!isGenericBackendBrief && !idea?.ai_refined && brief?.title === activeTitle)
     ? brief.key_points
-    : `1. Core Premise & Pattern Interrupt: "${activeHook || activeTitle}".
-2. Empirical Evidence & Ground Truth: Documented field artifacts, primary archival texts, and counter-intuitive data points.
-3. Analytical Deep Dive (${activeFormat || 'Explainer'}): Structural mechanisms, historical causality, and unexpected discoveries.
-4. Paradigm Shift & Retention Conclusion: Overturning traditional assumptions and establishing the new scientific/historical reality.`;
+    : `1. Primary Discoveries & Ground Truth: Documented field artifacts, primary archival texts, and counter-intuitive data points.
+2. Analytical Deep Dive (${activeFormat || 'Explainer'}): Structural mechanisms, historical causality, and unexpected discoveries.
+3. Paradigm Shift & Scientific Reality: Overturning traditional assumptions and establishing the verified evidence.`;
 
   const sourcesText = idea?.source_family_guidance || brief?.sources || 
     `Authoritative peer-reviewed journals, institutional archives, museum collections, and verified empirical databases.`;
@@ -138,7 +139,7 @@ export const BriefModal: React.FC<BriefModalProps> = ({
           </div>
 
           <div className="flex items-center space-x-2 flex-shrink-0">
-            {/* Top 1-Click Copy Brief Button */}
+            {/* Top 1-Click Copy Research Prompt Button */}
             <button
               onClick={handleCopyFullBrief}
               className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-md ${
@@ -146,17 +147,17 @@ export const BriefModal: React.FC<BriefModalProps> = ({
                   ? 'bg-emerald-500 text-neutral-950 shadow-emerald-500/20'
                   : 'bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white shadow-sky-600/30 active:scale-95 cursor-pointer'
               }`}
-              title="Copy Full Research Brief to clipboard"
+              title="Copy AI Research Prompt to clipboard"
             >
               {copied ? (
                 <>
                   <Check className="w-3.5 h-3.5" />
-                  <span>Copied Brief!</span>
+                  <span>Copied Prompt!</span>
                 </>
               ) : (
                 <>
                   <Copy className="w-3.5 h-3.5" />
-                  <span>Copy Brief</span>
+                  <span>Copy Research Prompt</span>
                 </>
               )}
             </button>
@@ -246,7 +247,7 @@ export const BriefModal: React.FC<BriefModalProps> = ({
             className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-xs font-bold text-white transition-all shadow-md shadow-sky-600/30 cursor-pointer"
           >
             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-            <span>{copied ? 'Copied Research Brief!' : 'Copy Research Brief'}</span>
+            <span>{copied ? 'Copied Research Prompt!' : 'Copy Research Prompt'}</span>
           </button>
 
           <button

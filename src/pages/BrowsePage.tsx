@@ -359,7 +359,7 @@ export const BrowsePage: React.FC<BrowsePageProps> = ({ onRefreshStats }) => {
                             ? 'border-emerald-500/50 bg-emerald-950/40 text-emerald-300'
                             : 'border-neutral-800 bg-neutral-900 text-neutral-400 hover:text-white'
                         }`}
-                        title="Copy Idea & Script Prompt"
+                        title="Copy AI Research Prompt"
                       >
                         {copiedId === it.idea_id ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
                       </button>

@@ -185,7 +185,7 @@ export const TopicCard: React.FC<TopicCardProps> = ({
           {/* Secondary Actions Group (Copy, Brief, Swap) */}
           <div className="flex items-center space-x-1.5">
             
-            {/* Copy Button */}
+            {/* Copy Research Prompt Button */}
             <button
               onClick={handleCopyPrompt}
               className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs font-medium border transition-all cursor-pointer ${
@@ -193,17 +193,17 @@ export const TopicCard: React.FC<TopicCardProps> = ({
                   ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
                   : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-800 text-neutral-300 hover:text-white'
               }`}
-              title="Copy Topic & Details"
+              title="Copy AI Research Prompt"
             >
               {isCopied ? (
                 <>
                   <Check className="w-3.5 h-3.5 text-emerald-400" />
-                  <span className="text-[11px]">Copied</span>
+                  <span className="text-[11px]">Copied!</span>
                 </>
               ) : (
                 <>
                   <Copy className="w-3.5 h-3.5 text-neutral-400" />
-                  <span className="text-[11px]">Copy</span>
+                  <span className="text-[11px]">Copy Prompt</span>
                 </>
               )}
             </button>
