@@ -390,10 +390,10 @@ export const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#07090e] text-[#f1f5f9] flex flex-col font-sans selection:bg-emerald-500/25 selection:text-emerald-200 relative overflow-x-hidden">
+    <div className="app-root min-h-screen flex flex-col font-sans selection:bg-emerald-500/25 selection:text-emerald-200 relative overflow-x-hidden transition-colors duration-200">
       
       {/* Subtle Ambient Radial Lighting for Visual Depth */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+      <div className="ambient-glow fixed inset-0 pointer-events-none z-0 overflow-hidden">
         <div className="absolute -top-[25%] left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-gradient-to-b from-emerald-500/5 via-teal-500/[0.02] to-transparent blur-3xl rounded-full" />
         <div className="absolute top-[40%] -left-[10%] w-[600px] h-[600px] bg-sky-500/[0.02] blur-3xl rounded-full" />
         <div className="absolute top-[60%] -right-[10%] w-[600px] h-[600px] bg-indigo-500/[0.02] blur-3xl rounded-full" />
@@ -489,7 +489,7 @@ export const App: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-white/[0.06] bg-[#07090e]/90 backdrop-blur-md py-6 text-center text-xs font-mono text-neutral-400 relative z-10">
+      <footer className="app-footer border-t border-white/[0.06] backdrop-blur-md py-6 text-center text-xs font-mono relative z-10 transition-colors">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <span className="flex items-center space-x-2 font-medium">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>

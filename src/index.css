@@ -7,83 +7,146 @@
     --theme-bg: #07090e;
     --theme-surface: #0d1118;
     --theme-surface-hover: #131822;
-    --theme-border: rgba(255, 255, 255, 0.08);
+    --theme-surface-glass: rgba(13, 17, 24, 0.88);
+    --theme-surface-recessed: #07090e;
+    --theme-border: rgba(255, 255, 255, 0.09);
+    --theme-border-subtle: rgba(255, 255, 255, 0.05);
     --theme-text-primary: #f8fafc;
-    --theme-text-secondary: #94a3b8;
-    --theme-text-muted: #64748b;
+    --theme-text-secondary: #cbd5e1;
+    --theme-text-muted: #94a3b8;
     --theme-accent: #10b981;
     --theme-accent-light: #34d399;
+    --theme-accent-bg: rgba(16, 185, 129, 0.12);
+    --theme-accent-border: rgba(16, 185, 129, 0.3);
+    --theme-scrollbar-track: #07090e;
+    --theme-scrollbar-thumb: #1e293b;
+    --theme-hook-bg: linear-gradient(135deg, rgba(16, 185, 129, 0.04) 0%, rgba(13, 17, 24, 0.85) 100%);
+    --theme-hook-border: rgba(16, 185, 129, 0.65);
+    --theme-hook-text: #f1f5f9;
   }
 
   html[data-theme="sepia"] {
-    --theme-bg: #1f1a15;
-    --theme-surface: #2a231d;
-    --theme-surface-hover: #362e26;
-    --theme-border: #44372e;
-    --theme-text-primary: #fbf5ee;
-    --theme-text-secondary: #d5c3af;
-    --theme-text-muted: #9e8a76;
+    --theme-bg: #1e1914;
+    --theme-surface: #28211a;
+    --theme-surface-hover: #332b22;
+    --theme-surface-glass: rgba(40, 33, 26, 0.94);
+    --theme-surface-recessed: #18130f;
+    --theme-border: #4a3e35;
+    --theme-border-subtle: #3a3028;
+    --theme-text-primary: #faf4ed;
+    --theme-text-secondary: #eddccb;
+    --theme-text-muted: #c4b09b;
     --theme-accent: #d97706;
     --theme-accent-light: #fbbf24;
+    --theme-accent-bg: rgba(217, 119, 6, 0.15);
+    --theme-accent-border: rgba(217, 119, 6, 0.4);
+    --theme-scrollbar-track: #1e1914;
+    --theme-scrollbar-thumb: #4a3e35;
+    --theme-hook-bg: linear-gradient(135deg, rgba(217, 119, 6, 0.1) 0%, rgba(40, 33, 26, 0.95) 100%);
+    --theme-hook-border: #d97706;
+    --theme-hook-text: #faf4ed;
   }
 
   html[data-theme="solarized-dark"] {
-    --theme-bg: #00222b;
+    --theme-bg: #002b36;
     --theme-surface: #073642;
     --theme-surface-hover: #0b4352;
-    --theme-border: #0e4c5b;
+    --theme-surface-glass: rgba(7, 54, 66, 0.94);
+    --theme-surface-recessed: #00212b;
+    --theme-border: #14596b;
+    --theme-border-subtle: #0e4c5b;
     --theme-text-primary: #fdf6e3;
-    --theme-text-secondary: #93a1a1;
-    --theme-text-muted: #657b83;
+    --theme-text-secondary: #eee8d5;
+    --theme-text-muted: #93a1a1;
     --theme-accent: #2aa198;
     --theme-accent-light: #268bd2;
+    --theme-accent-bg: rgba(42, 161, 152, 0.18);
+    --theme-accent-border: rgba(42, 161, 152, 0.45);
+    --theme-scrollbar-track: #002b36;
+    --theme-scrollbar-thumb: #14596b;
+    --theme-hook-bg: linear-gradient(135deg, rgba(42, 161, 152, 0.14) 0%, rgba(7, 54, 66, 0.95) 100%);
+    --theme-hook-border: #2aa198;
+    --theme-hook-text: #eee8d5;
   }
 
   html[data-theme="solarized-light"] {
-    --theme-bg: #fbf6ea;
-    --theme-surface: #eee8d5;
-    --theme-surface-hover: #e2dbca;
+    --theme-bg: #fdf6e3;
+    --theme-surface: #f6efe0;
+    --theme-surface-hover: #eee8d5;
+    --theme-surface-glass: rgba(246, 239, 224, 0.96);
+    --theme-surface-recessed: #ffffff;
     --theme-border: #d3cbb4;
-    --theme-text-primary: #073642;
-    --theme-text-secondary: #586e75;
-    --theme-text-muted: #839496;
-    --theme-accent: #2aa198;
-    --theme-accent-light: #268bd2;
+    --theme-border-subtle: #e0d8c0;
+    --theme-text-primary: #002b36;
+    --theme-text-secondary: #073642;
+    --theme-text-muted: #586e75;
+    --theme-accent: #00897b;
+    --theme-accent-light: #0e7490;
+    --theme-accent-bg: rgba(0, 137, 123, 0.12);
+    --theme-accent-border: rgba(0, 137, 123, 0.35);
+    --theme-scrollbar-track: #fdf6e3;
+    --theme-scrollbar-thumb: #d3cbb4;
+    --theme-hook-bg: linear-gradient(135deg, rgba(0, 137, 123, 0.08) 0%, rgba(238, 232, 213, 0.95) 100%);
+    --theme-hook-border: #00897b;
+    --theme-hook-text: #073642;
   }
 
   body {
-    @apply bg-[#07090e] text-[#f1f5f9] antialiased selection:bg-emerald-500/25 selection:text-emerald-200 transition-colors duration-200;
+    background-color: var(--theme-bg);
+    color: var(--theme-text-primary);
+    @apply antialiased transition-colors duration-200;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
   }
 }
 
-/* Custom modern scrollbars */
+/* Base Component Classes */
+.app-root {
+  background-color: var(--theme-bg);
+  color: var(--theme-text-primary);
+}
+
+.app-header {
+  background-color: var(--theme-surface-glass);
+  border-color: var(--theme-border);
+}
+
+.app-footer {
+  background-color: var(--theme-surface-glass);
+  border-color: var(--theme-border);
+  color: var(--theme-text-muted);
+}
+
+.app-header-logo-bg {
+  background-color: var(--theme-surface-recessed);
+}
+
+/* Custom scrollbars */
 ::-webkit-scrollbar {
   width: 7px;
   height: 7px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #07090e;
+  background: var(--theme-scrollbar-track);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
+  background: var(--theme-scrollbar-thumb);
   border-radius: 9999px;
   border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: var(--theme-border);
 }
 
-/* Luxury Glassmorphism utilities */
+/* Glassmorphism Panel */
 .glass-panel {
-  background: rgba(13, 17, 24, 0.76);
+  background: var(--theme-surface-glass);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.075);
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--theme-border);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.25), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
 }
 
 .glass-panel-hover {
@@ -91,139 +154,46 @@
 }
 
 .glass-panel-hover:hover {
-  border-color: rgba(16, 185, 129, 0.32);
-  box-shadow: 0 12px 35px -4px rgba(0, 0, 0, 0.65), 0 0 24px -4px rgba(16, 185, 129, 0.12), inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+  border-color: var(--theme-accent-border);
   transform: translateY(-2px);
 }
 
 /* Editorial Curiosity Hook Box */
 .editorial-hook {
   position: relative;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.03) 0%, rgba(7, 9, 14, 0.8) 100%);
-  border-left: 3px solid rgba(16, 185, 129, 0.65);
-}
-
-.gradient-border {
-  position: relative;
-}
-
-.gradient-border::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.45), rgba(245, 158, 11, 0.25), transparent);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
+  background: var(--theme-hook-bg);
+  border-left: 3px solid var(--theme-hook-border);
+  color: var(--theme-hook-text);
 }
 
 /* -------------------------------------------------------------------------- */
-/* SEPIA THEME (Warm Reading Palette for Zero Eye Strain)                    */
-/* -------------------------------------------------------------------------- */
-html[data-theme="sepia"] body,
-html[data-theme="sepia"] .bg-neutral-950 {
-  background-color: #221d18 !important;
-  color: #f7eee2 !important;
-}
-
-html[data-theme="sepia"] header,
-html[data-theme="sepia"] footer,
-html[data-theme="sepia"] .bg-neutral-950\/80,
-html[data-theme="sepia"] .bg-neutral-950\/90 {
-  background-color: rgba(34, 29, 24, 0.9) !important;
-  border-color: #4a3e35 !important;
-}
-
-html[data-theme="sepia"] .bg-neutral-900,
-html[data-theme="sepia"] .bg-neutral-900\/90,
-html[data-theme="sepia"] .bg-neutral-900\/80,
-html[data-theme="sepia"] .bg-neutral-900\/60,
-html[data-theme="sepia"] .bg-neutral-900\/50,
-html[data-theme="sepia"] .bg-neutral-900\/40 {
-  background-color: #2c2520 !important;
-}
-
-html[data-theme="sepia"] .bg-neutral-800,
-html[data-theme="sepia"] .bg-neutral-800\/90,
-html[data-theme="sepia"] .bg-neutral-800\/80,
-html[data-theme="sepia"] .bg-neutral-800\/60,
-html[data-theme="sepia"] .bg-neutral-800\/50,
-html[data-theme="sepia"] .bg-neutral-800\/40 {
-  background-color: #383029 !important;
-}
-
-html[data-theme="sepia"] .border-neutral-900,
-html[data-theme="sepia"] .border-neutral-800,
-html[data-theme="sepia"] .border-neutral-800\/80,
-html[data-theme="sepia"] .border-neutral-800\/50,
-html[data-theme="sepia"] .border-neutral-700 {
-  border-color: #4a3e35 !important;
-}
-
-html[data-theme="sepia"] .text-white,
-html[data-theme="sepia"] .text-neutral-100 {
-  color: #faf3ea !important;
-}
-
-html[data-theme="sepia"] .text-neutral-200,
-html[data-theme="sepia"] .text-neutral-300 {
-  color: #ebdcca !important;
-}
-
-html[data-theme="sepia"] .text-neutral-400 {
-  color: #d6c6b2 !important;
-}
-
-html[data-theme="sepia"] .text-neutral-500 {
-  color: #9c8975 !important;
-}
-
-html[data-theme="sepia"] .text-neutral-600 {
-  color: #7d6e5d !important;
-}
-
-html[data-theme="sepia"] .glass-panel {
-  background: rgba(44, 37, 32, 0.88) !important;
-  border-color: #4a3e35 !important;
-}
-
-html[data-theme="sepia"] input,
-html[data-theme="sepia"] select,
-html[data-theme="sepia"] textarea {
-  background-color: #1a1613 !important;
-  color: #f7eee2 !important;
-  border-color: #4a3e35 !important;
-}
-
-html[data-theme="sepia"] ::-webkit-scrollbar-track {
-  background: #221d18 !important;
-}
-
-html[data-theme="sepia"] ::-webkit-scrollbar-thumb {
-  background: #4a3e35 !important;
-}
-
-/* -------------------------------------------------------------------------- */
-/* SOLARIZED DARK THEME (Precision Ethan Schoonover Dark)                    */
+/* SOLARIZED DARK THEME OVERRIDES (Precision Ethan Schoonover Dark)          */
 /* -------------------------------------------------------------------------- */
 html[data-theme="solarized-dark"] body,
-html[data-theme="solarized-dark"] .bg-neutral-950 {
-  background-color: #002b36 !important;
-  color: #93a1a1 !important;
-}
-
-html[data-theme="solarized-dark"] header,
-html[data-theme="solarized-dark"] footer,
+html[data-theme="solarized-dark"] .app-root,
+html[data-theme="solarized-dark"] .bg-\[\#07090e\],
+html[data-theme="solarized-dark"] .bg-\[\#07090e\]\/95,
+html[data-theme="solarized-dark"] .bg-\[\#07090e\]\/90,
+html[data-theme="solarized-dark"] .bg-\[\#07090e\]\/80,
+html[data-theme="solarized-dark"] .bg-neutral-950,
+html[data-theme="solarized-dark"] .bg-neutral-950\/90,
 html[data-theme="solarized-dark"] .bg-neutral-950\/80,
-html[data-theme="solarized-dark"] .bg-neutral-950\/90 {
-  background-color: rgba(0, 43, 54, 0.9) !important;
-  border-color: #0e4c5b !important;
+html[data-theme="solarized-dark"] .bg-neutral-950\/70,
+html[data-theme="solarized-dark"] .bg-neutral-950\/60,
+html[data-theme="solarized-dark"] .bg-neutral-950\/40 {
+  background-color: #002b36 !important;
+  color: #fdf6e3 !important;
 }
 
+html[data-theme="solarized-dark"] .app-header,
+html[data-theme="solarized-dark"] .app-footer,
+html[data-theme="solarized-dark"] .glass-panel,
+html[data-theme="solarized-dark"] .bg-\[\#0d1118\],
+html[data-theme="solarized-dark"] .bg-\[\#0d1118\]\/95,
+html[data-theme="solarized-dark"] .bg-\[\#0d1118\]\/90,
+html[data-theme="solarized-dark"] .bg-\[\#0d1118\]\/80,
+html[data-theme="solarized-dark"] .bg-\[\#0d1118\]\/70,
+html[data-theme="solarized-dark"] .bg-\[\#0d1118\]\/60,
 html[data-theme="solarized-dark"] .bg-neutral-900,
 html[data-theme="solarized-dark"] .bg-neutral-900\/90,
 html[data-theme="solarized-dark"] .bg-neutral-900\/80,
@@ -231,50 +201,61 @@ html[data-theme="solarized-dark"] .bg-neutral-900\/60,
 html[data-theme="solarized-dark"] .bg-neutral-900\/50,
 html[data-theme="solarized-dark"] .bg-neutral-900\/40 {
   background-color: #073642 !important;
+  border-color: #14596b !important;
 }
 
+html[data-theme="solarized-dark"] .bg-\[\#111722\]\/80,
 html[data-theme="solarized-dark"] .bg-neutral-800,
 html[data-theme="solarized-dark"] .bg-neutral-800\/90,
 html[data-theme="solarized-dark"] .bg-neutral-800\/80,
 html[data-theme="solarized-dark"] .bg-neutral-800\/60,
 html[data-theme="solarized-dark"] .bg-neutral-800\/50,
 html[data-theme="solarized-dark"] .bg-neutral-800\/40 {
-  background-color: #0d4452 !important;
+  background-color: #0b4352 !important;
+  border-color: #14596b !important;
 }
 
+html[data-theme="solarized-dark"] [class*="border-white/"],
 html[data-theme="solarized-dark"] .border-neutral-900,
 html[data-theme="solarized-dark"] .border-neutral-800,
 html[data-theme="solarized-dark"] .border-neutral-800\/80,
+html[data-theme="solarized-dark"] .border-neutral-800\/60,
 html[data-theme="solarized-dark"] .border-neutral-800\/50,
 html[data-theme="solarized-dark"] .border-neutral-700 {
-  border-color: #0e4c5b !important;
+  border-color: #14596b !important;
 }
 
+html[data-theme="solarized-dark"] [class*="bg-white/0.0"],
+html[data-theme="solarized-dark"] [class*="bg-white/0.1"] {
+  background-color: rgba(253, 246, 227, 0.06) !important;
+}
+
+html[data-theme="solarized-dark"] [class*="hover:bg-white/"]:hover {
+  background-color: rgba(253, 246, 227, 0.12) !important;
+}
+
+/* High Contrast Solarized Dark Typography */
 html[data-theme="solarized-dark"] .text-white,
+html[data-theme="solarized-dark"] .text-\[\#f1f5f9\],
 html[data-theme="solarized-dark"] .text-neutral-100 {
-  color: #fdf6e3 !important;
+  color: #fdf6e3 !important; /* Solarized Base3 (Lightest Cream) */
 }
 
 html[data-theme="solarized-dark"] .text-neutral-200,
 html[data-theme="solarized-dark"] .text-neutral-300 {
-  color: #eee8d5 !important;
+  color: #eee8d5 !important; /* Solarized Base2 */
 }
 
 html[data-theme="solarized-dark"] .text-neutral-400 {
-  color: #93a1a1 !important;
+  color: #93a1a1 !important; /* Solarized Base1 */
 }
 
 html[data-theme="solarized-dark"] .text-neutral-500 {
-  color: #657b83 !important;
+  color: #657b83 !important; /* Solarized Base00 */
 }
 
 html[data-theme="solarized-dark"] .text-neutral-600 {
-  color: #586e75 !important;
-}
-
-html[data-theme="solarized-dark"] .glass-panel {
-  background: rgba(7, 54, 66, 0.88) !important;
-  border-color: #0e4c5b !important;
+  color: #586e75 !important; /* Solarized Base01 */
 }
 
 html[data-theme="solarized-dark"] input,
@@ -282,100 +263,220 @@ html[data-theme="solarized-dark"] select,
 html[data-theme="solarized-dark"] textarea {
   background-color: #00212b !important;
   color: #fdf6e3 !important;
-  border-color: #0e4c5b !important;
+  border-color: #14596b !important;
 }
 
-html[data-theme="solarized-dark"] ::-webkit-scrollbar-track {
-  background: #002b36 !important;
-}
-
-html[data-theme="solarized-dark"] ::-webkit-scrollbar-thumb {
-  background: #0e4c5b !important;
+html[data-theme="solarized-dark"] select option {
+  background-color: #073642 !important;
+  color: #fdf6e3 !important;
 }
 
 /* -------------------------------------------------------------------------- */
-/* SOLARIZED LIGHT THEME (Parchment Scientific Readability)                  */
+/* SOLARIZED LIGHT THEME OVERRIDES (Parchment Scientific Readability)        */
 /* -------------------------------------------------------------------------- */
 html[data-theme="solarized-light"] body,
-html[data-theme="solarized-light"] .bg-neutral-950 {
-  background-color: #fdf6e3 !important;
-  color: #586e75 !important;
-}
-
-html[data-theme="solarized-light"] header,
-html[data-theme="solarized-light"] footer,
+html[data-theme="solarized-light"] .app-root,
+html[data-theme="solarized-light"] .bg-\[\#07090e\],
+html[data-theme="solarized-light"] .bg-\[\#07090e\]\/95,
+html[data-theme="solarized-light"] .bg-\[\#07090e\]\/90,
+html[data-theme="solarized-light"] .bg-\[\#07090e\]\/80,
+html[data-theme="solarized-light"] .bg-neutral-950,
+html[data-theme="solarized-light"] .bg-neutral-950\/90,
 html[data-theme="solarized-light"] .bg-neutral-950\/80,
-html[data-theme="solarized-light"] .bg-neutral-950\/90 {
-  background-color: rgba(253, 246, 227, 0.95) !important;
-  border-color: #d3cbb4 !important;
+html[data-theme="solarized-light"] .bg-neutral-950\/70,
+html[data-theme="solarized-light"] .bg-neutral-950\/60,
+html[data-theme="solarized-light"] .bg-neutral-950\/40 {
+  background-color: #fdf6e3 !important;
+  color: #002b36 !important;
 }
 
+/* Hide ambient dark glows in light mode to prevent muddy smudges */
+html[data-theme="solarized-light"] .ambient-glow {
+  display: none !important;
+}
+
+html[data-theme="solarized-light"] .app-header,
+html[data-theme="solarized-light"] .app-footer,
+html[data-theme="solarized-light"] .glass-panel,
+html[data-theme="solarized-light"] .bg-\[\#0d1118\],
+html[data-theme="solarized-light"] .bg-\[\#0d1118\]\/95,
+html[data-theme="solarized-light"] .bg-\[\#0d1118\]\/90,
+html[data-theme="solarized-light"] .bg-\[\#0d1118\]\/80,
+html[data-theme="solarized-light"] .bg-\[\#0d1118\]\/70,
+html[data-theme="solarized-light"] .bg-\[\#0d1118\]\/60,
 html[data-theme="solarized-light"] .bg-neutral-900,
 html[data-theme="solarized-light"] .bg-neutral-900\/90,
 html[data-theme="solarized-light"] .bg-neutral-900\/80,
 html[data-theme="solarized-light"] .bg-neutral-900\/60,
 html[data-theme="solarized-light"] .bg-neutral-900\/50,
 html[data-theme="solarized-light"] .bg-neutral-900\/40 {
-  background-color: #eee8d5 !important;
+  background-color: #f5eed9 !important;
+  border-color: #d3cbb4 !important;
+  box-shadow: 0 2px 10px rgba(0, 43, 54, 0.06) !important;
 }
 
+html[data-theme="solarized-light"] .bg-\[\#111722\]\/80,
 html[data-theme="solarized-light"] .bg-neutral-800,
 html[data-theme="solarized-light"] .bg-neutral-800\/90,
 html[data-theme="solarized-light"] .bg-neutral-800\/80,
 html[data-theme="solarized-light"] .bg-neutral-800\/60,
 html[data-theme="solarized-light"] .bg-neutral-800\/50,
 html[data-theme="solarized-light"] .bg-neutral-800\/40 {
-  background-color: #e2dbca !important;
+  background-color: #eee8d5 !important;
+  border-color: #d3cbb4 !important;
 }
 
+html[data-theme="solarized-light"] [class*="border-white/"],
 html[data-theme="solarized-light"] .border-neutral-900,
 html[data-theme="solarized-light"] .border-neutral-800,
 html[data-theme="solarized-light"] .border-neutral-800\/80,
+html[data-theme="solarized-light"] .border-neutral-800\/60,
 html[data-theme="solarized-light"] .border-neutral-800\/50,
 html[data-theme="solarized-light"] .border-neutral-700 {
   border-color: #d3cbb4 !important;
 }
 
+/* Map white alpha fills to subtle dark tint in light mode for visible contrast */
+html[data-theme="solarized-light"] [class*="bg-white/0.0"],
+html[data-theme="solarized-light"] [class*="bg-white/0.1"] {
+  background-color: rgba(0, 43, 54, 0.05) !important;
+}
+
+html[data-theme="solarized-light"] [class*="hover:bg-white/"]:hover {
+  background-color: rgba(0, 43, 54, 0.09) !important;
+}
+
+/* High Contrast Solarized Light Typography */
 html[data-theme="solarized-light"] .text-white,
+html[data-theme="solarized-light"] .text-\[\#f1f5f9\],
 html[data-theme="solarized-light"] .text-neutral-100 {
-  color: #073642 !important;
+  color: #002b36 !important; /* Solarized Base03 (Darkest Navy - high contrast) */
 }
 
 html[data-theme="solarized-light"] .text-neutral-200,
 html[data-theme="solarized-light"] .text-neutral-300 {
-  color: #002b36 !important;
+  color: #073642 !important; /* Solarized Base02 */
 }
 
 html[data-theme="solarized-light"] .text-neutral-400 {
-  color: #586e75 !important;
+  color: #586e75 !important; /* Solarized Base01 */
 }
 
 html[data-theme="solarized-light"] .text-neutral-500 {
-  color: #839496 !important;
+  color: #657b83 !important; /* Solarized Base00 */
 }
 
 html[data-theme="solarized-light"] .text-neutral-600 {
-  color: #93a1a1 !important;
-}
-
-html[data-theme="solarized-light"] .glass-panel {
-  background: rgba(238, 232, 213, 0.92) !important;
-  border-color: #d3cbb4 !important;
+  color: #839496 !important;
 }
 
 html[data-theme="solarized-light"] input,
 html[data-theme="solarized-light"] select,
 html[data-theme="solarized-light"] textarea {
-  background-color: #fdf6e3 !important;
-  color: #073642 !important;
+  background-color: #ffffff !important;
+  color: #002b36 !important;
   border-color: #d3cbb4 !important;
 }
 
-html[data-theme="solarized-light"] ::-webkit-scrollbar-track {
-  background: #fdf6e3 !important;
+html[data-theme="solarized-light"] select option {
+  background-color: #fdf6e3 !important;
+  color: #002b36 !important;
 }
 
-html[data-theme="solarized-light"] ::-webkit-scrollbar-thumb {
-  background: #d3cbb4 !important;
+/* -------------------------------------------------------------------------- */
+/* SEPIA THEME OVERRIDES (Warm Reading Palette for Zero Eye Strain)           */
+/* -------------------------------------------------------------------------- */
+html[data-theme="sepia"] body,
+html[data-theme="sepia"] .app-root,
+html[data-theme="sepia"] .bg-\[\#07090e\],
+html[data-theme="sepia"] .bg-\[\#07090e\]\/95,
+html[data-theme="sepia"] .bg-\[\#07090e\]\/90,
+html[data-theme="sepia"] .bg-\[\#07090e\]\/80,
+html[data-theme="sepia"] .bg-neutral-950,
+html[data-theme="sepia"] .bg-neutral-950\/90,
+html[data-theme="sepia"] .bg-neutral-950\/80,
+html[data-theme="sepia"] .bg-neutral-950\/70,
+html[data-theme="sepia"] .bg-neutral-950\/60,
+html[data-theme="sepia"] .bg-neutral-950\/40 {
+  background-color: #1e1914 !important;
+  color: #faf4ed !important;
 }
 
+html[data-theme="sepia"] .app-header,
+html[data-theme="sepia"] .app-footer,
+html[data-theme="sepia"] .glass-panel,
+html[data-theme="sepia"] .bg-\[\#0d1118\],
+html[data-theme="sepia"] .bg-\[\#0d1118\]\/95,
+html[data-theme="sepia"] .bg-\[\#0d1118\]\/90,
+html[data-theme="sepia"] .bg-\[\#0d1118\]\/80,
+html[data-theme="sepia"] .bg-\[\#0d1118\]\/70,
+html[data-theme="sepia"] .bg-\[\#0d1118\]\/60,
+html[data-theme="sepia"] .bg-neutral-900,
+html[data-theme="sepia"] .bg-neutral-900\/90,
+html[data-theme="sepia"] .bg-neutral-900\/80,
+html[data-theme="sepia"] .bg-neutral-900\/60,
+html[data-theme="sepia"] .bg-neutral-900\/50,
+html[data-theme="sepia"] .bg-neutral-900\/40 {
+  background-color: #28211a !important;
+  border-color: #4a3e35 !important;
+}
+
+html[data-theme="sepia"] .bg-\[\#111722\]\/80,
+html[data-theme="sepia"] .bg-neutral-800,
+html[data-theme="sepia"] .bg-neutral-800\/90,
+html[data-theme="sepia"] .bg-neutral-800\/80,
+html[data-theme="sepia"] .bg-neutral-800\/60 {
+  background-color: #332b22 !important;
+  border-color: #4a3e35 !important;
+}
+
+html[data-theme="sepia"] [class*="border-white/"],
+html[data-theme="sepia"] .border-neutral-900,
+html[data-theme="sepia"] .border-neutral-800,
+html[data-theme="sepia"] .border-neutral-800\/80,
+html[data-theme="sepia"] .border-neutral-800\/60,
+html[data-theme="sepia"] .border-neutral-800\/50,
+html[data-theme="sepia"] .border-neutral-700 {
+  border-color: #4a3e35 !important;
+}
+
+html[data-theme="sepia"] [class*="bg-white/0.0"],
+html[data-theme="sepia"] [class*="bg-white/0.1"] {
+  background-color: rgba(250, 244, 237, 0.06) !important;
+}
+
+html[data-theme="sepia"] [class*="hover:bg-white/"]:hover {
+  background-color: rgba(250, 244, 237, 0.12) !important;
+}
+
+html[data-theme="sepia"] .text-white,
+html[data-theme="sepia"] .text-\[\#f1f5f9\],
+html[data-theme="sepia"] .text-neutral-100 {
+  color: #faf4ed !important;
+}
+
+html[data-theme="sepia"] .text-neutral-200,
+html[data-theme="sepia"] .text-neutral-300 {
+  color: #eddccb !important;
+}
+
+html[data-theme="sepia"] .text-neutral-400 {
+  color: #c4b09b !important;
+}
+
+html[data-theme="sepia"] .text-neutral-500 {
+  color: #9e8a76 !important;
+}
+
+html[data-theme="sepia"] input,
+html[data-theme="sepia"] select,
+html[data-theme="sepia"] textarea {
+  background-color: #18130f !important;
+  color: #faf4ed !important;
+  border-color: #4a3e35 !important;
+}
+
+html[data-theme="sepia"] select option {
+  background-color: #28211a !important;
+  color: #faf4ed !important;
+}

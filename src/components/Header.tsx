@@ -131,7 +131,7 @@ export const Header: React.FC<HeaderProps> = ({
   ];
 
   return (
-    <header className="border-b border-white/[0.08] bg-[#07090e]/95 backdrop-blur-xl sticky top-0 z-40 transition-colors shadow-2xl">
+    <header className="app-header border-b sticky top-0 z-40 transition-colors shadow-2xl backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         
         {/* Tier 1: Brand & Top Utilities Bar */}
@@ -144,7 +144,7 @@ export const Header: React.FC<HeaderProps> = ({
             title="KnowSights Content Engine"
           >
             <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-cyan-400 p-[1.5px] shadow-lg shadow-emerald-500/20 group-hover:shadow-emerald-500/40 transition-all">
-              <div className="w-full h-full bg-[#07090e] rounded-[10px] flex items-center justify-center">
+              <div className="w-full h-full app-header-logo-bg rounded-[10px] flex items-center justify-center">
                 <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400 group-hover:rotate-12 transition-transform" />
               </div>
             </div>
