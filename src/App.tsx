@@ -400,7 +400,7 @@ export const App: React.FC = () => {
       </div>
       
       {/* Top Navigation & KPI Header */}
-      <div className="relative z-10">
+      <div className="relative z-50">
         <Header
           activeTab={activeTab}
           setActiveTab={setActiveTab}

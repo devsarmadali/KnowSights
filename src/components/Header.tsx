@@ -131,7 +131,7 @@ export const Header: React.FC<HeaderProps> = ({
   ];
 
   return (
-    <header className="app-header border-b sticky top-0 z-40 transition-colors shadow-2xl backdrop-blur-xl">
+    <header className="app-header border-b sticky top-0 z-50 transition-colors shadow-2xl backdrop-blur-xl">
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         
         {/* Tier 1: Brand & Top Utilities Bar */}
@@ -195,10 +195,14 @@ export const Header: React.FC<HeaderProps> = ({
             </span>
 
             {/* Theme Selector Dropdown */}
-            <div className="relative" ref={themeMenuRef}>
+            <div className="relative z-50" ref={themeMenuRef}>
               <button
                 onClick={() => setShowThemeMenu(!showThemeMenu)}
-                className="flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/[0.08] text-xs font-mono text-neutral-300 hover:text-white transition-all shadow-sm cursor-pointer"
+                className={`flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border text-xs font-mono transition-all shadow-sm cursor-pointer ${
+                  showThemeMenu 
+                    ? 'bg-white/[0.1] border-emerald-500/50 text-white ring-1 ring-emerald-500/40' 
+                    : 'bg-white/[0.03] hover:bg-white/[0.06] border-white/[0.08] text-neutral-300 hover:text-white'
+                }`}
                 title="Change theme (Obsidian Dark, Warm Sepia, Solarized Dark, Solarized Light)"
                 aria-label="Theme selection"
               >
@@ -217,11 +221,12 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
 
               {showThemeMenu && (
-                <div className="absolute right-0 mt-2 w-64 rounded-2xl bg-[#0d1118]/95 backdrop-blur-xl border border-white/[0.1] shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
-                  <div className="px-2.5 py-1.5 border-b border-white/[0.06] mb-1">
+                <div className="app-theme-menu absolute right-0 top-full mt-2 w-72 rounded-2xl p-2.5 z-[100] backdrop-blur-2xl shadow-2xl animate-in fade-in zoom-in-95 duration-150">
+                  <div className="px-2.5 py-1.5 border-b border-white/[0.08] mb-1.5 flex items-center justify-between">
                     <p className="text-[10px] font-mono uppercase tracking-wider text-neutral-400 font-bold">Theme & Readability</p>
+                    <span className="text-[10px] font-mono text-emerald-400 font-semibold uppercase">4 Modes</span>
                   </div>
-                  <div className="space-y-1">
+                  <div className="space-y-1.5">
                     {themes.map((t) => {
                       const Icon = t.icon;
                       const isSelected = currentTheme === t.id;
@@ -232,10 +237,10 @@ export const Header: React.FC<HeaderProps> = ({
                             if (onThemeChange) onThemeChange(t.id);
                             setShowThemeMenu(false);
                           }}
-                          className={`w-full text-left flex items-start space-x-2.5 p-2 rounded-xl text-xs transition-all cursor-pointer ${
+                          className={`theme-menu-item w-full text-left flex items-start space-x-2.5 p-2 rounded-xl text-xs cursor-pointer ${
                             isSelected 
-                              ? 'bg-white/[0.1] text-white ring-1 ring-white/20' 
-                              : 'text-neutral-400 hover:text-white hover:bg-white/[0.05]'
+                              ? 'theme-menu-item-active ring-1' 
+                              : ''
                           }`}
                         >
                           <div className={`p-1.5 rounded-lg border flex-shrink-0 mt-0.5 ${t.previewClass}`}>

@@ -158,6 +158,27 @@
   transform: translateY(-2px);
 }
 
+/* Theme Selector Dropdown Menu */
+.app-theme-menu {
+  background-color: var(--theme-surface-glass);
+  border: 1px solid var(--theme-border);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--theme-border);
+}
+
+.theme-menu-item {
+  border: 1px solid transparent;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.theme-menu-item:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+}
+
+.theme-menu-item-active {
+  background-color: rgba(16, 185, 129, 0.15) !important;
+  border-color: rgba(16, 185, 129, 0.45) !important;
+}
+
 /* Editorial Curiosity Hook Box */
 .editorial-hook {
   position: relative;
@@ -269,6 +290,21 @@ html[data-theme="solarized-dark"] textarea {
 html[data-theme="solarized-dark"] select option {
   background-color: #073642 !important;
   color: #fdf6e3 !important;
+}
+
+html[data-theme="solarized-dark"] .app-theme-menu {
+  background-color: rgba(7, 54, 66, 0.98) !important;
+  border-color: #14596b !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px #14596b !important;
+}
+
+html[data-theme="solarized-dark"] .theme-menu-item:hover {
+  background-color: rgba(253, 246, 227, 0.07) !important;
+}
+
+html[data-theme="solarized-dark"] .theme-menu-item-active {
+  background-color: rgba(42, 161, 152, 0.22) !important;
+  border-color: #2aa198 !important;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -383,6 +419,21 @@ html[data-theme="solarized-light"] select option {
   color: #002b36 !important;
 }
 
+html[data-theme="solarized-light"] .app-theme-menu {
+  background-color: rgba(246, 239, 224, 0.98) !important;
+  border-color: #d3cbb4 !important;
+  box-shadow: 0 20px 40px -10px rgba(0, 43, 54, 0.18), 0 0 0 1px #d3cbb4 !important;
+}
+
+html[data-theme="solarized-light"] .theme-menu-item:hover {
+  background-color: rgba(0, 43, 54, 0.05) !important;
+}
+
+html[data-theme="solarized-light"] .theme-menu-item-active {
+  background-color: rgba(0, 137, 123, 0.12) !important;
+  border-color: #00897b !important;
+}
+
 /* -------------------------------------------------------------------------- */
 /* SEPIA THEME OVERRIDES (Warm Reading Palette for Zero Eye Strain)           */
 /* -------------------------------------------------------------------------- */
@@ -479,4 +530,19 @@ html[data-theme="sepia"] textarea {
 html[data-theme="sepia"] select option {
   background-color: #28211a !important;
   color: #faf4ed !important;
+}
+
+html[data-theme="sepia"] .app-theme-menu {
+  background-color: rgba(40, 33, 26, 0.98) !important;
+  border-color: #4a3e35 !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 0 0 0 1px #4a3e35 !important;
+}
+
+html[data-theme="sepia"] .theme-menu-item:hover {
+  background-color: rgba(250, 244, 237, 0.07) !important;
+}
+
+html[data-theme="sepia"] .theme-menu-item-active {
+  background-color: rgba(217, 119, 6, 0.18) !important;
+  border-color: #d97706 !important;
 }
