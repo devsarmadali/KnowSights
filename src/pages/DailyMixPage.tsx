@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { DailyBatch, BatchItem, SelectionMode } from '../types';
+import { DailyBatch, BatchItem, SelectionMode, ProductionIdea } from '../types';
 import { BatchControls } from '../components/BatchControls';
 import { TopicCard } from '../components/TopicCard';
 import { BriefModal } from '../components/BriefModal';
@@ -57,10 +57,9 @@ export const DailyMixPage: React.FC<DailyMixPageProps> = ({
   geminiKeysCount = 0,
   preferredModel
 }) => {
-  const [briefModalState, setBriefModalState] = useState<{ isOpen: boolean; ideaId: string | null; videoIdea: string }>({
+  const [briefModalState, setBriefModalState] = useState<{ isOpen: boolean; idea: ProductionIdea | null }>({
     isOpen: false,
-    ideaId: null,
-    videoIdea: ''
+    idea: null
   });
 
   const [batchCopied, setBatchCopied] = useState(false);
@@ -217,7 +216,7 @@ ${listText}
                 onMarkUsed={onMarkUsed}
                 onUndoUsed={onUndoUsed}
                 onReplace={onReplace}
-                onOpenBrief={(id, videoIdea) => setBriefModalState({ isOpen: true, ideaId: id, videoIdea })}
+                onOpenBrief={(idea) => setBriefModalState({ isOpen: true, idea })}
               />
             ))}
           </div>
@@ -257,9 +256,8 @@ ${listText}
       {/* Brief Modal */}
       <BriefModal
         isOpen={briefModalState.isOpen}
-        onClose={() => setBriefModalState({ isOpen: false, ideaId: null, videoIdea: '' })}
-        ideaId={briefModalState.ideaId}
-        videoIdea={briefModalState.videoIdea}
+        onClose={() => setBriefModalState({ isOpen: false, idea: null })}
+        idea={briefModalState.idea}
       />
 
     </div>

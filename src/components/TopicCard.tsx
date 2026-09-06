@@ -9,7 +9,7 @@ import {
   Star,
   Copy
 } from 'lucide-react';
-import { BatchItem } from '../types';
+import { BatchItem, ProductionIdea } from '../types';
 import { formatTopicCardCopyText } from '../utils/researchPrompt';
 
 interface TopicCardProps {
@@ -17,7 +17,7 @@ interface TopicCardProps {
   onMarkUsed: (ideaId: string, batchItemId: string) => Promise<void>;
   onUndoUsed: (ideaId: string, batchItemId: string) => Promise<void>;
   onReplace: (batchId: string, batchItemId: string, position: number) => Promise<void>;
-  onOpenBrief: (ideaId: string, videoIdea: string) => void;
+  onOpenBrief: (idea: ProductionIdea) => void;
 }
 
 export const TopicCard: React.FC<TopicCardProps> = ({
@@ -210,7 +210,7 @@ export const TopicCard: React.FC<TopicCardProps> = ({
 
             {/* Brief Button */}
             <button
-              onClick={() => onOpenBrief(idea.idea_id, idea.video_idea)}
+              onClick={() => onOpenBrief(idea)}
               className="flex items-center space-x-1 px-2.5 py-1.5 rounded-lg text-xs font-medium border border-neutral-800 bg-neutral-900 hover:bg-neutral-800 text-sky-400 hover:text-sky-300 transition-all cursor-pointer"
               title="Open Research Brief"
             >

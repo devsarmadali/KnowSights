@@ -43,10 +43,9 @@ export const BrowsePage: React.FC<BrowsePageProps> = ({ onRefreshStats }) => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Brief Modal State
-  const [briefModal, setBriefModal] = useState<{ isOpen: boolean; ideaId: string | null; videoIdea: string }>({
+  const [briefModal, setBriefModal] = useState<{ isOpen: boolean; idea: ProductionIdea | null }>({
     isOpen: false,
-    ideaId: null,
-    videoIdea: ''
+    idea: null
   });
 
   const handleCopyRow = async (it: ProductionIdea) => {
@@ -367,8 +366,8 @@ export const BrowsePage: React.FC<BrowsePageProps> = ({ onRefreshStats }) => {
 
                       {it.brief_available && (
                         <button
-                          onClick={() => setBriefModal({ isOpen: true, ideaId: it.idea_id, videoIdea: it.video_idea })}
-                          className="p-1.5 rounded-lg border border-neutral-800 bg-neutral-900 text-sky-400 hover:text-white transition-all"
+                          onClick={() => setBriefModal({ isOpen: true, idea: it })}
+                          className="p-1.5 rounded-lg border border-neutral-800 bg-neutral-900 text-sky-400 hover:text-white transition-all cursor-pointer"
                           title="Open Research Brief"
                         >
                           <BookOpen className="w-3.5 h-3.5" />
@@ -426,9 +425,8 @@ export const BrowsePage: React.FC<BrowsePageProps> = ({ onRefreshStats }) => {
       {/* Research Brief Modal */}
       <BriefModal
         isOpen={briefModal.isOpen}
-        onClose={() => setBriefModal({ isOpen: false, ideaId: null, videoIdea: '' })}
-        ideaId={briefModal.ideaId}
-        videoIdea={briefModal.videoIdea}
+        onClose={() => setBriefModal({ isOpen: false, idea: null })}
+        idea={briefModal.idea}
       />
 
     </div>

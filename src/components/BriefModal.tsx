@@ -10,20 +10,22 @@ import {
   Check,
   Sparkles
 } from 'lucide-react';
-import { IdeaBrief } from '../types';
+import { IdeaBrief, ProductionIdea } from '../types';
 import { api } from '../services/api';
 import { formatBriefModalCopyText } from '../utils/researchPrompt';
 
 interface BriefModalProps {
   isOpen: boolean;
   onClose: () => void;
-  ideaId: string | null;
-  videoIdea: string;
+  idea?: ProductionIdea | null;
+  ideaId?: string | null;
+  videoIdea?: string;
 }
 
 export const BriefModal: React.FC<BriefModalProps> = ({
   isOpen,
   onClose,
+  idea,
   ideaId,
   videoIdea
 }) => {
@@ -32,8 +34,19 @@ export const BriefModal: React.FC<BriefModalProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
 
+  // Derive active values prioritizing the current active idea displayed on the card
+  const activeIdeaId = idea?.idea_id || ideaId || '';
+  const activeTitle = idea?.video_idea || videoIdea || brief?.title || '';
+  const activeHook = idea?.curiosity_hook || '';
+  const activeFormat = idea?.signature_format || '';
+  const activeSubject = idea?.subject || '';
+  const activeTopicFamily = idea?.topic_family || '';
+  const activeSeed = (idea?.original_video_idea && idea.original_video_idea !== idea.video_idea) 
+    ? idea.original_video_idea 
+    : undefined;
+
   useEffect(() => {
-    if (!isOpen || !ideaId) {
+    if (!isOpen || !activeIdeaId) {
       setBrief(null);
       setError(null);
       return;
@@ -43,7 +56,7 @@ export const BriefModal: React.FC<BriefModalProps> = ({
       setLoading(true);
       setError(null);
       try {
-        const res = await api.getBrief(ideaId);
+        const res = await api.getBrief(activeIdeaId);
         if (res && res.success && res.brief) {
           setBrief(res.brief);
         } else {
@@ -58,27 +71,40 @@ export const BriefModal: React.FC<BriefModalProps> = ({
     };
 
     fetchBrief();
-  }, [isOpen, ideaId]);
+  }, [isOpen, activeIdeaId]);
 
-  if (!isOpen || !ideaId) return null;
+  if (!isOpen || !activeIdeaId) return null;
 
-  const overviewText = brief?.overview || 
-    `Investigative explainer breaking down "${videoIdea}". Explores core underlying mechanisms, counter-intuitive data, and tangible real-world significance for viewers.`;
+  // Check if a curated brief from human research exists or if it's the backend generic fallback
+  const isGenericBackendBrief = !brief || !brief.overview || brief.overview.startsWith('Curated research outline for');
 
-  const keyPointsText = brief?.key_points || 
-    `• Hook & Pattern Interrupt: Open with a provocative visual contradiction or puzzle regarding "${videoIdea}".\n• Foundational Concept: Break down why and how this phenomenon occurs in simple, visual terms.\n• Evidence & Case Breakdown: Examine documented historical, scientific, or geopolitical examples.\n• Myth Busting: Debunk the top misconception associated with this topic.\n• Takeaway & Future Outlook: Conclude with actionable insights and broader implications.`;
+  const overviewText = (!isGenericBackendBrief && !idea?.ai_refined && brief?.title === activeTitle)
+    ? brief.overview
+    : `Curated research outline for ${activeSubject || 'Knowledge & Civilizations'} / ${activeTopicFamily || 'Core Dynamics'}.\n📌 Active Angle & Hook: "${activeHook || activeTitle}".${activeSeed ? `\n🌱 Baseline Curriculum Seed: "${activeSeed}"` : ''}`;
 
-  const sourcesText = brief?.sources || 
-    `Peer-reviewed academic research, verified statistical datasets, historical archives, and authoritative institutional publications.`;
+  const keyPointsText = (!isGenericBackendBrief && !idea?.ai_refined && brief?.title === activeTitle)
+    ? brief.key_points
+    : `1. Core Premise & Pattern Interrupt: "${activeHook || activeTitle}".
+2. Empirical Evidence & Ground Truth: Documented field artifacts, primary archival texts, and counter-intuitive data points.
+3. Analytical Deep Dive (${activeFormat || 'Explainer'}): Structural mechanisms, historical causality, and unexpected discoveries.
+4. Paradigm Shift & Retention Conclusion: Overturning traditional assumptions and establishing the new scientific/historical reality.`;
+
+  const sourcesText = idea?.source_family_guidance || brief?.sources || 
+    `Authoritative peer-reviewed journals, institutional archives, museum collections, and verified empirical databases.`;
 
   const handleCopyFullBrief = async () => {
     const fullMarkdown = formatBriefModalCopyText({
-      ideaId,
-      title: brief?.title || videoIdea,
+      ideaId: activeIdeaId,
+      title: activeTitle,
       overview: overviewText,
       keyPoints: keyPointsText,
       sources: sourcesText,
-      readyStatus: brief?.ready_status
+      readyStatus: brief?.ready_status || (idea?.research_status ? idea.research_status : 'Ready'),
+      hook: activeHook,
+      subject: activeSubject,
+      topicFamily: activeTopicFamily,
+      format: activeFormat,
+      originalSeed: activeSeed
     });
 
     try {
@@ -104,10 +130,10 @@ export const BriefModal: React.FC<BriefModalProps> = ({
               <div className="flex items-center space-x-2">
                 <h3 className="text-base font-bold text-white truncate">Source-Ready Research Brief</h3>
                 <span className="px-2 py-0.5 rounded bg-neutral-900 border border-neutral-800 text-[11px] font-mono text-sky-400 font-bold flex-shrink-0">
-                  {ideaId}
+                  {activeIdeaId}
                 </span>
               </div>
-              <p className="text-xs text-neutral-400 truncate">{videoIdea}</p>
+              <p className="text-xs text-neutral-300 truncate font-medium">{activeTitle}</p>
             </div>
           </div>
 
@@ -118,7 +144,7 @@ export const BriefModal: React.FC<BriefModalProps> = ({
               className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-md ${
                 copied
                   ? 'bg-emerald-500 text-neutral-950 shadow-emerald-500/20'
-                  : 'bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white shadow-sky-600/30 active:scale-95'
+                  : 'bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white shadow-sky-600/30 active:scale-95 cursor-pointer'
               }`}
               title="Copy Full Research Brief to clipboard"
             >
@@ -137,7 +163,7 @@ export const BriefModal: React.FC<BriefModalProps> = ({
 
             <button 
               onClick={onClose}
-              className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
+              className="p-1.5 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -149,7 +175,7 @@ export const BriefModal: React.FC<BriefModalProps> = ({
           {loading ? (
             <div className="py-12 text-center text-neutral-400">
               <Loader2 className="w-6 h-6 animate-spin mx-auto text-sky-400 mb-2" />
-              <p>Loading research brief from Google Sheets...</p>
+              <p>Loading research brief...</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -158,7 +184,7 @@ export const BriefModal: React.FC<BriefModalProps> = ({
               <div className="flex items-center justify-between p-2.5 rounded-xl bg-emerald-950/20 border border-emerald-500/30 text-emerald-300 text-xs">
                 <div className="flex items-center space-x-2">
                   <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-                  <span>Status: <strong>{brief?.ready_status || 'Verified Production Ready'}</strong></span>
+                  <span>Status: <strong>{brief?.ready_status || (idea?.research_status ? idea.research_status : 'Verified Production Ready')}</strong></span>
                 </div>
                 <span className="text-[10px] font-mono text-emerald-400/80 bg-emerald-500/10 px-2 py-0.5 rounded">
                   1-Click Ready to Script
@@ -166,9 +192,23 @@ export const BriefModal: React.FC<BriefModalProps> = ({
               </div>
 
               {/* Title / Premise */}
-              <div className="p-3.5 rounded-xl bg-neutral-900/80 border border-neutral-800">
-                <h4 className="font-mono uppercase text-[11px] text-neutral-400 mb-1 font-bold">Research Title / Core Thesis</h4>
-                <p className="text-sm font-semibold text-white">{brief?.title || videoIdea}</p>
+              <div className="p-3.5 rounded-xl bg-neutral-900/80 border border-neutral-800 space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-mono uppercase text-[11px] text-neutral-400 font-bold">Research Title / Core Thesis</h4>
+                  {idea?.ai_refined && (
+                    <span className="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[10px] font-mono flex items-center space-x-1">
+                      <Sparkles className="w-3 h-3 text-amber-400" />
+                      <span>AI Refined YouTube Angle</span>
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm font-semibold text-white">{activeTitle}</p>
+                {activeSeed && (
+                  <p className="text-[11px] text-neutral-400 font-mono pt-1.5 border-t border-neutral-800/80 mt-1 flex items-center space-x-1 truncate">
+                    <span className="text-neutral-500">Curriculum Seed:</span>
+                    <span className="italic text-neutral-300 truncate">"{activeSeed}"</span>
+                  </p>
+                )}
               </div>
 
               {/* Overview */}
@@ -203,7 +243,7 @@ export const BriefModal: React.FC<BriefModalProps> = ({
         <div className="pt-3 border-t border-neutral-800 flex items-center justify-between">
           <button
             onClick={handleCopyFullBrief}
-            className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-xs font-bold text-white transition-all shadow-md shadow-sky-600/30"
+            className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-xs font-bold text-white transition-all shadow-md shadow-sky-600/30 cursor-pointer"
           >
             {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
             <span>{copied ? 'Copied Research Brief!' : 'Copy Research Brief'}</span>
@@ -211,7 +251,7 @@ export const BriefModal: React.FC<BriefModalProps> = ({
 
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-xs font-semibold text-neutral-300 transition-colors"
+            className="px-4 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-xs font-semibold text-neutral-300 transition-colors cursor-pointer"
           >
             Close
           </button>
