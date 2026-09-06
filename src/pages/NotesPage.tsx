@@ -36,6 +36,7 @@ import { api, getLocalNotes, saveLocalNotes } from '../services/api';
 
 interface NotesPageProps {
   showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
+  onNotesCountChange?: (count: number) => void;
 }
 
 type ViewMode = 'grid' | 'split';
@@ -115,10 +116,16 @@ SEARCH PROTOCOL:
   }
 ];
 
-export const NotesPage: React.FC<NotesPageProps> = ({ showToast }) => {
+export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountChange }) => {
   const [notes, setNotes] = useState<UserNote[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (onNotesCountChange) {
+      onNotesCountChange(notes.length);
+    }
+  }, [notes.length, onNotesCountChange]);
   
   // Filtering & Sorting State
   const [selectedCategory, setSelectedCategory] = useState<NoteCategory>('all');

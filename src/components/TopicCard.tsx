@@ -7,7 +7,8 @@ import {
   CheckCircle2, 
   BookOpen, 
   Star,
-  Copy
+  Copy,
+  FileText
 } from 'lucide-react';
 import { BatchItem, ProductionIdea } from '../types';
 import { formatTopicCardCopyText } from '../utils/researchPrompt';
@@ -18,6 +19,7 @@ interface TopicCardProps {
   onUndoUsed: (ideaId: string, batchItemId: string) => Promise<void>;
   onReplace: (batchId: string, batchItemId: string, position: number) => Promise<void>;
   onOpenBrief: (idea: ProductionIdea) => void;
+  onSaveToNotes?: (idea: ProductionIdea) => void;
 }
 
 export const TopicCard: React.FC<TopicCardProps> = ({
@@ -25,15 +27,25 @@ export const TopicCard: React.FC<TopicCardProps> = ({
   onMarkUsed,
   onUndoUsed,
   onReplace,
-  onOpenBrief
+  onOpenBrief,
+  onSaveToNotes
 }) => {
   const [isReplacing, setIsReplacing] = useState(false);
   const [isMarking, setIsMarking] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
   const idea = item.idea;
   const isUsed = item.status === 'used' || idea.used;
   const isReplaced = item.status === 'replaced';
+
+  const handleSaveToNotesClick = () => {
+    if (onSaveToNotes) {
+      onSaveToNotes(idea);
+      setIsSaved(true);
+      setTimeout(() => setIsSaved(false), 2000);
+    }
+  };
 
   const handleCopyPrompt = async () => {
     const textToCopy = formatTopicCardCopyText(idea);
@@ -217,6 +229,31 @@ export const TopicCard: React.FC<TopicCardProps> = ({
               <BookOpen className="w-3.5 h-3.5 text-sky-400" />
               <span className="text-[11px]">Brief</span>
             </button>
+
+            {/* Save to Notes Vault Button */}
+            {onSaveToNotes && (
+              <button
+                onClick={handleSaveToNotesClick}
+                className={`flex items-center space-x-1 px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                  isSaved
+                    ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-200 shadow-glow-emerald'
+                    : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/[0.08] text-neutral-300 hover:text-white'
+                }`}
+                title="Save this topic concept & research prompt directly to Personal Notes Vault"
+              >
+                {isSaved ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-400" />
+                    <span className="text-[11px] font-bold">Saved!</span>
+                  </>
+                ) : (
+                  <>
+                    <FileText className="w-3.5 h-3.5 text-emerald-400" />
+                    <span className="text-[11px]">Save</span>
+                  </>
+                )}
+              </button>
+            )}
 
             {/* Swap / Replace Button */}
             {!isUsed && !isReplaced && (

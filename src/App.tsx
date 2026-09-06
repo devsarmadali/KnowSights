@@ -3,9 +3,20 @@ import {
   DailyBatch, 
   SystemStats, 
   SelectionMode, 
-  AppConfig 
+  AppConfig,
+  ProductionIdea,
+  UserNote
 } from './types';
-import { api, loadConfig, saveConfig, normalizeStats, normalizeBatch } from './services/api';
+import { 
+  api, 
+  loadConfig, 
+  saveConfig, 
+  normalizeStats, 
+  normalizeBatch,
+  getLocalNotes,
+  saveLocalNotes
+} from './services/api';
+import { formatTopicCardCopyText } from './utils/researchPrompt';
 import { 
   refineBatchWithGeminiRotation, 
   refineSingleTopicWithGeminiRotation, 
@@ -33,6 +44,9 @@ export const App: React.FC = () => {
   const [currentBatch, setCurrentBatch] = useState<DailyBatch | null>(null);
   const [stats, setStats] = useState<SystemStats | null>(null);
   const [subjectsList, setSubjectsList] = useState<string[]>([]);
+  const [notesCount, setNotesCount] = useState<number>(() => {
+    return getLocalNotes().length;
+  });
   
   // Theme State (dark | sepia | solarized-dark | solarized-light)
   const [theme, setTheme] = useState<ThemeOption>(() => {
@@ -299,6 +313,82 @@ export const App: React.FC = () => {
     }
   };
 
+  // Save single idea from card directly into Personal Notes Vault
+  const handleSaveIdeaToNotes = (idea: ProductionIdea) => {
+    try {
+      const existing = getLocalNotes();
+      if (existing.some(n => n.id === `note-${idea.idea_id}`)) {
+        showToast(`"${idea.video_idea.slice(0, 32)}..." is already in your Notes Vault.`, 'info');
+        return;
+      }
+
+      const promptText = formatTopicCardCopyText(idea);
+      const newNote: UserNote = {
+        id: `note-${idea.idea_id}`,
+        title: idea.video_idea,
+        content: `## Idea Hook\n"${idea.curiosity_hook || ''}"\n\n## Category & Lineage\n- **Subject**: ${idea.subject}\n- **Topic Family**: ${idea.topic_family}\n- **Format**: ${idea.signature_format || 'Standard'}\n- **Production Score**: ${idea.production_score}\n\n## Standard AI Research Prompt\n\`\`\`text\n${promptText}\n\`\`\`\n\n## Personal Research Notes\n`,
+        category: 'prompts',
+        tags: [idea.subject, idea.signature_format || 'Idea', 'DailyMix'].filter(Boolean),
+        badge: 'Prompt',
+        is_pinned: false,
+        version: 1,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      const updated = [newNote, ...existing];
+      saveLocalNotes(updated);
+      setNotesCount(updated.length);
+      api.saveNote(newNote).catch(err => console.warn("Background D1 note sync:", err));
+      showToast(`Saved to Notes & Prompts Vault! (View in Notes)`, 'success');
+    } catch (e) {
+      console.error("Failed to save idea to notes", e);
+      showToast("Could not save to notes.", 'error');
+    }
+  };
+
+  // Bulk save entire current batch into Notes Vault
+  const handleSaveAllBatchToNotes = (ideas: ProductionIdea[]) => {
+    if (!ideas || !ideas.length) return;
+    try {
+      const existing = getLocalNotes();
+      let addedCount = 0;
+      const toAdd: UserNote[] = [];
+
+      for (const idea of ideas) {
+        if (!existing.some(n => n.id === `note-${idea.idea_id}`) && !toAdd.some(n => n.id === `note-${idea.idea_id}`)) {
+          const promptText = formatTopicCardCopyText(idea);
+          toAdd.push({
+            id: `note-${idea.idea_id}`,
+            title: idea.video_idea,
+            content: `## Idea Hook\n"${idea.curiosity_hook || ''}"\n\n## Category & Lineage\n- **Subject**: ${idea.subject}\n- **Topic Family**: ${idea.topic_family}\n- **Format**: ${idea.signature_format || 'Standard'}\n- **Production Score**: ${idea.production_score}\n\n## Standard AI Research Prompt\n\`\`\`text\n${promptText}\n\`\`\`\n\n## Personal Research Notes\n`,
+            category: 'prompts',
+            tags: [idea.subject, idea.signature_format || 'Idea', 'DailyMix'].filter(Boolean),
+            badge: 'Prompt',
+            is_pinned: false,
+            version: 1,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+          addedCount++;
+        }
+      }
+
+      if (addedCount === 0) {
+        showToast("All ideas in this batch are already saved in your Notes Vault.", 'info');
+        return;
+      }
+
+      const updated = [...toAdd, ...existing];
+      saveLocalNotes(updated);
+      setNotesCount(updated.length);
+      showToast(`Saved all ${addedCount} batch ideas to Notes & Prompts Vault!`, 'success');
+    } catch (e) {
+      console.error("Failed to save batch ideas to notes", e);
+      showToast("Could not save batch to notes.", 'error');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#07090e] text-[#f1f5f9] flex flex-col font-sans selection:bg-emerald-500/25 selection:text-emerald-200 relative overflow-x-hidden">
       
@@ -318,6 +408,7 @@ export const App: React.FC = () => {
           spreadsheetId={SPREADSHEET_ID}
           currentTheme={theme}
           onThemeChange={handleThemeChange}
+          notesCount={notesCount}
         />
       </div>
 
@@ -360,6 +451,8 @@ export const App: React.FC = () => {
                 }}
                 geminiKeysCount={getConfiguredGeminiKeys(config).length}
                 preferredModel={config.preferred_gemini_model}
+                onSaveToNotes={handleSaveIdeaToNotes}
+                onSaveAllToNotes={handleSaveAllBatchToNotes}
               />
             )}
 
@@ -375,7 +468,10 @@ export const App: React.FC = () => {
             )}
 
             {activeTab === 'notes' && (
-              <NotesPage showToast={showToast} />
+              <NotesPage 
+                showToast={showToast} 
+                onNotesCountChange={setNotesCount}
+              />
             )}
 
             {activeTab === 'settings' && (

@@ -11,7 +11,8 @@ import {
   RotateCw,
   Copy,
   Check,
-  Loader2
+  Loader2,
+  FileText
 } from 'lucide-react';
 
 interface DailyMixPageProps {
@@ -34,6 +35,8 @@ interface DailyMixPageProps {
   onToggleAiRefine?: (enabled: boolean) => void;
   geminiKeysCount?: number;
   preferredModel?: string;
+  onSaveToNotes?: (idea: ProductionIdea) => void;
+  onSaveAllToNotes?: (ideas: ProductionIdea[]) => void;
 }
 
 export const DailyMixPage: React.FC<DailyMixPageProps> = ({
@@ -55,7 +58,9 @@ export const DailyMixPage: React.FC<DailyMixPageProps> = ({
   aiRefineEnabled = true,
   onToggleAiRefine,
   geminiKeysCount = 0,
-  preferredModel
+  preferredModel,
+  onSaveToNotes,
+  onSaveAllToNotes
 }) => {
   const [briefModalState, setBriefModalState] = useState<{ isOpen: boolean; idea: ProductionIdea | null }>({
     isOpen: false,
@@ -204,6 +209,21 @@ ${listText}
                   </>
                 )}
               </button>
+
+              {/* Bulk Save Entire Batch to Notes Vault */}
+              {onSaveAllToNotes && (
+                <button
+                  onClick={() => {
+                    const ideas = batch.items.map(it => it.idea);
+                    onSaveAllToNotes(ideas);
+                  }}
+                  className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl font-bold transition-all shadow-sm cursor-pointer bg-white/[0.04] hover:bg-white/[0.08] text-neutral-200 hover:text-white border border-white/[0.1]"
+                  title="Save all ideas in this batch to your Notes & Prompts Vault"
+                >
+                  <FileText className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Save Batch to Notes</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -217,6 +237,7 @@ ${listText}
                 onUndoUsed={onUndoUsed}
                 onReplace={onReplace}
                 onOpenBrief={(idea) => setBriefModalState({ isOpen: true, idea })}
+                onSaveToNotes={onSaveToNotes}
               />
             ))}
           </div>
