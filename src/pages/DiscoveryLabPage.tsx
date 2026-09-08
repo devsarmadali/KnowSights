@@ -171,6 +171,7 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [expandedQuestionsId, setExpandedQuestionsId] = useState<string | null>(null);
   const [savingPoolId, setSavingPoolId] = useState<string | null>(null);
+  const [confirmClearOpen, setConfirmClearOpen] = useState(false);
 
   // Active Gemini keys count
   const activeGeminiKeys = getConfiguredGeminiKeys(config);
@@ -446,13 +447,12 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
     showToast("Research cycle reset to beginning (Batch 1).", 'info');
   };
 
-  // Clear all saved generated ideas
-  const handleClearGenerated = () => {
-    if (window.confirm("Are you sure you want to clear all saved generated research topics?")) {
-      clearGeneratedIdeas();
-      setGeneratedIdeas([]);
-      showToast("Cleared all generated research topics.", 'info');
-    }
+  // In-app 2-step clear confirmation (zero browser dialogs)
+  const handleConfirmClearGenerated = () => {
+    clearGeneratedIdeas();
+    setGeneratedIdeas([]);
+    setConfirmClearOpen(false);
+    showToast("Cleared all generated research topics.", 'info');
   };
 
   // Copy Topic Concept, Inquiry Questions, Reference Links & Standardized AI Research Prompt to Clipboard
@@ -1595,15 +1595,33 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
 
             {generatedIdeas.length > 0 && (
               <div className="flex items-center space-x-2 flex-wrap">
-                {/* Clear All Topics Button */}
-                <button
-                  onClick={handleClearGenerated}
-                  className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-neutral-900 hover:bg-rose-950/40 border border-neutral-800 hover:border-rose-800/50 text-neutral-400 hover:text-rose-300 text-xs font-mono transition-all cursor-pointer"
-                  title="Clear all generated topics from storage"
-                >
-                  <Trash2 className="w-3.5 h-3.5 text-neutral-500" />
-                  <span>Clear All ({generatedIdeas.length})</span>
-                </button>
+                {/* 2-Step Clear All Topics Button (Zero browser dialogs) */}
+                {!confirmClearOpen ? (
+                  <button
+                    onClick={() => setConfirmClearOpen(true)}
+                    className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-neutral-900 hover:bg-rose-950/40 border border-neutral-800 hover:border-rose-800/50 text-neutral-400 hover:text-rose-300 text-xs font-mono transition-all cursor-pointer"
+                    title="Clear all generated topics from storage"
+                  >
+                    <Trash2 className="w-3.5 h-3.5 text-neutral-500" />
+                    <span>Clear All ({generatedIdeas.length})</span>
+                  </button>
+                ) : (
+                  <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-xl bg-rose-500/15 border border-rose-500/30 text-xs font-mono animate-in fade-in duration-150">
+                    <span className="text-rose-300 font-semibold">Clear {generatedIdeas.length} ideas?</span>
+                    <button
+                      onClick={handleConfirmClearGenerated}
+                      className="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-[11px] shadow-sm transition-all cursor-pointer"
+                    >
+                      Yes, Clear
+                    </button>
+                    <button
+                      onClick={() => setConfirmClearOpen(false)}
+                      className="px-2.5 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-[11px] font-semibold transition-all cursor-pointer"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                )}
 
                 {/* View Switcher: Categorized Sections vs Flat Grid */}
                 <div className="bg-neutral-900 p-1 rounded-xl border border-neutral-800 flex items-center space-x-1 text-xs">

@@ -31,7 +31,8 @@ import {
   BookOpen,
   Share2,
   Save,
-  ArrowLeft
+  ArrowLeft,
+  AlertTriangle
 } from 'lucide-react';
 import { UserNote, UserNoteVersion, NoteBadge, NoteCategory } from '../types';
 import { api, getLocalNotes, saveLocalNotes } from '../services/api';
@@ -445,19 +446,26 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
     setViewMode('grid');
   };
 
-  // 5. Delete Note Handler
-  const handleDeleteNote = async (id: string, e?: React.MouseEvent) => {
+  // 5. In-App Delete Confirmation State & Handlers (Zero browser dialogs)
+  const [noteToDelete, setNoteToDelete] = useState<UserNote | null>(null);
+  const [isDeletingNote, setIsDeletingNote] = useState(false);
+
+  const requestDeleteNote = (note: UserNote, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
-    if (!window.confirm("Are you sure you want to permanently delete this note and all its revision versions?")) {
-      return;
-    }
+    setNoteToDelete(note);
+  };
+
+  const confirmDeleteNote = async () => {
+    if (!noteToDelete) return;
+    const id = noteToDelete.id;
+    setIsDeletingNote(true);
 
     try {
       await api.deleteNote(id);
       const updated = notes.filter(n => n.id !== id);
       setNotes(updated);
       saveLocalNotes(updated);
-      showToast("Note deleted successfully.", 'info');
+      showToast(`Deleted "${noteToDelete.title || 'Note'}" and its revisions.`, 'info');
 
       if (selectedNoteId === id) {
         if (updated.length > 0) {
@@ -466,10 +474,14 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
           setSelectedNoteId(null);
           setEditorTitle('');
           setEditorContent('');
+          setViewMode('grid');
         }
       }
     } catch (err) {
       showToast("Failed to delete note", 'error');
+    } finally {
+      setIsDeletingNote(false);
+      setNoteToDelete(null);
     }
   };
 
@@ -529,23 +541,33 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
     }
   };
 
-  const handleRestoreVersion = async (v: UserNoteVersion) => {
-    if (!selectedNoteId) return;
-    if (!window.confirm(`Restore this note to Version ${v.version_number}? This will save a new restored version.`)) {
-      return;
-    }
+  // In-App Version Restoration Confirmation
+  const [versionToRestore, setVersionToRestore] = useState<UserNoteVersion | null>(null);
+  const [isRestoringVersion, setIsRestoringVersion] = useState(false);
+
+  const requestRestoreVersion = (v: UserNoteVersion, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setVersionToRestore(v);
+  };
+
+  const confirmRestoreVersion = async () => {
+    if (!versionToRestore || !selectedNoteId) return;
+    setIsRestoringVersion(true);
 
     try {
-      const res = await api.restoreNoteVersion(selectedNoteId, v.version_number);
+      const res = await api.restoreNoteVersion(selectedNoteId, versionToRestore.version_number);
       if (res && res.success && res.note) {
         loadNoteIntoEditor(res.note);
         setNotes(prev => prev.map(n => n.id === selectedNoteId ? res.note : n));
         saveLocalNotes(notes.map(n => n.id === selectedNoteId ? res.note : n));
         setVersionDrawerOpen(false);
-        showToast(`Restored to Version ${v.version_number} (Now v${res.note.version})`, 'success');
+        setVersionToRestore(null);
+        showToast(`Restored to Version ${versionToRestore.version_number} (Now v${res.note.version})`, 'success');
       }
     } catch (err) {
       showToast("Failed to restore version", 'error');
+    } finally {
+      setIsRestoringVersion(false);
     }
   };
 
@@ -1010,7 +1032,7 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
 
                       {/* Delete Button */}
                       <button
-                        onClick={(e) => handleDeleteNote(note.id, e)}
+                        onClick={(e) => requestDeleteNote(note, e)}
                         className="p-1.5 rounded-xl bg-white/[0.04] hover:bg-rose-500/20 border border-white/[0.08] text-neutral-400 hover:text-rose-300 transition-all cursor-pointer"
                         title="Delete note"
                       >
@@ -1350,7 +1372,10 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
                 {/* Editor Bottom Footer: Manual Save Note & Milestone & Delete */}
                 <div className="flex items-center justify-between pt-3 border-t border-white/[0.08] flex-wrap gap-2">
                   <button
-                    onClick={() => selectedNoteId && handleDeleteNote(selectedNoteId)}
+                    onClick={(e) => {
+                      const current = notes.find(n => n.id === selectedNoteId);
+                      if (current) requestDeleteNote(current, e);
+                    }}
                     className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl text-xs text-neutral-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -1466,8 +1491,8 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
                       </button>
 
                       <button
-                        onClick={() => handleRestoreVersion(previewVersion)}
-                        className="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-xs font-bold text-white flex items-center space-x-1 shadow-sm"
+                        onClick={() => requestRestoreVersion(previewVersion)}
+                        className="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-xs font-bold text-white flex items-center space-x-1 shadow-sm transition-all cursor-pointer"
                       >
                         <RotateCcw className="w-3.5 h-3.5" />
                         <span>Restore This Version</span>
@@ -1547,7 +1572,7 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
 
                           {!isLatest && (
                             <button
-                              onClick={() => handleRestoreVersion(ver)}
+                              onClick={() => requestRestoreVersion(ver)}
                               className="flex items-center space-x-1 px-2.5 py-1 rounded-lg bg-sky-600/20 hover:bg-sky-600 border border-sky-500/30 hover:border-sky-500 text-sky-300 hover:text-white text-xs font-semibold transition-all cursor-pointer"
                               title="Restore note to this version"
                             >
@@ -1573,6 +1598,164 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
               </button>
             </div>
 
+          </div>
+        </div>
+      )}
+
+      {/* ================= 6. IN-APP 2-STEP DELETE CONFIRMATION MODAL ================= */}
+      {noteToDelete && (
+        <div 
+          className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150"
+          onClick={() => !isDeletingNote && setNoteToDelete(null)}
+        >
+          <div 
+            className="glass-panel w-full max-w-md rounded-3xl p-6 border border-rose-500/30 bg-[#0d1118]/95 shadow-tactile relative space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-start space-x-3.5">
+              <div className="w-11 h-11 rounded-2xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 shrink-0">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-display font-bold text-white tracking-tight">Delete Note & Revisions?</h3>
+                <p className="text-xs text-neutral-400 mt-0.5">
+                  Confirm permanent removal within KnowSights Vault
+                </p>
+              </div>
+              <button
+                onClick={() => !isDeletingNote && setNoteToDelete(null)}
+                className="text-neutral-400 hover:text-white p-1 rounded-lg transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Note Details Box */}
+            <div className="p-3.5 rounded-2xl bg-[#07090e]/90 border border-white/[0.08] space-y-2 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-mono uppercase font-bold px-2 py-0.5 rounded bg-white/[0.05] text-neutral-300 border border-white/[0.08]">
+                  {noteToDelete.badge || 'Note'}
+                </span>
+                <span className="text-[10px] font-mono text-neutral-400">v{noteToDelete.version || 1} Revisions</span>
+              </div>
+              
+              <h4 className="font-display font-bold text-white text-sm line-clamp-2 leading-snug">
+                {noteToDelete.title || 'Untitled Note'}
+              </h4>
+
+              <p className="text-xs text-neutral-400 line-clamp-3 leading-relaxed font-normal break-words">
+                {getContentPreview(noteToDelete.content) || <span className="italic text-neutral-500">Empty content draft...</span>}
+              </p>
+            </div>
+
+            {/* Warning Text */}
+            <div className="flex items-center space-x-2 text-[11px] text-rose-400/90 font-medium px-1">
+              <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+              <span>This will permanently delete this note and its version milestones from Cloudflare D1.</span>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center justify-end space-x-2 pt-2 border-t border-white/[0.06]">
+              <button
+                onClick={() => setNoteToDelete(null)}
+                disabled={isDeletingNote}
+                className="px-4 py-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.1] text-xs font-semibold text-neutral-300 hover:text-white transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmDeleteNote}
+                disabled={isDeletingNote}
+                className="flex items-center space-x-1.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 via-red-600 to-rose-700 hover:from-rose-500 hover:to-red-500 text-xs font-bold text-white shadow-lg shadow-rose-600/30 transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+              >
+                {isDeletingNote ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Deleting...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Confirm & Delete</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ================= 7. IN-APP VERSION RESTORE CONFIRMATION MODAL ================= */}
+      {versionToRestore && (
+        <div 
+          className="fixed inset-0 z-[130] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-150"
+          onClick={() => !isRestoringVersion && setVersionToRestore(null)}
+        >
+          <div 
+            className="glass-panel w-full max-w-md rounded-3xl p-6 border border-sky-500/30 bg-[#0d1118]/95 shadow-tactile relative space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start space-x-3.5">
+              <div className="w-11 h-11 rounded-2xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-sky-400 shrink-0">
+                <RotateCcw className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-display font-bold text-white tracking-tight">Restore to Version {versionToRestore.version_number}?</h3>
+                <p className="text-xs text-neutral-400 mt-0.5">
+                  Load this historical snapshot and create a new restored revision.
+                </p>
+              </div>
+              <button
+                onClick={() => !isRestoringVersion && setVersionToRestore(null)}
+                className="text-neutral-400 hover:text-white p-1 rounded-lg transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="p-3.5 rounded-2xl bg-[#07090e]/90 border border-white/[0.08] space-y-1.5 text-xs">
+              <div className="flex justify-between text-neutral-400 text-[11px] font-mono">
+                <span>Created:</span>
+                <span className="text-white">{new Date(versionToRestore.created_at).toLocaleString()}</span>
+              </div>
+              {versionToRestore.change_summary && (
+                <div className="flex justify-between text-neutral-400 text-[11px] font-mono">
+                  <span>Milestone:</span>
+                  <span className="text-sky-300">{versionToRestore.change_summary}</span>
+                </div>
+              )}
+              <p className="text-xs text-neutral-300 line-clamp-3 pt-1 border-t border-white/[0.06] font-mono">
+                {getContentPreview(versionToRestore.content) || <span className="italic text-neutral-500">Empty snapshot...</span>}
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end space-x-2 pt-2 border-t border-white/[0.06]">
+              <button
+                onClick={() => setVersionToRestore(null)}
+                disabled={isRestoringVersion}
+                className="px-4 py-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.1] text-xs font-semibold text-neutral-300 hover:text-white transition-all cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmRestoreVersion}
+                disabled={isRestoringVersion}
+                className="flex items-center space-x-1.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 via-indigo-600 to-teal-500 hover:from-sky-500 hover:to-teal-400 text-xs font-bold text-white shadow-lg shadow-sky-600/30 transition-all active:scale-95 cursor-pointer disabled:opacity-50"
+              >
+                {isRestoringVersion ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Restoring...</span>
+                  </>
+                ) : (
+                  <>
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    <span>Confirm & Restore</span>
+                  </>
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
