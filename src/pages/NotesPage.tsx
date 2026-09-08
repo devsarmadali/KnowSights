@@ -66,29 +66,26 @@ const BADGE_COLORS: Record<string, { bg: string; text: string; border: string }>
 
 const DEFAULT_STARTER_NOTES: Partial<UserNote>[] = [
   {
-    title: 'Investigative Documentary Deep-Dive Prompt (Broad Public / High Retention)',
-    content: `Act as an elite investigative documentary researcher and master storytelling fact-checker. Conduct an exhaustive, open-web, evidence-backed deep dive on the following topic:
+    title: 'Investigative Deep-Dive Prompt (Authentic Research & Broad Appeal)',
+    content: `Conduct an exhaustive, evidence-backed deep-dive investigation into the following topic:
 
-• TARGET TOPIC: [Insert topic, site, lost civilization, or scientific anomaly]
+• TOPIC: [Insert archaeological site, lost civilization, or scientific anomaly]
 • UNIQUE ANGLE & HOOK: [Insert the counterintuitive paradox or curiosity angle]
 
-CORE EDITORIAL DIRECTIVE (ACCESSIBLE TO BROAD AUDIENCES • DEEPLY RIGOROUS):
-1. ZERO ESOTERIC JARGON: Translate complex scientific, archaeological, or mechanical realities into vivid, intuitive analogies and narrative tension suitable for YouTube documentaries and a curious broad public.
-2. DIG LESSER-KNOWN FACTS: Uncover buried archival anomalies, forgotten expedition logs, and primary source eyewitness accounts that mainstream pop-science summaries miss.
-3. EXPLORE ALL ANGLES: Contrast the consensus with credible dissenting hypotheses and active debates.
-4. TANGIBLE HUMAN DRAMA: Anchor claims in specific discoverer names, exact dates, measurements, and visual scenes.
+RESEARCH & TONE REQUIREMENTS:
+1. ACCESSIBLE YET DEEP (ANTI-ESOTERIC): Write in clear, engaging, lucid language suitable for a broad, curious public and long-form narrative content. Avoid dry academic dissertation prose or impenetrable jargon, while maintaining uncompromising factual rigor.
+2. LESSER-KNOWN FACTS & AUTHENTICITY: Dig past standard summary overviews to uncover obscure archival findings, forgotten primary records, and counterintuitive details that are rarely discussed.
+3. ALL PERSPECTIVES & ACTORS: Name the key discoverers, scientists, or historical figures. Present the verified timeline and mechanism clearly, alongside competing theories and unresolved debates.
 
-OUTPUT FORMAT:
-1. Executive Story Hook & The Core Mystery (The paradigm shift)
-2. Lesser-Known Revelations & Buried Archival Facts
-3. The Chronological Narrative & Key Human Figures
-4. How It Actually Works / Core Mechanism (Vivid, accessible explanation)
-5. Competing Angles, Debates & Unresolved Mysteries
-6. Documentary Visual & Storytelling Asset Cues (Visual scene ideas & graphics)
-7. Annotated Source Directory (with direct citable URLs and institutional authorities across the web)`,
+DOSSIER STRUCTURE:
+1. Core Premise & Popular Misconception (The hook, what conventional wisdom gets wrong, and the verified reality)
+2. Timeline & Key Figures (The chronology, primary discoverers, and pivotal breakthrough moments)
+3. How It Works / Deep-Dive Evidence (The underlying mechanism and obscure verified facts explained with intuitive clarity)
+4. Competing Theories & Unresolved Questions (Major debates, rival interpretations, and what remains unanswered)
+5. Annotated Source Directory (with direct citable URLs and institutional authorities across the web)`,
     category: 'prompts',
     badge: 'Prompt',
-    tags: ['Documentary', 'Deep Research', 'YouTube', 'Perplexity'],
+    tags: ['Deep Research', 'Authenticity', 'Perplexity'],
     is_pinned: true,
   },
   {
