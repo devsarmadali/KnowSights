@@ -30,7 +30,8 @@ import {
   Hash,
   BookOpen,
   Share2,
-  Save
+  Save,
+  ArrowLeft
 } from 'lucide-react';
 import { UserNote, UserNoteVersion, NoteBadge, NoteCategory } from '../types';
 import { api, getLocalNotes, saveLocalNotes } from '../services/api';
@@ -215,7 +216,25 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
     }
   };
 
+  // Content preview helper that cleans raw markdown symbols into legible preview text
+  const getContentPreview = (content: string | undefined): string => {
+    if (!content) return '';
+    const trimmed = content.trim();
+    if (!trimmed) return '';
+    const clean = trimmed
+      .replace(/```[\s\S]*?```/g, ' [Code/Prompt] ')
+      .replace(/^#+\s+/gm, '')
+      .replace(/[*_~`]/g, '')
+      .replace(/\n{2,}/g, '\n')
+      .trim();
+    return clean;
+  };
+
   const initializeStarterNotes = async () => {
+    if (localStorage.getItem('knowsights_starter_initialized')) {
+      return;
+    }
+    localStorage.setItem('knowsights_starter_initialized', 'true');
     const createdNotes: UserNote[] = [];
     for (const starter of DEFAULT_STARTER_NOTES) {
       try {
@@ -252,11 +271,11 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
   // 3. Create New Note Handler (Safeguard against duplicate empty cards)
   const handleCreateNew = (category: string = 'prompts', badge: NoteBadge = 'Prompt') => {
     // If there is already an empty draft in the list, focus it instead of adding redundant cards!
-    const existingEmpty = notes.find(n => !n.content.trim() && (!n.title.trim() || n.title.startsWith('Untitled') || n.title.startsWith('New ')));
+    const existingEmpty = notes.find(n => !n.content || !n.content.trim());
     if (existingEmpty) {
       loadNoteIntoEditor(existingEmpty);
       setViewMode('split');
-      showToast(`Editing active draft ${badge.toLowerCase()}`, 'info');
+      showToast(`Switched to active empty draft. Write or paste content, then click Save & Close!`, 'info');
       return;
     }
 
@@ -277,12 +296,19 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
     setNotes(prev => [newNote, ...prev]);
     loadNoteIntoEditor(newNote);
     setViewMode('split');
-    showToast(`Created new ${badge.toLowerCase()} draft. Paste content and click Save Note!`, 'info');
+    showToast(`Created new ${badge.toLowerCase()} draft. Paste content and click Save & Close!`, 'info');
   };
 
   // 4. Robust Save Engine (debounced + explicit manual save)
   const triggerAutoSave = (updatedFields: Partial<UserNote>) => {
     if (!selectedNoteId) return;
+    const currentTitle = updatedFields.title !== undefined ? updatedFields.title : editorTitle;
+    const currentContent = updatedFields.content !== undefined ? updatedFields.content : editorContent;
+    // Safeguard: Never auto-save completely empty notes to prevent phantom card spam
+    if (!currentContent.trim() && (!currentTitle.trim() || currentTitle.startsWith('New ') || currentTitle.startsWith('Untitled'))) {
+      return;
+    }
+
     isDirtyRef.current = true;
     setSyncStatus('saving');
 
@@ -305,7 +331,12 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
     const currentTags = extraFields.tags !== undefined ? extraFields.tags : editorTags;
     const currentIsPinned = extraFields.is_pinned !== undefined ? extraFields.is_pinned : editorIsPinned;
 
-    const trimmedTitle = currentTitle.trim() || 'Untitled Note';
+    // Do not save if title and content are both totally empty
+    if (!currentTitle.trim() && !currentContent.trim()) {
+      return false;
+    }
+
+    const trimmedTitle = currentTitle.trim() || (currentContent.trim() ? currentContent.trim().substring(0, 40) : 'Untitled Note');
 
     const notePayload: Partial<UserNote> = {
       id: selectedNoteId,
@@ -372,8 +403,8 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
     return true;
   };
 
-  const handleManualSave = async () => {
-    if (!selectedNoteId) return;
+  const handleManualSave = async (): Promise<boolean> => {
+    if (!selectedNoteId) return false;
     setIsManualSaving(true);
     try {
       const ok = await executeSave({}, "Explicit user save");
@@ -381,14 +412,37 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
         setJustSaved(true);
         setTimeout(() => setJustSaved(false), 2500);
         showToast("Note & prompt saved successfully to D1 Vault!", 'success');
+        return true;
       } else {
         showToast("Saved to local offline draft.", 'info');
+        return true;
       }
     } catch (e) {
       showToast("Could not save note.", 'error');
+      return false;
     } finally {
       setIsManualSaving(false);
     }
+  };
+
+  // Save changes and return to Card Grid view
+  const handleSaveAndClose = async () => {
+    if (!editorContent.trim() && (!editorTitle.trim() || editorTitle.startsWith('New ') || editorTitle.startsWith('Untitled'))) {
+      showToast("Please enter a note title or content before saving.", 'info');
+      return;
+    }
+    const ok = await handleManualSave();
+    if (ok) {
+      setViewMode('grid');
+    }
+  };
+
+  // Close editor and return to Card Grid view, cleaning up any zero-content drafts
+  const handleCloseEditor = () => {
+    if (selectedNoteId && !editorContent.trim() && (!editorTitle.trim() || editorTitle.startsWith('New ') || editorTitle.startsWith('Untitled'))) {
+      setNotes(prev => prev.filter(n => n.id !== selectedNoteId));
+    }
+    setViewMode('grid');
   };
 
   // 5. Delete Note Handler
@@ -603,6 +657,17 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
 
         {/* Action Buttons: New Note, New Prompt, View Mode Toggle */}
         <div className="flex items-center space-x-2 flex-wrap gap-y-2">
+          {viewMode === 'split' && (
+            <button
+              onClick={handleCloseEditor}
+              className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.1] text-neutral-200 hover:text-white transition-all cursor-pointer mr-1 active:scale-95"
+              title="Return to Card Grid view"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 text-sky-400" />
+              <span>Back to Cards</span>
+            </button>
+          )}
+
           {/* New Prompt Button */}
           <button
             onClick={() => handleCreateNew('prompts', 'Prompt')}
@@ -870,10 +935,16 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
                     {note.title || "Untitled Note"}
                   </h3>
 
-                  {/* Multi-paragraph snippet */}
-                  <p className="text-xs text-neutral-300 mt-2 line-clamp-4 leading-relaxed font-normal">
-                    {note.content ? note.content : <span className="italic text-neutral-500">Empty note...</span>}
-                  </p>
+                  {/* Clean readable preview snippet */}
+                  <div className="mt-2 min-h-[3.75rem]">
+                    {getContentPreview(note.content) ? (
+                      <p className="text-xs text-neutral-300 line-clamp-4 leading-relaxed font-normal break-words whitespace-pre-line">
+                        {getContentPreview(note.content)}
+                      </p>
+                    ) : (
+                      <p className="text-xs italic text-neutral-500">Empty note... Click Edit to write or paste content.</p>
+                    )}
+                  </div>
                 </div>
 
                 {/* Card Footer: Tags, Metrics & Actions */}
@@ -1002,8 +1073,8 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
                   </div>
 
                   <h4 className="text-xs font-display font-bold text-white truncate">{note.title || "Untitled Note"}</h4>
-                  <p className="text-[11px] text-neutral-300 line-clamp-2 mt-1 leading-snug">
-                    {note.content || "Empty note content..."}
+                  <p className="text-[11px] text-neutral-300 line-clamp-2 mt-1 leading-snug break-words">
+                    {getContentPreview(note.content) || <span className="italic text-neutral-500">Empty note content...</span>}
                   </p>
                   
                   <div className="flex items-center justify-between text-[10px] font-mono text-neutral-400 mt-2.5 pt-2 border-t border-white/[0.06]">
@@ -1025,8 +1096,17 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
                 
                 {/* Editor Header: Controls & Sync Status */}
                 <div className="flex items-center justify-between pb-3.5 border-b border-white/[0.08] gap-2 flex-wrap">
-                  {/* Left: Badge & Category Selector */}
+                  {/* Left: Back button, Badge & Category Selector */}
                   <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+                    <button
+                      onClick={handleCloseEditor}
+                      className="flex items-center space-x-1 px-2.5 py-1.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.1] text-xs font-semibold text-neutral-300 hover:text-white transition-all cursor-pointer active:scale-95"
+                      title="Back to Card Grid view"
+                    >
+                      <ArrowLeft className="w-3.5 h-3.5 text-sky-400" />
+                      <span>Back</span>
+                    </button>
+
                     {/* Badge Picker */}
                     <select
                       value={editorBadge}
@@ -1081,8 +1161,8 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
                     </button>
                   </div>
 
-                  {/* Right: Sync Status, Versions & Fullscreen */}
-                  <div className="flex items-center space-x-2 font-mono text-xs">
+                  {/* Right: Sync Status, Save & Close, Save, Versions & Fullscreen */}
+                  <div className="flex items-center space-x-2 font-mono text-xs flex-wrap gap-y-1">
                     {/* Auto-save Status Indicator */}
                     <div className="flex items-center space-x-1.5 text-neutral-400 pr-1">
                       {syncStatus === 'saving' ? (
@@ -1093,24 +1173,35 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
                       ) : syncStatus === 'synced' ? (
                         <>
                           <Check className="w-3.5 h-3.5 text-emerald-400" />
-                          <span className="text-[11px] text-emerald-400">Synced to D1 {lastSavedAt ? `(${lastSavedAt})` : ''}</span>
+                          <span className="text-[11px] text-emerald-400">Synced {lastSavedAt ? `(${lastSavedAt})` : ''}</span>
                         </>
                       ) : (
                         <>
                           <AlertCircle className="w-3.5 h-3.5 text-neutral-500" />
-                          <span className="text-[11px] text-neutral-400">Local Draft</span>
+                          <span className="text-[11px] text-neutral-400">Draft</span>
                         </>
                       )}
                     </div>
 
-                    {/* Explicit Save Note Button */}
+                    {/* Prominent Save & Close Button */}
+                    <button
+                      onClick={handleSaveAndClose}
+                      disabled={isManualSaving}
+                      className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-500 hover:from-emerald-500 hover:to-teal-400 text-white shadow-md shadow-emerald-600/30 transition-all active:scale-95 cursor-pointer"
+                      title="Save note to D1 and close editor"
+                    >
+                      {isManualSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+                      <span>Save & Close</span>
+                    </button>
+
+                    {/* Quick Save Note Button (Keep open) */}
                     <button
                       onClick={handleManualSave}
                       disabled={isManualSaving}
-                      className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95 cursor-pointer ${
+                      className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95 cursor-pointer ${
                         justSaved
                           ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                          : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/30'
+                          : 'bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.1] text-emerald-300 hover:text-white'
                       }`}
                       title="Save note & prompt to Cloudflare D1 immediately"
                     >
@@ -1121,7 +1212,7 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
                       ) : (
                         <Save className="w-3.5 h-3.5" />
                       )}
-                      <span>{isManualSaving ? 'Saving...' : justSaved ? 'Saved!' : 'Save Note'}</span>
+                      <span>{isManualSaving ? 'Saving...' : justSaved ? 'Saved!' : 'Save'}</span>
                     </button>
 
                     {/* Version History Button */}
@@ -1131,17 +1222,26 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
                       title="View all past versions"
                     >
                       <History className="w-3.5 h-3.5" />
-                      <span>v{editorVersion} Revisions</span>
+                      <span>v{editorVersion}</span>
                     </button>
 
                     {/* 1-Click Copy Full Editor Content */}
                     <button
                       onClick={() => handleCopyNote(editorContent, selectedNoteId)}
-                      className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.1] text-neutral-200 hover:text-white font-semibold text-xs transition-all active:scale-95 cursor-pointer"
+                      className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.1] text-neutral-200 hover:text-white font-semibold text-xs transition-all active:scale-95 cursor-pointer"
                       title="Copy complete prompt / note to clipboard"
                     >
                       <Copy className="w-3.5 h-3.5" />
                       <span>Copy</span>
+                    </button>
+
+                    {/* Close button */}
+                    <button
+                      onClick={handleCloseEditor}
+                      className="p-1.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] text-neutral-400 hover:text-white transition-colors cursor-pointer"
+                      title="Close editor and back to cards"
+                    >
+                      <X className="w-4 h-4" />
                     </button>
 
                     {/* Fullscreen Toggle */}
@@ -1251,13 +1351,20 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
                 <div className="flex items-center justify-between pt-3 border-t border-white/[0.08] flex-wrap gap-2">
                   <button
                     onClick={() => selectedNoteId && handleDeleteNote(selectedNoteId)}
-                    className="flex items-center space-x-1.5 text-xs text-neutral-500 hover:text-rose-400 transition-colors cursor-pointer"
+                    className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl text-xs text-neutral-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors cursor-pointer"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                     <span>Delete Note</span>
                   </button>
 
-                  <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-2 flex-wrap gap-1.5">
+                    <button
+                      onClick={handleCloseEditor}
+                      className="px-3.5 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-xs font-semibold text-neutral-300 hover:text-white transition-all cursor-pointer"
+                    >
+                      Cancel / Close
+                    </button>
+
                     <button
                       onClick={async () => {
                         await executeSave({}, `Manual milestone v${editorVersion + 1}`);
@@ -1273,21 +1380,20 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
                     <button
                       onClick={handleManualSave}
                       disabled={isManualSaving}
-                      className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 cursor-pointer ${
-                        justSaved
-                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                          : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/30'
-                      }`}
-                      title="Save note to D1 database immediately"
+                      className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-white/[0.06] hover:bg-white/[0.1] border border-white/[0.1] text-xs font-bold text-emerald-300 hover:text-white transition-all cursor-pointer active:scale-95"
                     >
-                      {isManualSaving ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      ) : justSaved ? (
-                        <Check className="w-3.5 h-3.5 text-emerald-300" />
-                      ) : (
-                        <Save className="w-3.5 h-3.5" />
-                      )}
-                      <span>{isManualSaving ? 'Saving...' : justSaved ? 'Saved to Vault!' : 'Save Note & Prompt'}</span>
+                      <Save className="w-3.5 h-3.5" />
+                      <span>Save</span>
+                    </button>
+
+                    <button
+                      onClick={handleSaveAndClose}
+                      disabled={isManualSaving}
+                      className="flex items-center space-x-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-xs font-bold text-white shadow-md shadow-emerald-600/30 transition-all cursor-pointer active:scale-95"
+                      title="Save note and return to card grid"
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                      <span>Save & Close</span>
                     </button>
                   </div>
                 </div>
