@@ -578,7 +578,19 @@ async function callApi(action: string, payload: Record<string, any> = {}): Promi
     try {
       if (url.includes('workers.dev') || url.includes('cloudflare')) {
         // Cloudflare Edge Worker API (Ultra-Fast REST)
-        const isMutation = ['generate_batch', 'replace_item', 'mark_used', 'undo_used', 'save_config', 'update_config', 'add_production_idea'].includes(action);
+        const isMutation = [
+          'generate_batch', 
+          'replace_item', 
+          'mark_used', 
+          'undo_used', 
+          'save_config', 
+          'update_config', 
+          'add_production_idea',
+          'save_note',
+          'delete_note',
+          'restore_note_version',
+          'reset_cache_slate'
+        ].includes(action);
         const reqPayload = { action, ...payload };
 
         if (isMutation) {

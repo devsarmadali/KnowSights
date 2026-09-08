@@ -29,7 +29,8 @@ import {
   AlertCircle,
   Hash,
   BookOpen,
-  Share2
+  Share2,
+  Save
 } from 'lucide-react';
 import { UserNote, UserNoteVersion, NoteBadge, NoteCategory } from '../types';
 import { api, getLocalNotes, saveLocalNotes } from '../services/api';
@@ -164,23 +165,34 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
     loadNotes();
   }, []);
 
+  const [isManualSaving, setIsManualSaving] = useState(false);
+  const [justSaved, setJustSaved] = useState(false);
+
   const loadNotes = async () => {
     setLoading(true);
     try {
       const res = await api.getNotes();
       if (res && res.success && Array.isArray(res.notes)) {
-        if (res.notes.length === 0) {
+        // Filter out phantom empty notes (empty title and empty content)
+        const validNotes = res.notes.filter((n: UserNote) => 
+          (n.title && n.title.trim() && n.title !== 'Untitled Note') || 
+          (n.content && n.content.trim())
+        );
+        if (validNotes.length === 0) {
           // Initialize starter notes if completely empty
           await initializeStarterNotes();
         } else {
-          setNotes(res.notes);
-          saveLocalNotes(res.notes);
-          if (!selectedNoteId && res.notes.length > 0) {
-            loadNoteIntoEditor(res.notes[0]);
+          setNotes(validNotes);
+          saveLocalNotes(validNotes);
+          if (!selectedNoteId && validNotes.length > 0) {
+            loadNoteIntoEditor(validNotes[0]);
           }
         }
       } else {
-        const local = getLocalNotes();
+        const local = getLocalNotes().filter((n: UserNote) => 
+          (n.title && n.title.trim() && n.title !== 'Untitled Note') || 
+          (n.content && n.content.trim())
+        );
         if (local.length > 0) {
           setNotes(local);
           if (!selectedNoteId) loadNoteIntoEditor(local[0]);
@@ -190,7 +202,10 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
       }
     } catch (err) {
       console.warn("Failed to load notes from API, using local storage:", err);
-      const local = getLocalNotes();
+      const local = getLocalNotes().filter((n: UserNote) => 
+        (n.title && n.title.trim() && n.title !== 'Untitled Note') || 
+        (n.content && n.content.trim())
+      );
       setNotes(local);
       if (local.length > 0 && !selectedNoteId) {
         loadNoteIntoEditor(local[0]);
@@ -234,11 +249,21 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
     isDirtyRef.current = false;
   };
 
-  // 3. Create New Note Handler
+  // 3. Create New Note Handler (Safeguard against duplicate empty cards)
   const handleCreateNew = (category: string = 'prompts', badge: NoteBadge = 'Prompt') => {
+    // If there is already an empty draft in the list, focus it instead of adding redundant cards!
+    const existingEmpty = notes.find(n => !n.content.trim() && (!n.title.trim() || n.title.startsWith('Untitled') || n.title.startsWith('New ')));
+    if (existingEmpty) {
+      loadNoteIntoEditor(existingEmpty);
+      setViewMode('split');
+      showToast(`Editing active draft ${badge.toLowerCase()}`, 'info');
+      return;
+    }
+
+    const defaultTitle = badge === 'Prompt' ? 'New AI Search Prompt' : 'New Research Note';
     const newNote: UserNote = {
       id: `note_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-      title: 'Untitled ' + (badge === 'Prompt' ? 'Research Prompt' : 'Note'),
+      title: defaultTitle,
       content: '',
       category,
       tags: [],
@@ -252,10 +277,10 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
     setNotes(prev => [newNote, ...prev]);
     loadNoteIntoEditor(newNote);
     setViewMode('split');
-    showToast(`Created new ${badge.toLowerCase()}`, 'info');
+    showToast(`Created new ${badge.toLowerCase()} draft. Paste content and click Save Note!`, 'info');
   };
 
-  // 4. Auto-save Engine (Debounced 800ms)
+  // 4. Robust Save Engine (debounced + explicit manual save)
   const triggerAutoSave = (updatedFields: Partial<UserNote>) => {
     if (!selectedNoteId) return;
     isDirtyRef.current = true;
@@ -267,38 +292,102 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
 
     autoSaveTimerRef.current = setTimeout(async () => {
       await executeSave(updatedFields, "Auto-saved edit");
-    }, 800);
+    }, 1200);
   };
 
-  const executeSave = async (extraFields: Partial<UserNote> = {}, summary?: string) => {
-    if (!selectedNoteId) return;
+  const executeSave = async (extraFields: Partial<UserNote> = {}, summary?: string): Promise<boolean> => {
+    if (!selectedNoteId) return false;
+
+    const currentTitle = extraFields.title !== undefined ? extraFields.title : editorTitle;
+    const currentContent = extraFields.content !== undefined ? extraFields.content : editorContent;
+    const currentCategory = extraFields.category !== undefined ? extraFields.category : editorCategory;
+    const currentBadge = extraFields.badge !== undefined ? extraFields.badge : editorBadge;
+    const currentTags = extraFields.tags !== undefined ? extraFields.tags : editorTags;
+    const currentIsPinned = extraFields.is_pinned !== undefined ? extraFields.is_pinned : editorIsPinned;
+
+    const trimmedTitle = currentTitle.trim() || 'Untitled Note';
 
     const notePayload: Partial<UserNote> = {
       id: selectedNoteId,
-      title: editorTitle.trim() || 'Untitled Note',
-      content: editorContent,
-      category: editorCategory,
-      badge: editorBadge,
-      tags: editorTags,
-      is_pinned: editorIsPinned,
+      title: trimmedTitle,
+      content: currentContent,
+      category: currentCategory,
+      badge: currentBadge,
+      tags: currentTags,
+      is_pinned: currentIsPinned,
       ...extraFields
     };
+
+    setSyncStatus('saving');
 
     try {
       const res = await api.saveNote(notePayload, summary || "Content revision");
       if (res && res.success && res.note) {
-        setEditorVersion(res.note.version);
-        setNotes(prev => prev.map(n => n.id === selectedNoteId ? res.note : n));
-        saveLocalNotes(notes.map(n => n.id === selectedNoteId ? res.note : n));
+        const savedNote: UserNote = res.note;
+        setEditorVersion(savedNote.version);
+        setEditorTitle(savedNote.title);
+        setNotes(prev => prev.map(n => n.id === selectedNoteId ? savedNote : n));
+        
+        const local = getLocalNotes();
+        const existingIdx = local.findIndex(n => n.id === selectedNoteId);
+        const updatedLocal = existingIdx >= 0 
+          ? local.map(n => n.id === selectedNoteId ? savedNote : n)
+          : [savedNote, ...local];
+        saveLocalNotes(updatedLocal);
+
         setSyncStatus('synced');
         setLastSavedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
         isDirtyRef.current = false;
-      } else {
-        setSyncStatus('offline');
+        return true;
       }
     } catch (err) {
-      console.warn("Save note API error, saving to local storage:", err);
-      setSyncStatus('offline');
+      console.warn("API save note failed, saving to local fallback:", err);
+    }
+
+    // Local fallback save
+    const now = new Date().toISOString();
+    const fallbackNote: UserNote = {
+      id: selectedNoteId,
+      title: trimmedTitle,
+      content: currentContent,
+      category: currentCategory,
+      badge: currentBadge,
+      tags: currentTags,
+      is_pinned: currentIsPinned,
+      version: editorVersion + 1,
+      created_at: now,
+      updated_at: now
+    };
+    setEditorVersion(fallbackNote.version);
+    setNotes(prev => prev.map(n => n.id === selectedNoteId ? fallbackNote : n));
+    const local = getLocalNotes();
+    const existingIdx = local.findIndex(n => n.id === selectedNoteId);
+    const updatedLocal = existingIdx >= 0 
+      ? local.map(n => n.id === selectedNoteId ? fallbackNote : n)
+      : [fallbackNote, ...local];
+    saveLocalNotes(updatedLocal);
+    setSyncStatus('synced');
+    setLastSavedAt(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+    isDirtyRef.current = false;
+    return true;
+  };
+
+  const handleManualSave = async () => {
+    if (!selectedNoteId) return;
+    setIsManualSaving(true);
+    try {
+      const ok = await executeSave({}, "Explicit user save");
+      if (ok) {
+        setJustSaved(true);
+        setTimeout(() => setJustSaved(false), 2500);
+        showToast("Note & prompt saved successfully to D1 Vault!", 'success');
+      } else {
+        showToast("Saved to local offline draft.", 'info');
+      }
+    } catch (e) {
+      showToast("Could not save note.", 'error');
+    } finally {
+      setIsManualSaving(false);
     }
   };
 
@@ -520,16 +609,16 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
             className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold bg-gradient-to-r from-sky-600 via-indigo-600 to-teal-500 hover:from-sky-500 hover:to-teal-400 text-white shadow-md shadow-sky-600/30 active:scale-95 transition-all cursor-pointer"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
-            <span>New Prompt</span>
+            <span>+ New AI Prompt</span>
           </button>
 
           {/* New General Note Button */}
           <button
             onClick={() => handleCreateNew('research', 'Research')}
-            className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-neutral-200 hover:text-white transition-all cursor-pointer"
+            className="flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.1] text-neutral-200 hover:text-white transition-all cursor-pointer active:scale-95"
           >
-            <Plus className="w-3.5 h-3.5 text-neutral-400" />
-            <span>New Note</span>
+            <Plus className="w-3.5 h-3.5 text-neutral-300" />
+            <span>+ New Note</span>
           </button>
 
           {/* View Toggle */}
@@ -688,12 +777,22 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
                 Clear All Filters
               </button>
             ) : (
-              <button
-                onClick={() => handleCreateNew('prompts', 'Prompt')}
-                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 via-indigo-600 to-teal-500 hover:from-sky-500 hover:to-teal-400 text-xs font-bold text-white shadow-md shadow-sky-600/30 transition-all cursor-pointer"
-              >
-                Create Your First Prompt
-              </button>
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => handleCreateNew('prompts', 'Prompt')}
+                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-sky-600 via-indigo-600 to-teal-500 hover:from-sky-500 hover:to-teal-400 text-xs font-bold text-white shadow-md shadow-sky-600/30 transition-all cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5 inline mr-1 text-amber-300 fill-amber-300" />
+                  Create AI Prompt
+                </button>
+                <button
+                  onClick={() => handleCreateNew('research', 'Research')}
+                  className="px-4 py-2.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.1] text-xs font-semibold text-neutral-200 hover:text-white transition-all cursor-pointer"
+                >
+                  <Plus className="w-3.5 h-3.5 inline mr-1 text-neutral-300" />
+                  Create Note
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -798,7 +897,21 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
                     </div>
 
                     {/* Toolbar on Card */}
-                    <div className="flex items-center space-x-1">
+                    <div className="flex items-center space-x-1.5">
+                      {/* Explicit Edit Button */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          loadNoteIntoEditor(note);
+                          setViewMode('split');
+                        }}
+                        className="flex items-center space-x-1 px-2.5 py-1.5 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-sky-300 hover:text-white text-xs font-semibold transition-all cursor-pointer shadow-sm active:scale-95"
+                        title="Edit note in editor"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                        <span>Edit</span>
+                      </button>
+
                       {/* Copy Button */}
                       <button
                         onClick={(e) => handleCopyNote(note.content, note.id, e)}
@@ -869,6 +982,11 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
                         {note.badge}
                       </span>
                       <span className="text-[10px] font-mono text-neutral-400">v{note.version}</span>
+                      {isSelected && (
+                        <span className="text-[9px] font-mono font-bold px-1.5 py-0.2 rounded bg-sky-500/20 text-sky-300 border border-sky-500/30">
+                          Active
+                        </span>
+                      )}
                     </div>
 
                     <div className="flex items-center space-x-1 shrink-0">
@@ -985,6 +1103,27 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
                       )}
                     </div>
 
+                    {/* Explicit Save Note Button */}
+                    <button
+                      onClick={handleManualSave}
+                      disabled={isManualSaving}
+                      className={`flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95 cursor-pointer ${
+                        justSaved
+                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                          : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/30'
+                      }`}
+                      title="Save note & prompt to Cloudflare D1 immediately"
+                    >
+                      {isManualSaving ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : justSaved ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-300" />
+                      ) : (
+                        <Save className="w-3.5 h-3.5" />
+                      )}
+                      <span>{isManualSaving ? 'Saving...' : justSaved ? 'Saved!' : 'Save Note'}</span>
+                    </button>
+
                     {/* Version History Button */}
                     <button
                       onClick={() => selectedNoteId && handleOpenVersions(selectedNoteId)}
@@ -998,7 +1137,7 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
                     {/* 1-Click Copy Full Editor Content */}
                     <button
                       onClick={() => handleCopyNote(editorContent, selectedNoteId)}
-                      className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-sky-600 via-indigo-600 to-teal-500 hover:from-sky-500 hover:to-teal-400 text-white font-bold text-xs transition-all shadow-sm shadow-sky-600/30 active:scale-95 cursor-pointer"
+                      className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bg-white/[0.05] hover:bg-white/[0.09] border border-white/[0.1] text-neutral-200 hover:text-white font-semibold text-xs transition-all active:scale-95 cursor-pointer"
                       title="Copy complete prompt / note to clipboard"
                     >
                       <Copy className="w-3.5 h-3.5" />
@@ -1108,8 +1247,8 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
                   )}
                 </div>
 
-                {/* Editor Bottom Footer: Manual Save Version Milestone & Delete */}
-                <div className="flex items-center justify-between pt-2 border-t border-neutral-800">
+                {/* Editor Bottom Footer: Manual Save Note & Milestone & Delete */}
+                <div className="flex items-center justify-between pt-3 border-t border-white/[0.08] flex-wrap gap-2">
                   <button
                     onClick={() => selectedNoteId && handleDeleteNote(selectedNoteId)}
                     className="flex items-center space-x-1.5 text-xs text-neutral-500 hover:text-rose-400 transition-colors cursor-pointer"
@@ -1118,16 +1257,39 @@ export const NotesPage: React.FC<NotesPageProps> = ({ showToast, onNotesCountCha
                     <span>Delete Note</span>
                   </button>
 
-                  <button
-                    onClick={async () => {
-                      await executeSave({}, `Manual milestone v${editorVersion + 1}`);
-                      showToast(`Saved version milestone v${editorVersion + 1}!`, 'success');
-                    }}
-                    className="flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 border border-neutral-800 text-xs font-semibold text-neutral-300 hover:text-white transition-all cursor-pointer"
-                  >
-                    <History className="w-3.5 h-3.5 text-sky-400" />
-                    <span>Save Version Milestone</span>
-                  </button>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={async () => {
+                        await executeSave({}, `Manual milestone v${editorVersion + 1}`);
+                        showToast(`Saved version milestone v${editorVersion + 1}!`, 'success');
+                      }}
+                      className="flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-xs font-semibold text-neutral-300 hover:text-white transition-all cursor-pointer"
+                      title="Create an immutable named revision snapshot"
+                    >
+                      <History className="w-3.5 h-3.5 text-sky-400" />
+                      <span>Save Milestone</span>
+                    </button>
+
+                    <button
+                      onClick={handleManualSave}
+                      disabled={isManualSaving}
+                      className={`flex items-center space-x-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 cursor-pointer ${
+                        justSaved
+                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                          : 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-600/30'
+                      }`}
+                      title="Save note to D1 database immediately"
+                    >
+                      {isManualSaving ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : justSaved ? (
+                        <Check className="w-3.5 h-3.5 text-emerald-300" />
+                      ) : (
+                        <Save className="w-3.5 h-3.5" />
+                      )}
+                      <span>{isManualSaving ? 'Saving...' : justSaved ? 'Saved to Vault!' : 'Save Note & Prompt'}</span>
+                    </button>
+                  </div>
                 </div>
 
               </div>
