@@ -66,21 +66,29 @@ const BADGE_COLORS: Record<string, { bg: string; text: string; border: string }>
 
 const DEFAULT_STARTER_NOTES: Partial<UserNote>[] = [
   {
-    title: 'Elite Archaeological Investigative Scholar Prompt',
-    content: `Act as an elite investigative research scholar and documentary fact-checker specializing in Archaeology & Ancient Civilizations. Conduct an exhaustive, open-web, evidence-backed deep-dive search on the following topic and inquiry angle:
+    title: 'Investigative Documentary Deep-Dive Prompt (Broad Public / High Retention)',
+    content: `Act as an elite investigative documentary researcher and master storytelling fact-checker. Conduct an exhaustive, open-web, evidence-backed deep dive on the following topic:
 
-• TARGET TOPIC: [Insert archaeological site, lost civilization, or artifact]
-• UNIQUE ANGLE & HOOK: [Insert the counterintuitive paradox or recent excavation finding]
-• PRIMARY EVIDENCE REQUIRED: Excavation monographs, artifact serial numbers, carbon-14 dating intervals, and stratigraphy reports.
+• TARGET TOPIC: [Insert topic, site, lost civilization, or scientific anomaly]
+• UNIQUE ANGLE & HOOK: [Insert the counterintuitive paradox or curiosity angle]
 
-SEARCH PROTOCOL:
-1. Search peer-reviewed publications across Antiquity Journal, British Museum Research, and JSTOR.
-2. Identify the exact primary discoverers, excavation dates, and field notebook citations.
-3. Contrast conventional textbook narrative with verified empirical ground truth.
-4. Output a structured 5-part research dossier with annotated citable links.`,
+CORE EDITORIAL DIRECTIVE (ACCESSIBLE TO BROAD AUDIENCES • DEEPLY RIGOROUS):
+1. ZERO ESOTERIC JARGON: Translate complex scientific, archaeological, or mechanical realities into vivid, intuitive analogies and narrative tension suitable for YouTube documentaries and a curious broad public.
+2. DIG LESSER-KNOWN FACTS: Uncover buried archival anomalies, forgotten expedition logs, and primary source eyewitness accounts that mainstream pop-science summaries miss.
+3. EXPLORE ALL ANGLES: Contrast the consensus with credible dissenting hypotheses and active debates.
+4. TANGIBLE HUMAN DRAMA: Anchor claims in specific discoverer names, exact dates, measurements, and visual scenes.
+
+OUTPUT FORMAT:
+1. Executive Story Hook & The Core Mystery (The paradigm shift)
+2. Lesser-Known Revelations & Buried Archival Facts
+3. The Chronological Narrative & Key Human Figures
+4. How It Actually Works / Core Mechanism (Vivid, accessible explanation)
+5. Competing Angles, Debates & Unresolved Mysteries
+6. Documentary Visual & Storytelling Asset Cues (Visual scene ideas & graphics)
+7. Annotated Source Directory (with direct citable URLs and institutional authorities across the web)`,
     category: 'prompts',
     badge: 'Prompt',
-    tags: ['Archaeology', 'Deep Research', 'Perplexity'],
+    tags: ['Documentary', 'Deep Research', 'YouTube', 'Perplexity'],
     is_pinned: true,
   },
   {

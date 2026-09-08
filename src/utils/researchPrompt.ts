@@ -8,7 +8,7 @@
  * decorative ASCII bars) so the output is a pure, ready-to-execute research prompt.
  */
 
-import { GeneratedTopicIdea, ProductionIdea } from '../types';
+import type { GeneratedTopicIdea, ProductionIdea } from '../types/index';
 
 export interface StandardizedPromptParams {
   topic: string;
@@ -54,7 +54,7 @@ export function buildStandardizedResearchPrompt(params: StandardizedPromptParams
     ? `\n• INITIAL SEED ARTICLE: "${params.articleTitle}" (${params.articleUrl})`
     : '';
 
-  return `Act as an elite investigative research scholar and documentary fact-checker specializing in ${categoryStr}. Conduct an exhaustive, open-web, evidence-backed deep-dive search on the following topic, unique concept, and curiosity angle:
+  return `Act as an elite investigative documentary researcher and master storytelling fact-checker specializing in ${categoryStr}. Conduct an exhaustive, open-web, evidence-backed deep dive on the following topic, unique concept, and curiosity angle:
 
 • TARGET TOPIC: ${params.topic}${seedContext}
 • UNIQUE ANGLE & HOOK: ${hookStr}
@@ -63,22 +63,30 @@ export function buildStandardizedResearchPrompt(params: StandardizedPromptParams
 • REFERENCE SEED (STARTING CLUE ONLY): ${seedReferenceStr}${articleBlock}
   ⚠️ CRITICAL SOURCE MANDATE: The reference above is ONLY an initial seed and context springboard. Do NOT restrict or limit your research to this single publication or domain. You are explicitly authorized and instructed to gather credible data across ALL relevant, authentic, and renowned sources on the web (peer-reviewed academic journals, museum catalogs, archaeological field reports, national archives, and university research libraries).
 ${questionsBlock}
+CORE EDITORIAL DIRECTIVE (ACCESSIBLE TO BROAD AUDIENCES • DEEPLY RIGOROUS):
+1. BROAD PUBLIC ACCESSIBILITY (ZERO ESOTERIC JARGON): The end goal is to prepare a compelling, high-retention report suitable for YouTube documentaries, video essays, social media audiences, and the curious broad public. Do NOT write in dry academic dissertation prose or bury insights under dense, impenetrable jargon. Translate complex scientific, archaeological, historical, or physical mechanisms into vivid, intuitive analogies and narrative tension—without dumbing down the underlying truth.
+2. OBSESSIVE INVESTIGATIVE RIGOR & LESSER-KNOWN FACTS: Accessibility does NOT mean superficial pop-science fluff. We place the highest premium on rock-solid authenticity, deep research, and digging up lesser-known, obscure, or buried facts that 99% of mainstream media and typical YouTube summaries miss. Unearth forgotten archival logs, unusual primary source excerpts, bizarre anomalies, and specific eyewitness testimonies.
+3. EXPLORE ALL ANGLES & COMPETING PERSPECTIVES: Present the complete landscape. Detail the prevailing scientific/historical consensus, credible dissenting theories, and active controversies. Explore every angle with intellectual honesty and evidence-backed nuance.
+4. TANGIBLE HUMAN DRAMA & SENSORY DETAIL: Ground every claim in specific human names (discoverers, dissenters, chroniclers), exact dates, physical coordinates, artifact names, verified measurements, and what these discoveries looked, sounded, and felt like on the ground.
+
 RESEARCH OBJECTIVES & SEARCH REQUIREMENTS:
-1. COMPREHENSIVE MULTI-SOURCE INQUIRY: Cast a wide net across all authoritative, credible, and renowned resources. Do NOT limit your search to any single cited website. Gather corroborating and diverse evidence from global scholarly institutions, archives, and specialized research bodies.
-2. PRIMARY EVIDENCE & VERIFIED DISCOVERERS: Identify by name the exact primary excavators, scientists, archival historians, or chroniclers who made this discovery or investigated this event. Cite original field logs, excavation papers, and academic monographs.
-3. HARD FACTS, TIMELINES & MEASUREMENTS: Extract exact dates, physical locations, artifact/manuscript names, verified measurements, statistics, and chronological milestones. Avoid vague generalizations.
-4. UNDERLYING MECHANISM & CAUSALITY: Explain precisely HOW and WHY this event, anomaly, or discovery unfolded. Detail the technological, geological, economic, or physical mechanism driving it.
-5. COUNTERINTUITIVE INSIGHTS & MYTH BUSTING: Identify the prevailing popular misconception or conventional textbook assumption that this evidence overturns. What is the surprising, verified reality?
-6. SCHOLARLY CONSENSUS & ONGOING DEBATES: Detail what modern academic specialists agree upon, and highlight any remaining unresolved controversies or active scientific debates.
-7. MULTI-SOURCE CITATIONS & CITABLE DIRECTORY: Provide direct citable links, publication titles, DOIs, or official repository references (e.g., Nature, Science, Antiquity, JSTOR, British Museum, Library of Congress, archaeological institutes) for every key assertion.
+1. COMPREHENSIVE MULTI-SOURCE WEB SWEEP: Cast a wide net across authoritative global institutions (national archives, museum registries, excavation reports, peer-reviewed journals, science libraries). Corroborate all findings across diverse, independent sources.
+2. PRIMARY DISCOVERERS & HUMAN JOURNEY: Identify the exact excavators, scientists, historians, or chroniclers who made this breakthrough. Detail the human journey, fieldwork obstacles, and exact breakthrough moments.
+3. LESSER-KNOWN REVELATIONS & BURIED FACTS: Unearth the hidden layer—overlooked archival anomalies, obscure primary documents, and fascinating counterintuitive details that elevate this above standard pop summaries.
+4. HOW IT WORKS IN PLAIN, VIVID ENGLISH: Detail the underlying mechanism, physical principles, or historical catalysts. Use intuitive, visual analogies so a broad audience immediately grasps the mechanics.
+5. CONVENTIONAL MYTH VS. VERIFIED REALITY: State the prevailing popular misconception or textbook assumption, and contrast it with the verified empirical reality.
+6. RIVAL THEORIES & UNRESOLVED MYSTERIES: Outline competing hypotheses, unresolved paradoxes, or unanswered questions that keep the audience intrigued.
+7. VISUAL & STORYTELLING CUES FOR VIDEO PRODUCTION: Include visualizable scene descriptions, artifact dimensions, map coordinates, and dramatic narrative beats for video editors and documentary animators.
 
 OUTPUT FORMAT:
-Generate a structured, fact-dense Research Dossier organized into:
-1. Executive Summary & Historical/Scientific Context
-2. Chronological Timeline of Pivotal Events & Key Figures
-3. Core Mechanism / Deep Dive Evidence (with verified data points)
-4. Surprising Anomalies / Myth-Busting Findings
-5. Annotated Source Directory (with direct citable URLs and institutional authorities across the web)`.trim();
+Generate a structured, high-retention Research Dossier organized into:
+1. Executive Story Hook & The Core Mystery (The gripping premise, the widespread misconception vs. reality, and why this story captivates a broad audience)
+2. Lesser-Known Revelations & Buried Archival Facts (Overlooked anomalies, obscure primary records, and surprising twists)
+3. The Chronological Narrative & Key Human Figures (Pivotal milestones, discoverers, expedition drama, and the breakthrough moment)
+4. How It Actually Works / Core Mechanism (Explained in lucid, vivid English with intuitive real-world analogies and hard verified data points)
+5. Competing Angles, Debates & Unresolved Mysteries (Rival theories, conflicting evidence, and open questions)
+6. Documentary Visual & Storytelling Asset Cues (Visual scene ideas, artifact appearances, 3D map elements, and dramatic narrative pacing)
+7. Annotated Source Directory (with direct citable URLs and institutional authorities across the web, noting specific relevance for fact-checking)`.trim();
 }
 
 /**
