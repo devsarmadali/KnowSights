@@ -135,11 +135,12 @@ export async function generateIdeaWithGeminiRotation(
   const prompt = `You are KnowSights' Senior YouTube Content Strategist and Video Topic Architect.
 Analyze this publication finding and transform it into a high-retention, curiosity-driven YouTube educational video topic.
 
-CRITICAL DIRECTIVE — YOUTUBE FIRST, NOT ACADEMIC:
-- Avoid dry journalistic or academic syllabus phrasing (e.g. "An analysis of...", "Understanding how...", "A study on...").
+CRITICAL DIRECTIVE — FULL EDITORIAL FREEDOM TO PIVOT & REFRAME ANGLES:
+- YOU HAVE 100% FREEDOM TO MODIFY, REFRAME, OR COMPLETELY PIVOT THE TOPIC ANGLE: The input article title and summary are only starting factual clues. Do NOT merely summarize or rephrase them.
+- If the original reporting takes a dry, conventional, or academic angle, DISCARD IT. Pivot boldly to the single most counterintuitive paradox, hidden controversy, shocking anomaly, or dramatic revelation embedded in the discovery.
+- Zoom in on the high-stakes human drama, the bizarre engineering edge-case, the forgotten archival anomaly, or the paradigm-shattering mystery that makes scrolling or clicking away impossible.
 - Formulate an active, intrigue-driven YouTube title (50-80 chars) that creates an immediate pattern interrupt.
-- Ground the video in authentic empirical data, but make the narrative presentation fascinating, suspenseful, and intellectually gripping.
-- Craft a 3-beat script outline: 1. Hook & Popular Myth; 2. The Empirical Smoking Gun & Mechanism; 3. The Mind-Blowing Paradigm Climax.
+- Ground the video in authentic empirical data, but deliver a riveting narrative blueprint with a 3-beat script outline: 1. Hook & Popular Myth; 2. The Empirical Smoking Gun & Mechanism; 3. The Mind-Blowing Paradigm Climax.
 
 ---
 ARTICLE DETAILS:
@@ -317,12 +318,14 @@ export async function refineBatchWithGeminiRotation(
 Transform this batch of ${items.length} academic/curriculum topics into high-retention, curiosity-driven YouTube educational video concepts and rich content resources.
 
 CORE OPERATIONAL DIRECTIVES:
-1. DITCH ACADEMIC STIFF PHRASING:
+1. FULL EDITORIAL FREEDOM TO RADICALLY PIVOT, MODIFY & TRANSFORM TOPIC ANGLES:
+   - YOU ARE GRANTED 100% EDITORIAL FREEDOM TO MODIFY, REFRAME, OR COMPLETELY CHANGE THE TOPIC ANGLE IF NEEDED FOR MAXIMUM YOUTUBE ENGAGEMENT.
    - The input topics are formal academic curriculum items (e.g. "Compare cloud AI with on-device AI for privacy and speed", "How transmission spectroscopy detects atmospheric water on distant worlds").
+   - DO NOT merely rephrase or synonym-swap the seed! The baseline seed is only an initial topic anchor.
+   - If the original angle is dry, generic, or conventional, DISCARD IT. You have full license to pivot to the most shocking conflict, bizarre edge-case, hidden vulnerability, forgotten historical rivalry, or counterintuitive paradox embedded within the subject.
    - Transform each into an active, intrigue-driven, punchy YouTube video title (50-80 chars) that creates an immediate pattern-interrupt.
-2. GIVE EACH TOPIC A UNIQUE, COMPELLING ANGLE & STORYTELLING LENS:
-   - Identify the counterintuitive tension, hidden mechanism, real-world paradox, or unasked question inside each concept.
-   - Assign a distinct "content_angle" (e.g. "The Engineering Cover-up", "The Counterintuitive Physics Paradox", "The Hidden Flaw in Plain Sight").
+2. ASSIGN A DISTINCT CONTRARIAN OR FASCINATION LENS:
+   - Assign a distinct, sharp "content_angle" (e.g. "The Engineering Cover-up", "The Counterintuitive Physics Paradox", "The Hidden Flaw in Plain Sight", "The State-Sponsored Monopoly").
    - Do NOT use repetitive phrasing or formulas across the batch. Give every topic a unique, distinct angle.
 3. CRAFT A COMPELLING YOUTUBE BRIEF (NARRATIVE RESOURCE):
    - "brief_overview": 2-3 sentence narrative overview showing why this story is gripping to a general viewer, connecting authentic ground truth to cinematic storytelling.
@@ -530,22 +533,21 @@ export async function refineDiscoveryIdeasWithGeminiRotation(
 Transform this batch of ${ideas.length} breaking publication discoveries into high-retention, curiosity-driven YouTube educational video concepts.
 
 CRITICAL DIRECTIVES:
-1. DITCH ACADEMIC/JOURNALISTIC HEADLINES:
-   - The inputs are publication research items (e.g. "Excavations at Tell el-Amarna Reveal New Glazed Tile Workshops", "JWST Spectroscopic Analysis of Exoplanet Atmosphere").
-   - Transform each into an active, intrigue-driven YouTube video title (50-80 chars) that creates an immediate pattern-interrupt.
-2. GIVE EACH TOPIC A UNIQUE, COMPELLING ANGLE:
-   - Identify the counterintuitive tension, hidden mechanism, or unasked question.
-   - Assign a distinct "content_angle" (e.g. "The Royal Cover-up", "The Counterintuitive Physics Paradox", "The Impossible Anomaly").
+1. FULL EDITORIAL FREEDOM TO RADICALLY PIVOT, MODIFY & REFRAME ANGLES:
+   - YOU ARE GRANTED 100% EDITORIAL FREEDOM TO MODIFY, REFRAME, OR COMPLETELY CHANGE THE TOPIC ANGLE IF NEEDED FOR MAXIMUM VIRALITY AND YOUTUBE RETENTION.
+   - The input publication titles and current hooks are only raw factual starting clues. DO NOT stay trapped in polite academic, journalistic, or institutional summary angles.
+   - If an article is dry or conventional, DISCARD the surface angle completely. Pivot boldly to the single most compelling paradox, hidden controversy, shocking empirical finding, or forbidden mystery in the research.
+   - Reframe the story around intense human drama, counterintuitive physical mechanisms, or paradigm shifts that compel viewers to click and stay hooked.
+2. PUNCHY, INTRIGUE-DRIVEN YOUTUBE TITLES (50-80 chars) & HIGH-TENSION HOOKS:
+   - Formulate active, suspenseful YouTube titles that shatter conventional assumptions and generate irresistible curiosity.
 3. CRAFT A COMPELLING YOUTUBE BRIEF & SCRIPT BLUEPRINT:
-   - "brief_overview": 2-3 sentence narrative overview showing why this discovery grips a general viewer.
+   - "content_angle": The contrarian or fascination angle (e.g. "The Royal Cover-up", "The Counterintuitive Physics Paradox", "The Impossible Anomaly").
+   - "brief_overview": 2-3 sentence narrative overview showing why this discovery grips a general viewer, connecting authentic ground truth to cinematic storytelling.
    - "brief_key_points": 3 concrete script beats:
      1. Beat 1 (Hook & Popular Myth): What 99% of people misunderstand.
      2. Beat 2 (The Empirical Smoking Gun): The exact artifact, data, or site uncovered.
      3. Beat 3 (The Mind-Blowing Climax): The paradigm shift that changes our view of history or science.
-   - "core_questions": 3 inquiry questions for video narration:
-     1. Physical/Field Evidence: What specific artifact or measurement was found?
-     2. Underlying Mechanism: What scientific principle or historical pressure explains it?
-     3. Paradigm Shift: How does this overturn conventional thinking?
+   - "core_questions": 3 inquiry questions for video narration (Physical Evidence, Underlying Mechanism, Paradigm Shift).
 4. ASSIGN SIGNATURE FORMAT & CONCRETE VISUAL GUIDANCE:
    - Formats: "SF01 — Hidden System", "SF02 — Counterintuitive Mechanism", "SF04 — Case Study Breakdown", "SF08 — Visualized Rules & Quirks", "SF17 — Under the Hood".
    - "visualization_direction": Concrete visual cues for editors (3D scans, micro-CT cross-sections, motion graphics, split screens).
