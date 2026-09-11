@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   DailyBatch, 
+  BatchItem,
   SystemStats, 
   SelectionMode, 
   AppConfig,
@@ -313,6 +314,34 @@ export const App: React.FC = () => {
     }
   };
 
+  // 5b. On-Demand Single Topic Refinement with Gemini
+  const handleRefineSingleTopic = async (item: BatchItem) => {
+    if (!currentBatch) return;
+    const keys = getConfiguredGeminiKeys(config);
+    if (keys.length === 0) {
+      showToast("No Gemini API keys configured. Please add one in Settings.", 'error');
+      return;
+    }
+
+    try {
+      const res = await refineSingleTopicWithGeminiRotation(item, config);
+      if (res.refinedItem) {
+        const updatedItems = currentBatch.items.map(it => 
+          it.batch_item_id === item.batch_item_id ? res.refinedItem : it
+        );
+        setCurrentBatch({ ...currentBatch, items: updatedItems });
+        showToast(
+          `✨ Refined "${res.refinedItem.idea.video_idea.slice(0, 36)}..." into a YouTube angle with ${res.modelUsed || 'Gemini'}!`,
+          'success'
+        );
+      } else {
+        showToast(`Refinement failed: ${res.error || 'Unknown error'}`, 'error');
+      }
+    } catch (err: any) {
+      showToast(`Refinement error: ${err.message}`, 'error');
+    }
+  };
+
   // Save single idea from card directly into Personal Notes Vault
   const handleSaveIdeaToNotes = (idea: ProductionIdea) => {
     try {
@@ -453,6 +482,7 @@ export const App: React.FC = () => {
                 preferredModel={config.preferred_gemini_model}
                 onSaveToNotes={handleSaveIdeaToNotes}
                 onSaveAllToNotes={handleSaveAllBatchToNotes}
+                onRefineSingleTopic={handleRefineSingleTopic}
               />
             )}
 

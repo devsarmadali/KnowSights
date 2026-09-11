@@ -20,6 +20,7 @@ interface TopicCardProps {
   onReplace: (batchId: string, batchItemId: string, position: number) => Promise<void>;
   onOpenBrief: (idea: ProductionIdea) => void;
   onSaveToNotes?: (idea: ProductionIdea) => void;
+  onRefineSingle?: (item: BatchItem) => Promise<void>;
 }
 
 export const TopicCard: React.FC<TopicCardProps> = ({
@@ -28,9 +29,11 @@ export const TopicCard: React.FC<TopicCardProps> = ({
   onUndoUsed,
   onReplace,
   onOpenBrief,
-  onSaveToNotes
+  onSaveToNotes,
+  onRefineSingle
 }) => {
   const [isReplacing, setIsReplacing] = useState(false);
+  const [isRefiningSingle, setIsRefiningSingle] = useState(false);
   const [isMarking, setIsMarking] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
@@ -82,6 +85,16 @@ export const TopicCard: React.FC<TopicCardProps> = ({
     }
   };
 
+  const handleRefineSingleClick = async () => {
+    if (!onRefineSingle || isUsed || isReplaced || isRefiningSingle) return;
+    setIsRefiningSingle(true);
+    try {
+      await onRefineSingle(item);
+    } finally {
+      setIsRefiningSingle(false);
+    }
+  };
+
   return (
     <div 
       className={`glass-panel glass-panel-hover rounded-2xl p-5 relative flex flex-col justify-between transition-all duration-200 border overflow-hidden ${
@@ -109,10 +122,31 @@ export const TopicCard: React.FC<TopicCardProps> = ({
               Seed #{idea.parent_sr}
             </span>
           )}
+          {idea.ai_refined && (
+            <span 
+              className="text-[10px] font-mono font-bold text-amber-300 bg-amber-400/10 px-1.5 py-0.5 rounded-md border border-amber-400/25 flex items-center space-x-1"
+              title="Refined into a high-retention YouTube concept by Gemini"
+            >
+              <Sparkles className="w-2.5 h-2.5 text-amber-400" />
+              <span>AI Angle</span>
+            </span>
+          )}
         </div>
 
-        {/* Signature Format Tag */}
+        {/* Action / Score Pill */}
         <div className="flex items-center space-x-1.5 shrink-0">
+          {onRefineSingle && !isUsed && !isReplaced && (
+            <button
+              onClick={handleRefineSingleClick}
+              disabled={isRefiningSingle}
+              className="flex items-center space-x-1 px-2 py-0.5 rounded-md text-[10px] font-mono font-bold text-amber-300 bg-amber-400/10 hover:bg-amber-400/20 border border-amber-400/30 transition-all cursor-pointer disabled:opacity-50"
+              title="Refine this individual topic into a YouTube angle with Gemini"
+            >
+              <Sparkles className={`w-3 h-3 text-amber-400 ${isRefiningSingle ? 'animate-spin' : ''}`} />
+              <span>{isRefiningSingle ? 'Refining...' : (idea.ai_refined ? 'Re-roll' : 'AI Refine')}</span>
+            </button>
+          )}
+
           <span className="flex items-center space-x-1 text-amber-400 font-mono text-xs font-bold bg-amber-400/10 px-2 py-0.5 rounded-full border border-amber-400/20">
             <Star className="w-3 h-3 fill-amber-400" />
             <span>{idea.production_score}</span>
@@ -120,7 +154,7 @@ export const TopicCard: React.FC<TopicCardProps> = ({
         </div>
       </div>
 
-      {/* 2. Main Title (Concept) */}
+      {/* 2. Main Title & YouTube Storytelling Angle */}
       <div className="mb-3 space-y-1.5">
         <div className="flex items-center justify-between gap-2">
           <span className="text-[10px] uppercase font-mono font-bold tracking-wider px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">
@@ -130,6 +164,14 @@ export const TopicCard: React.FC<TopicCardProps> = ({
             {idea.signature_format ? (idea.signature_format.includes('—') ? idea.signature_format.split('—')[1].trim() : idea.signature_format) : ''}
           </span>
         </div>
+
+        {idea.content_angle && (
+          <div className="text-[11px] font-mono text-amber-300/90 flex items-center space-x-1 pt-0.5">
+            <span className="text-amber-500 font-bold">Angle:</span>
+            <span className="truncate italic font-medium">{idea.content_angle}</span>
+          </div>
+        )}
+
         <h3 className="font-display font-bold text-base sm:text-lg leading-snug text-white tracking-tight line-clamp-3">
           {idea.video_idea}
         </h3>

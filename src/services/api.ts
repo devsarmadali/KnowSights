@@ -992,12 +992,16 @@ export const api = {
       signature_format: idea.signature_format,
       subject: idea.subject,
       topic_family: idea.topic_family,
-      subtopic_seed: idea.source_article_title || idea.video_idea,
+      subtopic_seed: idea.original_video_idea || idea.source_article_title || idea.video_idea,
       source_article_title: idea.source_article_title,
       production_score: idea.production_score,
       priority_tier: idea.priority_tier,
       visualization_direction: idea.visualization_direction,
       source_family_guidance: idea.source_family_guidance,
+      content_angle: idea.content_angle,
+      content_brief_overview: idea.content_brief_overview,
+      content_brief_key_points: idea.content_brief_key_points,
+      ai_refined: idea.ai_refined,
       request_id: generateRequestId()
     }),
   resetFreshSlate: () =>

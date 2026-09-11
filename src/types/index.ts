@@ -23,6 +23,9 @@ export interface ProductionIdea {
   source_family_guidance?: string;
   ai_refined?: boolean;
   original_video_idea?: string;
+  content_angle?: string;
+  content_brief_overview?: string;
+  content_brief_key_points?: string;
 }
 
 export interface BatchItem {
@@ -146,6 +149,11 @@ export interface GeneratedTopicIdea {
   added_to_pool?: boolean;
   generated_at?: string;
   generated_timestamp?: number;
+  ai_refined?: boolean;
+  original_video_idea?: string;
+  content_angle?: string;
+  content_brief_overview?: string;
+  content_brief_key_points?: string;
 }
 
 export interface ResearchCycleState {

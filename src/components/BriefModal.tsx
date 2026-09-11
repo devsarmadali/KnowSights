@@ -78,17 +78,21 @@ export const BriefModal: React.FC<BriefModalProps> = ({
   // Check if a curated brief from human research exists or if it's the backend generic fallback
   const isGenericBackendBrief = !brief || !brief.overview || brief.overview.startsWith('Curated research outline for');
 
-  const overviewText = (!isGenericBackendBrief && !idea?.ai_refined && brief?.title === activeTitle)
-    ? brief.overview
-    : (idea?.visualization_direction 
-        ? idea.visualization_direction 
-        : `Investigative exploration into ${activeSubject || 'historical & scientific breakthroughs'} focusing on "${activeTitle}".`);
+  const overviewText = idea?.content_brief_overview
+    ? idea.content_brief_overview
+    : ((!isGenericBackendBrief && !idea?.ai_refined && brief?.title === activeTitle)
+        ? brief.overview
+        : (idea?.visualization_direction 
+            ? idea.visualization_direction 
+            : `Investigative exploration into ${activeSubject || 'historical & scientific breakthroughs'} focusing on "${activeTitle}".`));
 
-  const keyPointsText = (!isGenericBackendBrief && !idea?.ai_refined && brief?.title === activeTitle)
-    ? brief.key_points
-    : `1. Primary Discoveries & Ground Truth: Documented field artifacts, primary archival texts, and counter-intuitive data points.
-2. Analytical Deep Dive (${activeFormat || 'Explainer'}): Structural mechanisms, historical causality, and unexpected discoveries.
-3. Paradigm Shift & Scientific Reality: Overturning traditional assumptions and establishing the verified evidence.`;
+  const keyPointsText = idea?.content_brief_key_points
+    ? idea.content_brief_key_points
+    : ((!isGenericBackendBrief && !idea?.ai_refined && brief?.title === activeTitle)
+        ? brief.key_points
+        : `1. Hook & Popular Myth: What conventional assumptions get wrong and the counter-intuitive hook.
+2. The Empirical Smoking Gun & Mechanism (${activeFormat || 'Explainer'}): Documented primary evidence, physical artifacts, and underlying causality.
+3. Paradigm Shift & Scientific Reality: The mind-blowing consequence that overturns previous models.`);
 
   const sourcesText = idea?.source_family_guidance || brief?.sources || 
     `Authoritative peer-reviewed journals, institutional archives, museum collections, and verified empirical databases.`;
@@ -102,9 +106,11 @@ export const BriefModal: React.FC<BriefModalProps> = ({
       sources: sourcesText,
       readyStatus: brief?.ready_status || (idea?.research_status ? idea.research_status : 'Ready'),
       hook: activeHook,
+      angle: idea?.content_angle,
       subject: activeSubject,
       topicFamily: activeTopicFamily,
       format: activeFormat,
+      visualizationDirection: idea?.visualization_direction,
       originalSeed: activeSeed
     });
 
@@ -194,14 +200,21 @@ export const BriefModal: React.FC<BriefModalProps> = ({
 
               {/* Title / Premise */}
               <div className="p-4 rounded-2xl bg-white/[0.03] border border-white/[0.08] space-y-1.5">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <h4 className="font-mono uppercase text-[11px] text-neutral-400 font-bold">Research Title / Core Thesis</h4>
-                  {idea?.ai_refined && (
-                    <span className="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[10px] font-mono flex items-center space-x-1">
-                      <Sparkles className="w-3 h-3 text-amber-400" />
-                      <span>AI Refined YouTube Angle</span>
-                    </span>
-                  )}
+                  <div className="flex items-center space-x-1.5 flex-wrap">
+                    {idea?.content_angle && (
+                      <span className="px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-300 text-[10px] font-mono">
+                        Angle: {idea.content_angle}
+                      </span>
+                    )}
+                    {idea?.ai_refined && (
+                      <span className="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[10px] font-mono flex items-center space-x-1">
+                        <Sparkles className="w-3 h-3 text-amber-400" />
+                        <span>AI Refined YouTube Angle</span>
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <p className="text-sm font-display font-bold text-white tracking-tight leading-snug">{activeTitle}</p>
                 {activeSeed && (
@@ -214,7 +227,7 @@ export const BriefModal: React.FC<BriefModalProps> = ({
 
               {/* Overview */}
               <div className="space-y-1.5">
-                <h4 className="font-mono uppercase text-[11px] text-neutral-400 font-bold">Executive Overview</h4>
+                <h4 className="font-mono uppercase text-[11px] text-neutral-400 font-bold">Executive Overview & Narrative Blueprint</h4>
                 <div className="p-4 rounded-2xl bg-white/[0.02] border border-white/[0.06] whitespace-pre-line text-neutral-100 leading-relaxed font-normal">
                   {overviewText}
                 </div>
@@ -227,6 +240,16 @@ export const BriefModal: React.FC<BriefModalProps> = ({
                   {keyPointsText}
                 </div>
               </div>
+
+              {/* Visual Guidance for Video Editors */}
+              {idea?.visualization_direction && (
+                <div className="space-y-1.5">
+                  <h4 className="font-mono uppercase text-[11px] text-neutral-400 font-bold">Visual & Motion Graphics Direction (For Video Editors)</h4>
+                  <div className="p-3.5 rounded-2xl bg-emerald-950/20 border border-emerald-500/20 text-emerald-200 text-xs leading-relaxed">
+                    {idea.visualization_direction}
+                  </div>
+                </div>
+              )}
 
               {/* Sources */}
               <div className="space-y-1.5">

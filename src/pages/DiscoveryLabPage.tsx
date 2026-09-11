@@ -75,6 +75,8 @@ import {
 import { 
   getConfiguredGeminiKeys, 
   generateIdeaWithGeminiRotation,
+  refineDiscoveryIdeasWithGeminiRotation,
+  refineSingleDiscoveryIdeaWithGeminiRotation,
   testGeminiApiKey 
 } from '../services/gemini';
 
@@ -172,6 +174,8 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
   const [expandedQuestionsId, setExpandedQuestionsId] = useState<string | null>(null);
   const [savingPoolId, setSavingPoolId] = useState<string | null>(null);
   const [confirmClearOpen, setConfirmClearOpen] = useState(false);
+  const [isRefiningBatch, setIsRefiningBatch] = useState<boolean>(false);
+  const [refiningSingleId, setRefiningSingleId] = useState<string | null>(null);
 
   // Active Gemini keys count
   const activeGeminiKeys = getConfiguredGeminiKeys(config);
@@ -455,6 +459,66 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
     showToast("Cleared all generated research topics.", 'info');
   };
 
+  // Refine all current Discovery Lab generated topics into YouTube video concepts
+  const handleRefineAllGenerated = async () => {
+    if (!generatedIdeas.length) return;
+    if (!isAiActive) {
+      showToast("Please configure a Gemini API key to refine topics into YouTube angles.", 'error');
+      setShowKeyModal(true);
+      return;
+    }
+
+    setIsRefiningBatch(true);
+    try {
+      const res = await refineDiscoveryIdeasWithGeminiRotation(generatedIdeas, config);
+      if (res.success && res.refinedIdeas.length > 0) {
+        setGeneratedIdeas(res.refinedIdeas);
+        saveGeneratedIdeas(res.refinedIdeas);
+        showToast(
+          `✨ Refined all ${res.refinedIdeas.length} topics into YouTube video concepts with ${res.modelUsed || 'Gemini'} (Key #${res.keyUsedIndex})!`,
+          'success'
+        );
+      } else {
+        showToast(`Refinement failed: ${res.error || 'Unknown error'}`, 'error');
+      }
+    } catch (err: any) {
+      showToast(`Refinement error: ${err.message}`, 'error');
+    } finally {
+      setIsRefiningBatch(false);
+    }
+  };
+
+  // Refine a single generated topic idea into a YouTube video concept
+  const handleRefineSingleIdea = async (idea: GeneratedTopicIdea) => {
+    if (!isAiActive) {
+      showToast("Please configure a Gemini API key to refine topics into YouTube angles.", 'error');
+      setShowKeyModal(true);
+      return;
+    }
+
+    setRefiningSingleId(idea.id);
+    try {
+      const res = await refineSingleDiscoveryIdeaWithGeminiRotation(idea, config);
+      if (res.refinedIdea) {
+        setGeneratedIdeas(prev => {
+          const updated = prev.map(it => it.id === idea.id ? res.refinedIdea : it);
+          saveGeneratedIdeas(updated);
+          return updated;
+        });
+        showToast(
+          `✨ Refined "${res.refinedIdea.video_idea.slice(0, 36)}..." into a YouTube angle with ${res.modelUsed || 'Gemini'}!`,
+          'success'
+        );
+      } else {
+        showToast(`Refinement failed: ${res.error || 'Unknown error'}`, 'error');
+      }
+    } catch (err: any) {
+      showToast(`Refinement error: ${err.message}`, 'error');
+    } finally {
+      setRefiningSingleId(null);
+    }
+  };
+
   // Copy Topic Concept, Inquiry Questions, Reference Links & Standardized AI Research Prompt to Clipboard
   const handleCopyPrompt = async (idea: GeneratedTopicIdea) => {
     const promptText = formatDiscoveryIdeaCopyText(idea);
@@ -598,7 +662,13 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
               <ExternalLink className="w-3 h-3 text-neutral-500 group-hover:text-emerald-400 transition-colors" />
             </a>
 
-            <div className="flex items-center space-x-2 text-[11px] font-mono">
+            <div className="flex items-center space-x-2 text-[11px] font-mono flex-wrap gap-1">
+              {idea.ai_refined && (
+                <span className="px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/30 text-amber-300 font-bold flex items-center space-x-1">
+                  <Sparkles className="w-2.5 h-2.5 text-amber-400" />
+                  <span>AI Angle</span>
+                </span>
+              )}
               <span className="px-2 py-0.5 rounded-md bg-neutral-800/80 border border-neutral-700 text-emerald-400 font-semibold">
                 {idea.signature_format}
               </span>
@@ -607,6 +677,13 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
               </span>
             </div>
           </div>
+
+          {idea.content_angle && (
+            <div className="text-[11px] font-mono text-amber-300/90 flex items-center space-x-1 pt-0.5">
+              <span className="text-amber-500 font-bold">Angle:</span>
+              <span className="truncate italic font-medium">{idea.content_angle}</span>
+            </div>
+          )}
 
           {/* Video Concept Title */}
           <h3 className="text-base sm:text-lg font-bold text-white tracking-tight leading-snug">
@@ -721,7 +798,7 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
         </div>
 
         {/* Card Actions Footer */}
-        <div className="border-t border-neutral-800/80 pt-4 flex items-center justify-between gap-2">
+        <div className="border-t border-neutral-800/80 pt-4 flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
           
           {/* Copy Topic & Research Brief Button */}
           <button
@@ -746,9 +823,24 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
             )}
           </button>
 
+          {/* Single Idea Gemini Refinement Button */}
+          <button
+            onClick={() => handleRefineSingleIdea(idea)}
+            disabled={refiningSingleId === idea.id || !isAiActive}
+            className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border ${
+              isAiActive
+                ? 'bg-neutral-900 hover:bg-neutral-800 border-amber-500/30 text-amber-300 hover:border-amber-500/50'
+                : 'bg-neutral-900/50 border-neutral-800 text-neutral-500 cursor-not-allowed'
+            } disabled:opacity-50`}
+            title={isAiActive ? "Refine this topic with Gemini for a viral YouTube angle" : "Configure Gemini keys to enable refinement"}
+          >
+            <Sparkles className={`w-3.5 h-3.5 text-amber-400 ${refiningSingleId === idea.id ? 'animate-spin' : ''}`} />
+            <span>{refiningSingleId === idea.id ? 'Refining...' : (idea.ai_refined ? 'Re-roll Angle' : 'Refine Angle')}</span>
+          </button>
+
           {/* Add to Production Pool Button */}
           {idea.added_to_pool ? (
-            <span className="inline-flex items-center space-x-1 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono font-bold">
+            <span className="inline-flex items-center space-x-1 px-3 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-mono font-bold shrink-0">
               <CheckCircle2 className="w-3.5 h-3.5" />
               <span>In Production Pool</span>
             </span>
@@ -756,7 +848,7 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
             <button
               onClick={() => handleAddToPool(idea)}
               disabled={isSaving}
-              className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white text-xs font-bold transition-all shadow-sm shadow-emerald-950/50 disabled:opacity-50 cursor-pointer"
+              className="inline-flex items-center space-x-1.5 px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white text-xs font-bold transition-all shadow-sm shadow-emerald-950/50 disabled:opacity-50 cursor-pointer shrink-0"
               title="Permanently add to Cloudflare D1 Production Pool as a KS-P idea"
             >
               {isSaving ? (
@@ -1595,6 +1687,30 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
 
             {generatedIdeas.length > 0 && (
               <div className="flex items-center space-x-2 flex-wrap">
+                {/* Batch Refine YouTube Angles with Gemini */}
+                <button
+                  onClick={handleRefineAllGenerated}
+                  disabled={isRefiningBatch || !isAiActive}
+                  className={`inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer ${
+                    isAiActive
+                      ? 'bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-violet-950/50'
+                      : 'bg-neutral-900 text-neutral-500 border border-neutral-800 cursor-not-allowed'
+                  }`}
+                  title={isAiActive ? "Refine all generated topics with Gemini for YouTube video creation" : "Configure Gemini API Keys to enable refinement"}
+                >
+                  {isRefiningBatch ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+                      <span>Refining Angles...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
+                      <span>Refine All for YouTube ({generatedIdeas.length})</span>
+                    </>
+                  )}
+                </button>
+
                 {/* 2-Step Clear All Topics Button (Zero browser dialogs) */}
                 {!confirmClearOpen ? (
                   <button

@@ -37,6 +37,7 @@ interface DailyMixPageProps {
   preferredModel?: string;
   onSaveToNotes?: (idea: ProductionIdea) => void;
   onSaveAllToNotes?: (ideas: ProductionIdea[]) => void;
+  onRefineSingleTopic?: (item: BatchItem) => Promise<void>;
 }
 
 export const DailyMixPage: React.FC<DailyMixPageProps> = ({
@@ -60,7 +61,8 @@ export const DailyMixPage: React.FC<DailyMixPageProps> = ({
   geminiKeysCount = 0,
   preferredModel,
   onSaveToNotes,
-  onSaveAllToNotes
+  onSaveAllToNotes,
+  onRefineSingleTopic
 }) => {
   const [briefModalState, setBriefModalState] = useState<{ isOpen: boolean; idea: ProductionIdea | null }>({
     isOpen: false,
@@ -176,12 +178,12 @@ ${listText}
                   {isRefiningBatch ? (
                     <>
                       <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
-                      <span>Refining with Gemini...</span>
+                      <span>Refining YouTube Angles...</span>
                     </>
                   ) : (
                     <>
                       <Sparkles className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
-                      <span>Refine Batch (Gemini)</span>
+                      <span>Refine YouTube Angles (Gemini)</span>
                     </>
                   )}
                 </button>
@@ -238,6 +240,7 @@ ${listText}
                 onReplace={onReplace}
                 onOpenBrief={(idea) => setBriefModalState({ isOpen: true, idea })}
                 onSaveToNotes={onSaveToNotes}
+                onRefineSingle={onRefineSingleTopic}
               />
             ))}
           </div>
