@@ -745,12 +745,23 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
             </a>
 
             <div className="flex items-center space-x-2 text-[11px] font-mono flex-wrap gap-1">
-              {idea.ai_refined && (
-                <span className="px-2 py-0.5 rounded-md bg-amber-500/15 border border-amber-500/30 text-amber-300 font-bold flex items-center space-x-1">
-                  <Sparkles className="w-2.5 h-2.5 text-amber-400" />
-                  <span>AI Angle</span>
-                </span>
-              )}
+              {/* Quick Gemini Refine Trigger in Card Header */}
+              <button
+                onClick={() => handleRefineSingleIdea(idea)}
+                disabled={refiningSingleId === idea.id}
+                className={`px-2 py-0.5 rounded-md font-bold flex items-center space-x-1 transition-all cursor-pointer border ${
+                  idea.ai_refined
+                    ? 'bg-amber-500/15 border-amber-500/40 text-amber-300 hover:bg-amber-500/25'
+                    : isAiActive
+                      ? 'bg-violet-600/20 hover:bg-violet-600/30 border-violet-500/40 text-violet-200'
+                      : 'bg-violet-950/30 hover:bg-violet-900/40 border-violet-500/30 text-violet-300'
+                }`}
+                title={isAiActive ? "Refine this topic with Gemini for a viral YouTube angle" : "Click to configure Gemini keys and enable refinement"}
+              >
+                <Sparkles className={`w-2.5 h-2.5 text-amber-400 fill-amber-400 ${refiningSingleId === idea.id ? 'animate-spin' : ''}`} />
+                <span>{refiningSingleId === idea.id ? 'Refining...' : (idea.ai_refined ? '✨ Gemini Re-roll' : '✨ Gemini Refine')}</span>
+              </button>
+
               <span className="px-2 py-0.5 rounded-md bg-neutral-800/80 border border-neutral-700 text-emerald-400 font-semibold">
                 {idea.signature_format}
               </span>
@@ -909,15 +920,15 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
           <button
             onClick={() => handleRefineSingleIdea(idea)}
             disabled={refiningSingleId === idea.id}
-            className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border ${
+            className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border ${
               isAiActive
-                ? 'bg-gradient-to-r from-violet-950/70 to-indigo-950/70 hover:from-violet-900/80 hover:to-indigo-900/80 border-violet-500/40 text-violet-200 hover:border-violet-500/70 shadow-sm'
-                : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-800 text-neutral-400 hover:text-white'
+                ? 'bg-gradient-to-r from-violet-900/60 to-indigo-900/60 hover:from-violet-800/80 hover:to-indigo-800/80 border-violet-500/50 text-violet-100 hover:border-violet-400 shadow-md shadow-violet-950/40'
+                : 'bg-violet-950/40 hover:bg-violet-900/50 border-violet-500/40 text-violet-200 hover:text-white'
             }`}
             title={isAiActive ? "Refine this topic with Gemini for a viral YouTube angle" : "Click to configure Gemini keys and enable refinement"}
           >
-            <Sparkles className={`w-3.5 h-3.5 ${isAiActive ? 'text-amber-400 fill-amber-400' : 'text-neutral-500'} ${refiningSingleId === idea.id ? 'animate-spin' : ''}`} />
-            <span>{refiningSingleId === idea.id ? 'Refining Angle...' : (idea.ai_refined ? '✨ Re-roll YouTube Angle' : '✨ Refine YouTube Angle')}</span>
+            <Sparkles className={`w-3.5 h-3.5 text-amber-400 fill-amber-400 ${refiningSingleId === idea.id ? 'animate-spin' : ''}`} />
+            <span>{refiningSingleId === idea.id ? 'Refining Angle...' : (idea.ai_refined ? '✨ Gemini Re-roll Angle' : '✨ Gemini Refine Angle')}</span>
           </button>
 
           {/* Add to Production Pool Button */}

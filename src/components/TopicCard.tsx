@@ -143,7 +143,7 @@ export const TopicCard: React.FC<TopicCardProps> = ({
               title="Refine this individual topic into a YouTube angle with Gemini"
             >
               <Sparkles className={`w-3 h-3 text-amber-400 ${isRefiningSingle ? 'animate-spin' : ''}`} />
-              <span>{isRefiningSingle ? 'Refining...' : (idea.ai_refined ? 'Re-roll' : 'AI Refine')}</span>
+              <span>{isRefiningSingle ? 'Refining...' : (idea.ai_refined ? '✨ Gemini Re-roll' : '✨ Gemini Refine')}</span>
             </button>
           )}
 
