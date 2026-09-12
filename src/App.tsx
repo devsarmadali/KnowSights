@@ -492,6 +492,8 @@ export const App: React.FC = () => {
 
             {activeTab === 'discovery' && (
               <DiscoveryLabPage 
+                config={config}
+                setConfig={setConfig}
                 onRefreshStats={refreshStats} 
                 showToast={showToast} 
               />

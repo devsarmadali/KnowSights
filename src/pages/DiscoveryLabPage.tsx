@@ -128,11 +128,15 @@ function formatGeneratedTime(timestamp?: number | string): { fullDate: string; r
 }
 
 interface DiscoveryLabPageProps {
+  config?: AppConfig;
+  setConfig?: (cfg: AppConfig) => void;
   onRefreshStats: () => Promise<void>;
   showToast: (message: string, type?: 'success' | 'error' | 'info') => void;
 }
 
 export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
+  config: propConfig,
+  setConfig: propSetConfig,
   onRefreshStats,
   showToast
 }) => {
@@ -158,12 +162,27 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
   const [selectedTierFilter, setSelectedTierFilter] = useState<string>('all');
 
   // Gemini Configuration State
-  const [config, setConfigState] = useState<AppConfig>(loadConfig());
-  const [key1, setKey1] = useState(config.gemini_api_key_1 || '');
-  const [key2, setKey2] = useState(config.gemini_api_key_2 || '');
-  const [key3, setKey3] = useState(config.gemini_api_key_3 || '');
+  const [config, setConfigState] = useState<AppConfig>(propConfig || loadConfig());
+  const [key1, setKey1] = useState((propConfig || config).gemini_api_key_1 || '');
+  const [key2, setKey2] = useState((propConfig || config).gemini_api_key_2 || '');
+  const [key3, setKey3] = useState((propConfig || config).gemini_api_key_3 || '');
   const [keyTestLoading, setKeyTestLoading] = useState<number | null>(null);
   const [keyTestResult, setKeyTestResult] = useState<{ [key: number]: string }>({});
+
+  // Auto-Refine Toggle (Defaults to ON if Gemini keys are present)
+  const [autoRefineEnabled, setAutoRefineEnabled] = useState<boolean>(() => {
+    return getConfiguredGeminiKeys(propConfig || config).length > 0;
+  });
+
+  // Sync with propConfig if updated from Settings or TopicMixer
+  React.useEffect(() => {
+    if (propConfig) {
+      setConfigState(propConfig);
+      setKey1(propConfig.gemini_api_key_1 || '');
+      setKey2(propConfig.gemini_api_key_2 || '');
+      setKey3(propConfig.gemini_api_key_3 || '');
+    }
+  }, [propConfig]);
 
   // Generation, Persistent Ideas & Research Cycle State
   const [isFetching, setIsFetching] = useState<boolean>(false);
@@ -240,7 +259,17 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
     setSelectedGroup(source.group);
     setActiveView('generator');
     setTimeout(() => {
-      handleFetchAndGenerateCustom([source]);
+      handleFetchAndGenerateCustom([source], false);
+    }, 100);
+  };
+
+  // Quick single source generator with instant Gemini YouTube refinement
+  const handleScanSingleSourceAndRefine = (source: DiscoverySource) => {
+    setSelectedSourceIds([source.id]);
+    setSelectedGroup(source.group);
+    setActiveView('generator');
+    setTimeout(() => {
+      handleFetchAndGenerateCustom([source], true);
     }, 100);
   };
 
@@ -264,7 +293,31 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
     setSelectedSourceIds([tempSource.id]);
     setActiveView('generator');
     setTimeout(() => {
-      handleFetchAndGenerateCustom([tempSource]);
+      handleFetchAndGenerateCustom([tempSource], false);
+    }, 100);
+  };
+
+  // Quick institutional archive scan with instant Gemini YouTube refinement
+  const handleScanInstitutionalArchiveAndRefine = (repo: InstitutionalRepository) => {
+    const tempSource: DiscoverySource = {
+      id: repo.id,
+      name: repo.name,
+      type: repo.type,
+      category: repo.category,
+      group: 'history',
+      bestFor: repo.purpose,
+      officialUrl: repo.officialUrl,
+      feedUrl: repo.searchPattern || `https://news.google.com/rss/search?q=site:${new URL(repo.officialUrl).hostname}&hl=en-US&gl=US&ceid=US:en`,
+      searchFeedPattern: repo.searchPattern,
+      subjectMapping: repo.subjectMapping,
+      topicFamily: repo.topicFamily,
+      defaultFormat: repo.defaultFormat
+    };
+
+    setSelectedSourceIds([tempSource.id]);
+    setActiveView('generator');
+    setTimeout(() => {
+      handleFetchAndGenerateCustom([tempSource], true);
     }, 100);
   };
 
@@ -278,6 +331,9 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
     };
     saveConfig(updated);
     setConfigState(updated);
+    if (propSetConfig) {
+      propSetConfig(updated);
+    }
     setShowKeyModal(false);
     const count = getConfiguredGeminiKeys(updated).length;
     if (count > 0) {
@@ -303,7 +359,8 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
   };
 
   // Main Fetch & Idea Generation Engine: Strictly 2 Resources & Max 4 Topics per run
-  const handleFetchAndGenerateCustom = async (sourcesToUse?: DiscoverySource[]) => {
+  const handleFetchAndGenerateCustom = async (sourcesToUse?: DiscoverySource[], autoRefineOverride?: boolean) => {
+    const shouldAutoRefine = autoRefineOverride !== undefined ? autoRefineOverride : autoRefineEnabled;
     let targetSources: DiscoverySource[] = [];
     const activeSelected = DISCOVERY_SOURCES.filter(s => selectedSourceIds.includes(s.id));
 
@@ -422,13 +479,33 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
       setCycleState(nextCycleState);
       saveResearchCycle(nextCycleState);
 
-      // 2. Set and persist current run's 4 generated topics
-      setGeneratedIdeas(finalTopics);
-      saveGeneratedIdeas(finalTopics);
+      // 2. Auto-Refine with Gemini for YouTube angles if enabled and keys exist
+      let displayTopics = finalTopics;
+      if (shouldAutoRefine && useAi && finalTopics.length > 0) {
+        setFetchProgress({
+          current: targetSources.length,
+          total: targetSources.length,
+          sourceName: "✨ Synthesizing viral YouTube angles with Gemini multi-key rotation...",
+          aiActive: true
+        });
+        try {
+          const refineRes = await refineDiscoveryIdeasWithGeminiRotation(finalTopics, currentConfig);
+          if (refineRes.success && refineRes.refinedIdeas.length > 0) {
+            displayTopics = refineRes.refinedIdeas;
+          }
+        } catch (rErr) {
+          console.warn("Auto-refinement pass warning:", rErr);
+        }
+      }
 
-      if (finalTopics.length > 0) {
+      // 3. Set and persist current run's generated topics
+      setGeneratedIdeas(displayTopics);
+      saveGeneratedIdeas(displayTopics);
+
+      if (displayTopics.length > 0) {
+        const refinedCount = displayTopics.filter(t => t.ai_refined).length;
         showToast(
-          `Researched 2 sources (${targetSources.map(s => s.name).join(' & ')}). Generated ${finalTopics.length} fresh topic ideas!`,
+          `Researched 2 sources (${targetSources.map(s => s.name).join(' & ')}). Generated ${displayTopics.length} fresh topics${refinedCount > 0 ? ` with ${refinedCount} YouTube angles` : ''}!`,
           'success'
         );
       } else {
@@ -443,6 +520,7 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
   };
 
   const handleFetchAndGenerate = () => handleFetchAndGenerateCustom();
+  const handleFetchAndRefine = () => handleFetchAndGenerateCustom(undefined, true);
 
   // Reset Research Cycle Loop to start
   const handleResetCycle = () => {
@@ -461,7 +539,11 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
 
   // Refine all current Discovery Lab generated topics into YouTube video concepts
   const handleRefineAllGenerated = async () => {
-    if (!generatedIdeas.length) return;
+    if (!generatedIdeas.length) {
+      showToast("No generated topics loaded yet. Scanning 2 sources & refining with Gemini...", 'info');
+      await handleFetchAndRefine();
+      return;
+    }
     if (!isAiActive) {
       showToast("Please configure a Gemini API key to refine topics into YouTube angles.", 'error');
       setShowKeyModal(true);
@@ -826,16 +908,16 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
           {/* Single Idea Gemini Refinement Button */}
           <button
             onClick={() => handleRefineSingleIdea(idea)}
-            disabled={refiningSingleId === idea.id || !isAiActive}
-            className={`flex items-center space-x-1.5 px-3 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border ${
+            disabled={refiningSingleId === idea.id}
+            className={`flex items-center space-x-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer border ${
               isAiActive
-                ? 'bg-neutral-900 hover:bg-neutral-800 border-amber-500/30 text-amber-300 hover:border-amber-500/50'
-                : 'bg-neutral-900/50 border-neutral-800 text-neutral-500 cursor-not-allowed'
-            } disabled:opacity-50`}
-            title={isAiActive ? "Refine this topic with Gemini for a viral YouTube angle" : "Configure Gemini keys to enable refinement"}
+                ? 'bg-gradient-to-r from-violet-950/70 to-indigo-950/70 hover:from-violet-900/80 hover:to-indigo-900/80 border-violet-500/40 text-violet-200 hover:border-violet-500/70 shadow-sm'
+                : 'bg-neutral-900 hover:bg-neutral-800 border-neutral-800 text-neutral-400 hover:text-white'
+            }`}
+            title={isAiActive ? "Refine this topic with Gemini for a viral YouTube angle" : "Click to configure Gemini keys and enable refinement"}
           >
-            <Sparkles className={`w-3.5 h-3.5 text-amber-400 ${refiningSingleId === idea.id ? 'animate-spin' : ''}`} />
-            <span>{refiningSingleId === idea.id ? 'Refining...' : (idea.ai_refined ? 'Re-roll Angle' : 'Refine Angle')}</span>
+            <Sparkles className={`w-3.5 h-3.5 ${isAiActive ? 'text-amber-400 fill-amber-400' : 'text-neutral-500'} ${refiningSingleId === idea.id ? 'animate-spin' : ''}`} />
+            <span>{refiningSingleId === idea.id ? 'Refining Angle...' : (idea.ai_refined ? '✨ Re-roll YouTube Angle' : '✨ Refine YouTube Angle')}</span>
           </button>
 
           {/* Add to Production Pool Button */}
@@ -906,6 +988,25 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
                   {isAiActive ? `Gemini AI (${activeGeminiKeys.length} Keys Active)` : 'Set Gemini Keys'}
                 </span>
                 <Key className="w-3 h-3 text-neutral-500 ml-1" />
+              </button>
+
+              {/* Quick Gemini Refine Action */}
+              <button
+                onClick={handleRefineAllGenerated}
+                disabled={isRefiningBatch}
+                className={`inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl border text-xs font-mono font-bold transition-all cursor-pointer ${
+                  isAiActive
+                    ? 'bg-gradient-to-r from-violet-600/30 via-indigo-600/30 to-purple-600/30 hover:bg-violet-600/50 border-violet-500/40 text-violet-200 shadow-sm shadow-violet-950/40'
+                    : 'bg-neutral-900 border-neutral-800 text-neutral-400 hover:text-white'
+                }`}
+                title={isAiActive ? "Refine research topics into viral YouTube concepts with Gemini" : "Click to configure Gemini keys and enable refinement"}
+              >
+                <Sparkles className={`w-3.5 h-3.5 ${isAiActive ? 'text-amber-300 fill-amber-300' : 'text-neutral-500'} ${isRefiningBatch ? 'animate-spin' : ''}`} />
+                <span>
+                  {isRefiningBatch 
+                    ? 'Refining Angles...' 
+                    : (generatedIdeas.length > 0 ? `Refine ${generatedIdeas.length} for YouTube` : 'Refine with Gemini')}
+                </span>
               </button>
 
               {/* 3-View Switcher */}
@@ -987,8 +1088,8 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
 
                 <button
                   onClick={handleFetchAndGenerate}
-                  disabled={isFetching}
-                  className="inline-flex items-center justify-center space-x-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-semibold text-sm shadow-lg shadow-emerald-950/60 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  disabled={isFetching || isRefiningBatch}
+                  className="inline-flex items-center justify-center space-x-2 px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-semibold text-sm shadow-lg shadow-emerald-950/60 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                   title="Research next 2 publication resources in the round-robin cycle"
                 >
                   {isFetching ? (
@@ -1002,6 +1103,73 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
                       <span>Fetch Next 2 Sources (Batch {currentBatchNumber}/{totalBatches})</span>
                     </>
                   )}
+                </button>
+
+                {/* Primary Gemini Refinement Button in Generator Controls Bar */}
+                <button
+                  onClick={handleRefineAllGenerated}
+                  disabled={isRefiningBatch || isFetching}
+                  className={`inline-flex items-center justify-center space-x-2 px-5 py-3 rounded-2xl font-bold text-sm shadow-lg transition-all cursor-pointer ${
+                    isAiActive
+                      ? 'bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-violet-950/60 border border-violet-400/30 ring-1 ring-violet-500/20'
+                      : 'bg-neutral-900 hover:bg-neutral-800 border border-neutral-700 text-neutral-300'
+                  } disabled:opacity-50`}
+                  title={
+                    isAiActive
+                      ? (generatedIdeas.length > 0 
+                          ? `Refine all ${generatedIdeas.length} topics into viral YouTube video concepts with Gemini`
+                          : "Scan 2 sources and refine into YouTube concepts with Gemini")
+                      : "Configure Gemini API keys to enable refinement"
+                  }
+                >
+                  {isRefiningBatch ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin text-white" />
+                      <span>Refining YouTube Angles...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 text-amber-300 fill-amber-300" />
+                      <span>
+                        {generatedIdeas.length > 0 
+                          ? `Refine with Gemini (${generatedIdeas.length})` 
+                          : 'Fetch & Refine with Gemini'}
+                      </span>
+                    </>
+                  )}
+                </button>
+
+                {/* Auto-Refine Toggle */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (!isAiActive) {
+                      setShowKeyModal(true);
+                      showToast("Configure Gemini API keys to enable automatic YouTube angle refinement.", 'info');
+                      return;
+                    }
+                    setAutoRefineEnabled(!autoRefineEnabled);
+                    showToast(
+                      !autoRefineEnabled
+                        ? "Auto-refine ON: Next fetched topics will be refined into YouTube concepts automatically."
+                        : "Auto-refine OFF: Topics will use raw publication concepts.",
+                      'info'
+                    );
+                  }}
+                  className={`inline-flex items-center space-x-1.5 px-3.5 py-3 rounded-2xl border text-xs font-semibold transition-all cursor-pointer ${
+                    autoRefineEnabled && isAiActive
+                      ? 'bg-violet-950/50 border-violet-500/40 text-violet-200 shadow-sm'
+                      : 'bg-neutral-900/80 border-neutral-800 text-neutral-400 hover:text-neutral-200'
+                  }`}
+                  title="Automatically refine generated topics into YouTube angles using Gemini on fetch"
+                >
+                  <Sparkles className={`w-3.5 h-3.5 ${autoRefineEnabled && isAiActive ? 'text-amber-400 fill-amber-400 animate-pulse' : 'text-neutral-500'}`} />
+                  <span className="hidden lg:inline">Auto-Refine</span>
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono font-bold ${
+                    autoRefineEnabled && isAiActive ? 'bg-violet-600 text-white' : 'bg-neutral-800 text-neutral-400'
+                  }`}>
+                    {autoRefineEnabled && isAiActive ? 'ON' : 'OFF'}
+                  </span>
                 </button>
 
                 <button
@@ -1307,14 +1475,14 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
                           </div>
                         </div>
 
-                        <div className="border-t border-neutral-800/80 pt-3 flex items-center justify-between gap-2">
+                        <div className="border-t border-neutral-800/80 pt-3 flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
                           <a
                             href={source.officialUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex-1 inline-flex items-center justify-center space-x-1.5 px-3 py-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 text-xs font-mono text-neutral-300 hover:text-emerald-300 transition-all group"
                           >
-                            <span>Visit Publication</span>
+                            <span>Visit</span>
                             <ExternalLink className="w-3 h-3 text-neutral-500 group-hover:text-emerald-400" />
                           </a>
 
@@ -1324,7 +1492,16 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
                             title="Fetch latest articles from this source only"
                           >
                             <Zap className="w-3 h-3 text-emerald-400" />
-                            <span>Scan Source</span>
+                            <span>Scan</span>
+                          </button>
+
+                          <button
+                            onClick={() => handleScanSingleSourceAndRefine(source)}
+                            className="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/40 text-violet-200 text-xs font-bold transition-all cursor-pointer"
+                            title="Fetch articles from this source and immediately refine into YouTube concepts with Gemini"
+                          >
+                            <Sparkles className="w-3 h-3 text-amber-300 fill-amber-300" />
+                            <span>✨ Scan & Refine</span>
                           </button>
                         </div>
                       </div>
@@ -1495,24 +1672,33 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
                         </div>
                       </div>
 
-                      <div className="border-t border-neutral-800/80 pt-3 flex items-center justify-between gap-2">
+                      <div className="border-t border-neutral-800/80 pt-3 flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
                         <a
                           href={repo.officialUrl}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex-1 inline-flex items-center justify-center space-x-1.5 px-3 py-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 border border-neutral-800 text-xs font-mono text-neutral-300 hover:text-blue-300 transition-all group"
                         >
-                          <span>Visit Official Archive</span>
+                          <span>Visit Archive</span>
                           <ExternalLink className="w-3 h-3 text-neutral-500 group-hover:text-blue-400" />
                         </a>
 
                         <button
                           onClick={() => handleScanInstitutionalArchive(repo)}
-                          className="inline-flex items-center space-x-1.5 px-3 py-2 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-300 text-xs font-bold transition-all cursor-pointer"
+                          className="inline-flex items-center space-x-1.5 px-2.5 py-2 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 text-blue-300 text-xs font-bold transition-all cursor-pointer"
                           title="Generate ideas from this institutional repository"
                         >
                           <Zap className="w-3 h-3 text-blue-400" />
-                          <span>Scan Archive</span>
+                          <span>Scan</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleScanInstitutionalArchiveAndRefine(repo)}
+                          className="inline-flex items-center space-x-1.5 px-2.5 py-2 rounded-xl bg-violet-600/20 hover:bg-violet-600/30 border border-violet-500/40 text-violet-200 text-xs font-bold transition-all cursor-pointer"
+                          title="Scan this repository and refine into YouTube concepts with Gemini"
+                        >
+                          <Sparkles className="w-3 h-3 text-amber-300 fill-amber-300" />
+                          <span>✨ Scan & Refine</span>
                         </button>
                       </div>
                     </div>
@@ -1685,108 +1871,125 @@ export const DiscoveryLabPage: React.FC<DiscoveryLabPageProps> = ({
               )}
             </div>
 
-            {generatedIdeas.length > 0 && (
-              <div className="flex items-center space-x-2 flex-wrap">
-                {/* Batch Refine YouTube Angles with Gemini */}
-                <button
-                  onClick={handleRefineAllGenerated}
-                  disabled={isRefiningBatch || !isAiActive}
-                  className={`inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer ${
-                    isAiActive
-                      ? 'bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-violet-950/50'
-                      : 'bg-neutral-900 text-neutral-500 border border-neutral-800 cursor-not-allowed'
-                  }`}
-                  title={isAiActive ? "Refine all generated topics with Gemini for YouTube video creation" : "Configure Gemini API Keys to enable refinement"}
-                >
-                  {isRefiningBatch ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
-                      <span>Refining Angles...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
-                      <span>Refine All for YouTube ({generatedIdeas.length})</span>
-                    </>
-                  )}
-                </button>
-
-                {/* 2-Step Clear All Topics Button (Zero browser dialogs) */}
-                {!confirmClearOpen ? (
-                  <button
-                    onClick={() => setConfirmClearOpen(true)}
-                    className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-neutral-900 hover:bg-rose-950/40 border border-neutral-800 hover:border-rose-800/50 text-neutral-400 hover:text-rose-300 text-xs font-mono transition-all cursor-pointer"
-                    title="Clear all generated topics from storage"
-                  >
-                    <Trash2 className="w-3.5 h-3.5 text-neutral-500" />
-                    <span>Clear All ({generatedIdeas.length})</span>
-                  </button>
+            <div className="flex items-center space-x-2 flex-wrap">
+              {/* Batch Refine YouTube Angles with Gemini - ALWAYS VISIBLE */}
+              <button
+                onClick={handleRefineAllGenerated}
+                disabled={isRefiningBatch}
+                className={`inline-flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer ${
+                  isAiActive
+                    ? 'bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 hover:from-violet-500 hover:to-indigo-500 text-white shadow-violet-950/50 border border-violet-400/30 ring-1 ring-violet-500/20'
+                    : 'bg-neutral-900 text-neutral-300 hover:text-white border border-neutral-700'
+                }`}
+                title={
+                  isAiActive 
+                    ? (generatedIdeas.length > 0 
+                        ? `Refine all ${generatedIdeas.length} topics with Gemini for YouTube video creation` 
+                        : "Fetch latest discoveries and refine into YouTube concepts with Gemini")
+                    : "Configure Gemini API Keys to enable refinement"
+                }
+              >
+                {isRefiningBatch ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-white" />
+                    <span>Refining Angles...</span>
+                  </>
                 ) : (
-                  <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-xl bg-rose-500/15 border border-rose-500/30 text-xs font-mono animate-in fade-in duration-150">
-                    <span className="text-rose-300 font-semibold">Clear {generatedIdeas.length} ideas?</span>
+                  <>
+                    <Sparkles className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
+                    <span>{generatedIdeas.length > 0 ? `Refine All for YouTube (${generatedIdeas.length})` : 'Refine with Gemini'}</span>
+                  </>
+                )}
+              </button>
+
+              {generatedIdeas.length > 0 && (
+                <>
+                  {/* 2-Step Clear All Topics Button (Zero browser dialogs) */}
+                  {!confirmClearOpen ? (
                     <button
-                      onClick={handleConfirmClearGenerated}
-                      className="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-[11px] shadow-sm transition-all cursor-pointer"
+                      onClick={() => setConfirmClearOpen(true)}
+                      className="inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-xl bg-neutral-900 hover:bg-rose-950/40 border border-neutral-800 hover:border-rose-800/50 text-neutral-400 hover:text-rose-300 text-xs font-mono transition-all cursor-pointer"
+                      title="Clear all generated topics from storage"
                     >
-                      Yes, Clear
+                      <Trash2 className="w-3.5 h-3.5 text-neutral-500" />
+                      <span>Clear All ({generatedIdeas.length})</span>
+                    </button>
+                  ) : (
+                    <div className="inline-flex items-center space-x-2 px-3 py-1 rounded-xl bg-rose-500/15 border border-rose-500/30 text-xs font-mono animate-in fade-in duration-150">
+                      <span className="text-rose-300 font-semibold">Clear {generatedIdeas.length} ideas?</span>
+                      <button
+                        onClick={handleConfirmClearGenerated}
+                        className="px-2.5 py-1 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-bold text-[11px] shadow-sm transition-all cursor-pointer"
+                      >
+                        Yes, Clear
+                      </button>
+                      <button
+                        onClick={() => setConfirmClearOpen(false)}
+                        className="px-2.5 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-[11px] font-semibold transition-all cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  )}
+
+                  {/* View Switcher: Categorized Sections vs Flat Grid */}
+                  <div className="bg-neutral-900 p-1 rounded-xl border border-neutral-800 flex items-center space-x-1 text-xs">
+                    <button
+                      onClick={() => setIdeaViewMode('categorized')}
+                      className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
+                        ideaViewMode === 'categorized'
+                          ? 'bg-neutral-800 text-emerald-400 shadow-sm'
+                          : 'text-neutral-400 hover:text-white'
+                      }`}
+                    >
+                      <FolderOpen className="w-3.5 h-3.5" />
+                      <span>Classified Sections ({categorizedIdeas.length})</span>
                     </button>
                     <button
-                      onClick={() => setConfirmClearOpen(false)}
-                      className="px-2.5 py-1 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-[11px] font-semibold transition-all cursor-pointer"
+                      onClick={() => setIdeaViewMode('flat')}
+                      className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
+                        ideaViewMode === 'flat'
+                          ? 'bg-neutral-800 text-white shadow-sm'
+                          : 'text-neutral-400 hover:text-white'
+                      }`}
                     >
-                      Cancel
+                      <LayoutGrid className="w-3.5 h-3.5" />
+                      <span>Flat Grid</span>
                     </button>
                   </div>
-                )}
-
-                {/* View Switcher: Categorized Sections vs Flat Grid */}
-                <div className="bg-neutral-900 p-1 rounded-xl border border-neutral-800 flex items-center space-x-1 text-xs">
-                  <button
-                    onClick={() => setIdeaViewMode('categorized')}
-                    className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
-                      ideaViewMode === 'categorized'
-                        ? 'bg-neutral-800 text-emerald-400 shadow-sm'
-                        : 'text-neutral-400 hover:text-white'
-                    }`}
-                  >
-                    <FolderOpen className="w-3.5 h-3.5" />
-                    <span>Classified Sections ({categorizedIdeas.length})</span>
-                  </button>
-                  <button
-                    onClick={() => setIdeaViewMode('flat')}
-                    className={`flex items-center space-x-1.5 px-3 py-1.5 rounded-lg font-semibold transition-all cursor-pointer ${
-                      ideaViewMode === 'flat'
-                        ? 'bg-neutral-800 text-white shadow-sm'
-                        : 'text-neutral-400 hover:text-white'
-                    }`}
-                  >
-                    <LayoutGrid className="w-3.5 h-3.5" />
-                    <span>Flat Grid</span>
-                  </button>
-                </div>
-              </div>
-            )}
+                </>
+              )}
+            </div>
           </div>
 
           {/* Empty State */}
           {generatedIdeas.length === 0 && !isFetching && (
-            <div className="glass-panel p-12 rounded-3xl border border-neutral-800 text-center space-y-4">
+            <div className="glass-panel p-12 rounded-3xl border border-neutral-800 text-center space-y-5">
               <div className="w-12 h-12 rounded-2xl bg-neutral-900 border border-neutral-800 flex items-center justify-center mx-auto text-emerald-400">
                 <Compass className="w-6 h-6" />
               </div>
               <div>
                 <h3 className="text-base font-bold text-white">No Topic Ideas Generated Yet</h3>
                 <p className="text-xs text-neutral-400 mt-1 max-w-md mx-auto">
-                  Click "Fetch & Generate" above to scan the {DISCOVERY_SOURCES.length} publications for breaking findings, or enter a specific search query.
+                  Click "Fetch Next 2 Sources" above to scan publications, or fetch and refine directly with Gemini for instant YouTube video angles.
                 </p>
               </div>
-              <button
-                onClick={handleFetchAndGenerate}
-                className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-all shadow-md shadow-emerald-950/50"
-              >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Fetch Latest Discoveries Now</span>
-              </button>
+              <div className="flex items-center justify-center space-x-3 flex-wrap gap-y-2 pt-1">
+                <button
+                  onClick={handleFetchAndGenerate}
+                  className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-all shadow-md shadow-emerald-950/50 cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Fetch Latest Discoveries</span>
+                </button>
+                <button
+                  onClick={handleFetchAndRefine}
+                  className="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-violet-600 via-indigo-600 to-purple-600 hover:from-violet-500 hover:to-indigo-500 text-white font-semibold text-xs transition-all shadow-md shadow-violet-950/60 border border-violet-400/30 cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
+                  <span>✨ Fetch & Refine with Gemini (YouTube Angles)</span>
+                </button>
+              </div>
             </div>
           )}
 
