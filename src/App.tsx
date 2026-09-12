@@ -39,12 +39,27 @@ import {
 
 export const SPREADSHEET_ID = '1HB4Zxg9qXzWVKyjAzSoTPHadPIVNZitojfaR0qd601w';
 
+export const DEFAULT_CURRICULUM_SUBJECTS: string[] = [
+  'History & Civilizations',
+  'Artificial Intelligence',
+  'Current Affairs',
+  'Fitness',
+  'General Knowledge',
+  'Geography & Countries',
+  'Health & Human Body',
+  'Interesting Facts',
+  'Science & Discoveries',
+  'Space & Astronomy',
+  'Technology & Future Innovations',
+  'Visualized Concepts, Rankings & Timelines'
+];
+
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'mix' | 'browse' | 'discovery' | 'notes' | 'settings'>('mix');
   const [config, setConfig] = useState<AppConfig>(loadConfig());
   const [currentBatch, setCurrentBatch] = useState<DailyBatch | null>(null);
   const [stats, setStats] = useState<SystemStats | null>(null);
-  const [subjectsList, setSubjectsList] = useState<string[]>([]);
+  const [subjectsList, setSubjectsList] = useState<string[]>(DEFAULT_CURRICULUM_SUBJECTS);
   const [notesCount, setNotesCount] = useState<number>(() => {
     return getLocalNotes().length;
   });
@@ -73,7 +88,7 @@ export const App: React.FC = () => {
   // Mixer Controls State
   const [mode, setMode] = useState<SelectionMode>((config.default_mode as SelectionMode) || 'BALANCED');
   const [size, setSize] = useState<number>(config.daily_mix_size || 12);
-  const [subjectFilter, setSubjectFilter] = useState<string>('');
+  const [subjectFilter, setSubjectFilter] = useState<string>('History & Civilizations');
   
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);

@@ -168,6 +168,11 @@ export const BatchControls: React.FC<BatchControlsProps> = ({
                 className="w-full bg-[#0d1118] text-neutral-100 border border-white/[0.1] rounded-xl px-3.5 py-2 text-xs font-medium appearance-none focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 pr-8 transition-colors cursor-pointer"
               >
                 <option value="">All Subjects {subjectsList.length > 0 ? `(${subjectsList.length} Disciplines)` : '(Broad Mix)'}</option>
+                {subjectFilter && !subjectsList.includes(subjectFilter) && (
+                  <option value={subjectFilter}>
+                    {subjectFilter}
+                  </option>
+                )}
                 {subjectsList.map((s) => (
                   <option key={s} value={s}>
                     {s}
