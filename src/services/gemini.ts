@@ -1,5 +1,6 @@
 import { AppConfig, DiscoveryArticle, DiscoverySource, GeneratedTopicIdea, BatchItem, ProductionIdea } from '../types';
 import { loadConfig } from './api';
+import { buildStandardizedResearchPrompt } from '../utils/researchPrompt';
 
 export interface GeminiRotationResult {
   success: boolean;
@@ -215,6 +216,24 @@ Return a strictly valid JSON object matching this schema with NO markdown code f
         const cleaned = rawText.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
         const parsed = JSON.parse(cleaned);
 
+        const initialPrompt = buildStandardizedResearchPrompt({
+          topic: parsed.video_idea || article.title,
+          hook: parsed.curiosity_hook,
+          angle: parsed.content_angle,
+          subject: source.subjectMapping,
+          topicFamily: source.topicFamily,
+          format: parsed.signature_format || source.defaultFormat || 'SF04 — Case Study Breakdown',
+          overview: parsed.brief_overview || `${source.name} reporting on "${article.title}".`,
+          keyPoints: parsed.brief_key_points,
+          visualizationDirection: parsed.visualization_direction,
+          sources: `Primary publication: ${source.name} (${source.officialUrl}). Article link: ${article.link || source.officialUrl}`,
+          coreQuestions: (parsed.core_questions && parsed.core_questions.length === 3) ? parsed.core_questions : undefined,
+          articleTitle: article.title,
+          articleUrl: article.link || source.officialUrl,
+          authorityName: source.name,
+          originalSeed: article.title
+        });
+
         const generated: GeneratedTopicIdea = {
           id: `GEN-AI-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
           original_video_idea: article.title,
@@ -249,6 +268,8 @@ Return a strictly valid JSON object matching this schema with NO markdown code f
           freshness_class: 'Recent Publication (AI Curated)',
           visualization_direction: parsed.visualization_direction || `Incorporate archival scans, 3D maps, and visual motion graphics from ${source.name}.`,
           source_family_guidance: `Primary publication: ${source.name} (${source.officialUrl}). Article link: ${article.link || source.officialUrl}. AI analyzed (${model}) from live publication stream.`,
+          starting_clues: `${source.name} reporting archive (${source.officialUrl}). Lead article: "${article.title}".`,
+          research_prompt: initialPrompt,
           added_to_pool: false,
           ai_refined: true,
           generated_at: new Date().toISOString(),
@@ -314,8 +335,8 @@ export async function refineBatchWithGeminiRotation(
     current_format: it.idea.signature_format || "Standard"
   }));
 
-  const prompt = `You are KnowSights' Senior YouTube Content Strategist and Video Topic Architect.
-Transform this batch of ${items.length} academic/curriculum topics into high-retention, curiosity-driven YouTube educational video concepts and rich content resources.
+  const prompt = `You are KnowSights' Senior YouTube Content Strategist, Investigative Researcher, and Video Topic Architect.
+Transform this batch of ${items.length} academic/curriculum topics into high-retention, curiosity-driven YouTube educational video concepts and generate specific deep research parameters for each item.
 
 CORE OPERATIONAL DIRECTIVES:
 1. FULL EDITORIAL FREEDOM TO RADICALLY PIVOT, MODIFY & TRANSFORM TOPIC ANGLES:
@@ -327,15 +348,18 @@ CORE OPERATIONAL DIRECTIVES:
 2. ASSIGN A DISTINCT CONTRARIAN OR FASCINATION LENS:
    - Assign a distinct, sharp "content_angle" (e.g. "The Engineering Cover-up", "The Counterintuitive Physics Paradox", "The Hidden Flaw in Plain Sight", "The State-Sponsored Monopoly").
    - Do NOT use repetitive phrasing or formulas across the batch. Give every topic a unique, distinct angle.
-3. CRAFT A COMPELLING YOUTUBE BRIEF (NARRATIVE RESOURCE):
+3. CRAFT A COMPELLING RESEARCH & SCRIPT BRIEF (NARRATIVE RESOURCE):
    - "brief_overview": 2-3 sentence narrative overview showing why this story is gripping to a general viewer, connecting authentic ground truth to cinematic storytelling.
    - "brief_key_points": 3 concrete script/story beats for video generation:
      1. Beat 1 (Hook & Popular Myth): What 99% of people misunderstand or assume.
      2. Beat 2 (The Empirical Smoking Gun & Mechanism): The exact verified artifact, archival document, or scientific data point that reveals the truth.
      3. Beat 3 (The Mind-Blowing Climax / Takeaway): The paradigm-shifting consequence that leaves the audience in awe.
-4. PRESERVE SUBSTANTIVE EDUCATIONAL & EMPIRICAL VALUE:
+   - "core_questions": 3 inquiry questions to resolve during investigation (Physical Evidence, Underlying Mechanism, Paradigm Shift).
+4. SPECIFIC STARTING CLUES & ARCHIVAL REPOSITORIES:
+   - "starting_clues": Concrete starting leads, including exact museum collections, institutional databases (e.g. NASA ADS, JSTOR, British Museum, NOAA, CERN, National Archives), seminal papers/authors, or primary historical records.
+5. PRESERVE SUBSTANTIVE EDUCATIONAL & EMPIRICAL VALUE:
    - The video concepts must remain 100% accurate, deeply informative, and intellectually honest. No cheap or sensationalized clickbait. Every concept must deliver genuine real-world knowledge and insight that respects the viewer's intelligence.
-5. ASSIGN RELEVANT SIGNATURE FORMAT & CONCRETE VISUAL DIRECTION:
+6. ASSIGN RELEVANT SIGNATURE FORMAT & CONCRETE VISUAL DIRECTION:
    - Signature formats: "SF01 — Hidden System", "SF02 — Counterintuitive Mechanism", "SF03 — Scale Shock", "SF04 — Case Study Breakdown", "SF08 — Visualized Rules & Quirks", "SF11 — Myth vs Measurement", "SF14 — Reverse Explanation", "SF17 — Under the Hood".
    - Provide concrete visual pacing guidance (e.g. 3D exploded diagrams, side-by-side split screen, animated archival maps, interactive metric curves) for video editors.
 
@@ -352,6 +376,12 @@ Return a strictly valid JSON array of objects with the exact same length (${item
     "content_angle": "The Counterintuitive Privacy Paradox",
     "brief_overview": "While users assume enterprise AI encrypts their identity, modern cloud neural pipelines leak device telemetry and keystroke cadence through side-channel metadata.",
     "brief_key_points": "1. Hook & Popular Myth: The illusion that encrypted chat sessions protect user identity.\\n2. The Empirical Smoking Gun: Packet sniffers revealing 40+ unencrypted hardware fingerprints dispatched on every query.\\n3. Paradigm Shift: Why local SLMs are becoming an operational imperative rather than a luxury.",
+    "core_questions": [
+      "What exact side-channel metadata packets leak during cloud inference sessions?",
+      "How do modern neural routing pipelines correlate user telemetry across distributed endpoints?",
+      "What empirical performance and privacy trade-offs exist when quantizing models for on-device inference?"
+    ],
+    "starting_clues": "USENIX Security proceedings, IEEE Symposium on Security and Privacy papers, EFF privacy whitepapers, and Wireshark telemetry packet analyses.",
     "signature_format": "SF01 — Hidden System",
     "visualization_direction": "Side-by-side data flow diagram comparing packets leaving a phone versus local neural processor execution.",
     "production_score": 94
@@ -429,17 +459,48 @@ Return a strictly valid JSON array of objects with the exact same length (${item
           }
 
           const originalTitle = origItem.idea.original_video_idea || origItem.idea.video_idea;
+          const refinedTitle = match.video_idea ? String(match.video_idea).trim() : origItem.idea.video_idea;
+          const refinedHook = match.curiosity_hook ? String(match.curiosity_hook).trim() : origItem.idea.curiosity_hook;
+          const refinedAngle = match.content_angle ? String(match.content_angle).trim() : origItem.idea.content_angle;
+          const refinedOverview = match.brief_overview ? String(match.brief_overview).trim() : origItem.idea.content_brief_overview;
+          const refinedKeyPoints = match.brief_key_points ? String(match.brief_key_points).trim() : origItem.idea.content_brief_key_points;
+          const refinedFormat = match.signature_format ? String(match.signature_format).trim() : origItem.idea.signature_format;
+          const refinedVis = match.visualization_direction ? String(match.visualization_direction).trim() : origItem.idea.visualization_direction;
+          const refinedClues = match.starting_clues ? String(match.starting_clues).trim() : (origItem.idea.starting_clues || origItem.idea.source_family_guidance);
+          const refinedQuestions = (Array.isArray(match.core_questions) && match.core_questions.length > 0)
+            ? match.core_questions.map(String)
+            : origItem.idea.core_questions;
+
+          // Assemble the complete ready-to-copy deep research prompt with all placeholders populated with refined info
+          const refinedPrompt = buildStandardizedResearchPrompt({
+            topic: refinedTitle,
+            hook: refinedHook,
+            angle: refinedAngle,
+            subject: origItem.idea.subject,
+            topicFamily: origItem.idea.topic_family,
+            format: refinedFormat,
+            overview: refinedOverview,
+            keyPoints: refinedKeyPoints,
+            visualizationDirection: refinedVis,
+            sources: refinedClues || 'Authoritative historical archives, peer-reviewed scientific journals, and museum catalogs.',
+            coreQuestions: refinedQuestions,
+            originalSeed: originalTitle !== refinedTitle ? originalTitle : undefined
+          });
+
           const refinedIdea: ProductionIdea = {
             ...origItem.idea,
             original_video_idea: originalTitle,
-            video_idea: match.video_idea ? String(match.video_idea).trim() : origItem.idea.video_idea,
-            curiosity_hook: match.curiosity_hook ? String(match.curiosity_hook).trim() : origItem.idea.curiosity_hook,
-            content_angle: match.content_angle ? String(match.content_angle).trim() : origItem.idea.content_angle,
-            content_brief_overview: match.brief_overview ? String(match.brief_overview).trim() : origItem.idea.content_brief_overview,
-            content_brief_key_points: match.brief_key_points ? String(match.brief_key_points).trim() : origItem.idea.content_brief_key_points,
-            signature_format: match.signature_format ? String(match.signature_format).trim() : origItem.idea.signature_format,
-            visualization_direction: match.visualization_direction ? String(match.visualization_direction).trim() : origItem.idea.visualization_direction,
+            video_idea: refinedTitle,
+            curiosity_hook: refinedHook,
+            content_angle: refinedAngle,
+            content_brief_overview: refinedOverview,
+            content_brief_key_points: refinedKeyPoints,
+            signature_format: refinedFormat,
+            visualization_direction: refinedVis,
             production_score: typeof match.production_score === 'number' ? match.production_score : origItem.idea.production_score,
+            starting_clues: refinedClues,
+            core_questions: refinedQuestions,
+            research_prompt: refinedPrompt,
             ai_refined: true
           };
 
@@ -551,6 +612,8 @@ CRITICAL DIRECTIVES:
 4. ASSIGN SIGNATURE FORMAT & CONCRETE VISUAL GUIDANCE:
    - Formats: "SF01 — Hidden System", "SF02 — Counterintuitive Mechanism", "SF04 — Case Study Breakdown", "SF08 — Visualized Rules & Quirks", "SF17 — Under the Hood".
    - "visualization_direction": Concrete visual cues for editors (3D scans, micro-CT cross-sections, motion graphics, split screens).
+5. SPECIFIC STARTING CLUES & ARCHIVAL REPOSITORIES:
+   - "starting_clues": Concrete starting leads, archival repositories, institutional databases, or field records relevant to this discovery (e.g. publication DOI leads, museum catalogs, expedition field records).
 
 INPUT BATCH:
 ${JSON.stringify(promptItems, null, 2)}
@@ -569,6 +632,7 @@ Return a strictly valid JSON array of objects matching this schema (${ideas.leng
       "How did craftsmen achieve temperatures exceeding 1,100°C using rudimentary charcoal drafts?",
       "Why did the royal court tightly control synthetic blue glass while other crafts remained open?"
     ],
+    "starting_clues": "Egypt Exploration Society Amarna excavation reports, Journal of Archaeological Science micro-CT slag analysis, and British Museum Department of Ancient Egypt and Sudan archives.",
     "signature_format": "SF04 — Case Study Breakdown",
     "visualization_direction": "3D photogrammetry flythrough of the Amarna furnace ruins cross-referenced with micro-CT scans of cobalt glass slag.",
     "production_score": 95
@@ -636,19 +700,54 @@ Return a strictly valid JSON array of objects matching this schema (${ideas.leng
           const match = parsedArray.find((p: any) => p.id === origIdea.id) || parsedArray[idx];
           if (!match) return origIdea;
 
+          const refinedIdeaTitle = match.video_idea ? String(match.video_idea).trim() : origIdea.video_idea;
+          const refinedHook = match.curiosity_hook ? String(match.curiosity_hook).trim() : origIdea.curiosity_hook;
+          const refinedAngle = match.content_angle ? String(match.content_angle).trim() : origIdea.content_angle;
+          const refinedOverview = match.brief_overview ? String(match.brief_overview).trim() : origIdea.content_brief_overview;
+          const refinedKeyPoints = match.brief_key_points ? String(match.brief_key_points).trim() : origIdea.content_brief_key_points;
+          const refinedFormat = match.signature_format ? String(match.signature_format).trim() : origIdea.signature_format;
+          const refinedVis = match.visualization_direction ? String(match.visualization_direction).trim() : origIdea.visualization_direction;
+          const refinedQuestions: [string, string, string] = (Array.isArray(match.core_questions) && match.core_questions.length === 3)
+            ? [String(match.core_questions[0]), String(match.core_questions[1]), String(match.core_questions[2])]
+            : origIdea.core_questions;
+
+          const articleTitle = origIdea.source_article_title || origIdea.video_idea;
+          const primaryUrl = origIdea.source_url || origIdea.source_official_url || '';
+          const officialUrl = origIdea.source_official_url || (origIdea.source_url ? new URL(origIdea.source_url).origin : '');
+          const refinedClues = match.starting_clues ? String(match.starting_clues).trim() : (origIdea.starting_clues || `${origIdea.source_name} (${officialUrl || primaryUrl}). Article link: ${primaryUrl}`);
+
+          // Assemble the complete ready-to-copy deep research prompt with all placeholders populated with refined info
+          const refinedPrompt = buildStandardizedResearchPrompt({
+            topic: refinedIdeaTitle,
+            hook: refinedHook,
+            angle: refinedAngle,
+            subject: origIdea.subject,
+            topicFamily: origIdea.topic_family,
+            format: refinedFormat,
+            overview: refinedOverview || `${origIdea.source_name} reporting on "${articleTitle}". ${refinedVis || ''}`,
+            keyPoints: refinedKeyPoints,
+            visualizationDirection: refinedVis,
+            sources: refinedClues,
+            coreQuestions: refinedQuestions,
+            articleTitle: articleTitle,
+            articleUrl: primaryUrl,
+            authorityName: origIdea.source_name,
+            originalSeed: origIdea.original_video_idea
+          });
+
           return {
             ...origIdea,
             original_video_idea: origIdea.original_video_idea || origIdea.video_idea,
-            video_idea: match.video_idea ? String(match.video_idea).trim() : origIdea.video_idea,
-            curiosity_hook: match.curiosity_hook ? String(match.curiosity_hook).trim() : origIdea.curiosity_hook,
-            content_angle: match.content_angle ? String(match.content_angle).trim() : origIdea.content_angle,
-            content_brief_overview: match.brief_overview ? String(match.brief_overview).trim() : origIdea.content_brief_overview,
-            content_brief_key_points: match.brief_key_points ? String(match.brief_key_points).trim() : origIdea.content_brief_key_points,
-            core_questions: (Array.isArray(match.core_questions) && match.core_questions.length === 3)
-              ? [String(match.core_questions[0]), String(match.core_questions[1]), String(match.core_questions[2])]
-              : origIdea.core_questions,
-            signature_format: match.signature_format ? String(match.signature_format).trim() : origIdea.signature_format,
-            visualization_direction: match.visualization_direction ? String(match.visualization_direction).trim() : origIdea.visualization_direction,
+            video_idea: refinedIdeaTitle,
+            curiosity_hook: refinedHook,
+            content_angle: refinedAngle,
+            content_brief_overview: refinedOverview,
+            content_brief_key_points: refinedKeyPoints,
+            core_questions: refinedQuestions,
+            signature_format: refinedFormat,
+            visualization_direction: refinedVis,
+            starting_clues: refinedClues,
+            research_prompt: refinedPrompt,
             production_score: typeof match.production_score === 'number' ? match.production_score : origIdea.production_score,
             ai_refined: true
           };

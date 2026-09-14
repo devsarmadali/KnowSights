@@ -26,6 +26,9 @@ export interface ProductionIdea {
   content_angle?: string;
   content_brief_overview?: string;
   content_brief_key_points?: string;
+  research_prompt?: string;
+  starting_clues?: string;
+  core_questions?: string[];
 }
 
 export interface BatchItem {
@@ -154,6 +157,8 @@ export interface GeneratedTopicIdea {
   content_angle?: string;
   content_brief_overview?: string;
   content_brief_key_points?: string;
+  research_prompt?: string;
+  starting_clues?: string;
 }
 
 export interface ResearchCycleState {

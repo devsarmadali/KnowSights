@@ -94,7 +94,7 @@ export const BriefModal: React.FC<BriefModalProps> = ({
 2. The Empirical Smoking Gun & Mechanism (${activeFormat || 'Explainer'}): Documented primary evidence, physical artifacts, and underlying causality.
 3. Paradigm Shift & Scientific Reality: The mind-blowing consequence that overturns previous models.`);
 
-  const sourcesText = idea?.source_family_guidance || brief?.sources || 
+  const sourcesText = idea?.starting_clues || idea?.source_family_guidance || brief?.sources || 
     `Authoritative peer-reviewed journals, institutional archives, museum collections, and verified empirical databases.`;
 
   const handleCopyFullBrief = async () => {
@@ -111,7 +111,9 @@ export const BriefModal: React.FC<BriefModalProps> = ({
       topicFamily: activeTopicFamily,
       format: activeFormat,
       visualizationDirection: idea?.visualization_direction,
-      originalSeed: activeSeed
+      originalSeed: activeSeed,
+      researchPrompt: idea?.research_prompt,
+      coreQuestions: idea?.core_questions
     });
 
     try {
@@ -247,6 +249,21 @@ export const BriefModal: React.FC<BriefModalProps> = ({
                   <h4 className="font-mono uppercase text-[11px] text-neutral-400 font-bold">Visual & Motion Graphics Direction (For Video Editors)</h4>
                   <div className="p-3.5 rounded-2xl bg-emerald-950/20 border border-emerald-500/20 text-emerald-200 text-xs leading-relaxed">
                     {idea.visualization_direction}
+                  </div>
+                </div>
+              )}
+
+              {/* Refined Inquiry Questions (if available) */}
+              {idea?.core_questions && idea.core_questions.length > 0 && (
+                <div className="space-y-1.5">
+                  <h4 className="font-mono uppercase text-[11px] text-neutral-400 font-bold">Deep Investigation Questions</h4>
+                  <div className="p-3.5 rounded-2xl bg-cyan-950/20 border border-cyan-500/20 text-cyan-200 text-xs leading-relaxed space-y-1.5">
+                    {idea.core_questions.map((q, idx) => (
+                      <div key={idx} className="flex items-start space-x-2">
+                        <span className="font-mono font-bold text-cyan-400 shrink-0">{idx + 1}.</span>
+                        <span className="text-neutral-200">{q}</span>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}

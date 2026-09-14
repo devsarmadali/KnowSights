@@ -1,14 +1,15 @@
 /**
- * KnowSights Standardized AI Search Agent Prompt Generator
+ * KnowSights Standardized AI Search & Deep Research Investigation Prompt Generator
  * 
- * Generates clean, production-ready research prompts engineered for AI search agents
- * (Perplexity, Gemini Deep Research, ChatGPT Search, Claude Research).
+ * Generates an exhaustive, evidence-backed research dossier prompt engineered for
+ * frontier AI search & deep research models (Perplexity, Gemini Deep Research, 
+ * ChatGPT Search, Claude).
  * 
- * Specifically optimized as a Content Resource for YouTube Video Generation & Social Storytelling:
- * - Ditching dry academic dissertation prose in favor of high-retention narrative framing
- * - Uncovering authentic empirical evidence (archival proofs, exact dates, discoverers, verified data)
- * - Organizing research into a 6-part YouTube video production blueprint
- * - Excluding internal application metadata (e.g. "KNOWSIGHTS RESEARCH BRIEF", "Idea ID")
+ * Specifically optimized for Evidence-First Investigation & Comprehensive Dossier Assembly:
+ * - Starting leads, not established facts (claims are strengthened, corrected, or refuted)
+ * - Verifiable empirical truth: Verified Fact / Strong Evidence / Interpretation / Disputed / Uncertain / Unsupported
+ * - 10-part structured dossier output (Executive Summary, Findings, Key Evidence, Primary Materials, Sources)
+ * - Strict research-only discipline: Zero superficial packaging (no hooks, titles, or scripts during research)
  */
 
 import type { GeneratedTopicIdea, ProductionIdea } from '../types/index';
@@ -33,57 +34,202 @@ export interface StandardizedPromptParams {
 }
 
 /**
- * Builds the pure standardized AI search agent prompt engineered for YouTube video generation.
- * Strictly avoids internal application wrappers or ID bookkeeping.
+ * Builds the exhaustive, evidence-backed deep investigation prompt engineered for
+ * frontier AI search & deep research agents (Perplexity, Gemini Deep Research, ChatGPT Search, Claude).
+ * Dynamically populates topic metadata while strictly adhering to the standardized research dossier framework.
  */
 export function buildStandardizedResearchPrompt(params: StandardizedPromptParams): string {
-  const categoryStr = [params.subject, params.topicFamily].filter(Boolean).join(' / ') || 'General Knowledge & Historical Inquiries';
-  const hookStr = params.hook ? `"${params.hook}"` : `Investigate the counterintuitive reality and lesser-known facts behind ${params.topic}.`;
-  const angleStr = params.angle ? `\n• UNIQUE STORYTELLING ANGLE: ${params.angle}` : '';
-  const formatStr = params.format ? `\n• SIGNATURE VIDEO FORMAT: ${params.format}` : '';
-  const seedReferenceStr = params.sources || 'Authoritative historical archives, academic publications, and museum records.';
-  const overviewStr = params.overview || `Investigative breakdown into the origins, mechanisms, evidence, and historical/scientific reality of "${params.topic}".`;
+  const categoryStr = [params.subject, params.topicFamily].filter(Boolean).join(' / ');
 
-  const seedContext = params.originalSeed
-    ? `\n• BASELINE SEED: "${params.originalSeed}"`
-    : '';
+  // 1. Gather all initial context, claims, notes, premise, and clues into structured background items
+  const backgroundItems: string[] = [];
 
-  const keyPointsBlock = params.keyPoints && params.keyPoints.trim()
-    ? `\n• KEY SCRIPT BEATS & INQUIRY ANGLES:\n${params.keyPoints.trim()}`
-    : '';
+  if (categoryStr) {
+    backgroundItems.push(`- **Domain / Field:** ${categoryStr}`);
+  }
 
-  const visBlock = params.visualizationDirection && params.visualizationDirection.trim()
-    ? `\n• VISUAL & PACING DIRECTION (FOR EDITORS):\n  ${params.visualizationDirection.trim()}`
-    : '';
+  // Prevent duplicate printing if overview was populated from hook
+  const isOverviewDuplicated = params.overview && params.hook &&
+    params.overview.trim().toLowerCase() === params.hook.trim().toLowerCase();
 
-  const questionsBlock = params.coreQuestions && params.coreQuestions.length > 0
-    ? `\n• CORE QUESTIONS TO RESOLVE IN VIDEO:\n${params.coreQuestions.map((q, idx) => `  ${idx + 1}. ${q}`).join('\n')}`
-    : '';
+  if (params.overview && params.overview.trim() && !isOverviewDuplicated) {
+    backgroundItems.push(`- **Initial Premise / Context:** ${params.overview.trim()}`);
+  }
 
-  const articleBlock = params.articleTitle && params.articleUrl
-    ? `\n• SEED ARTICLE: "${params.articleTitle}" (${params.articleUrl})`
-    : '';
+  if (params.hook && params.hook.trim()) {
+    backgroundItems.push(`- **Initial Seed Claim / Working Hook:** "${params.hook.trim()}"`);
+  }
 
-  return `Conduct an exhaustive, evidence-backed deep-dive investigation to build a YouTube Video Production Dossier & Narrative Resource for the following topic (${categoryStr}):
+  if (params.angle && params.angle.trim()) {
+    backgroundItems.push(`- **Editorial Angle / Narrative Focus:** ${params.angle.trim()}`);
+  }
 
-• VIDEO TITLE & CORE CONCEPT: ${params.topic}${seedContext}
-• YOUTUBE HOOK & PATTERN INTERRUPT: ${hookStr}${angleStr}${formatStr}
-• NARRATIVE PREMISE & OVERVIEW: ${overviewStr}${keyPointsBlock}${visBlock}
-• REFERENCE EVIDENCE SEED (STARTING CLUE ONLY): ${seedReferenceStr}${articleBlock}
-  (Search broadly across all authentic open-web sources: national archives, museum catalogs, academic journals, and field reports. Do not limit research to the seed reference.)
-${questionsBlock}
-RESEARCH & PRODUCTION REQUIREMENTS (YOUTUBE & SOCIAL CONTENT ORIENTATION):
-1. ANTI-ACADEMIC TONE (NARRATIVE RETENTION): Present all findings in vivid, visceral, engaging language suitable for high-retention video narration. Avoid dry syllabus lectures, textbook summaries, or impenetrable academic jargon, while maintaining 100% empirical rigor.
-2. AUTHENTIC EMPIRICAL EVIDENCE & OBSCURITY: Ground the narrative in rock-solid ground truth—exact dates, primary archival records, verified measurements, discoverer names, and published field reports. Uncover the counterintuitive details and obscure anomalies that conventional overviews skip.
-3. VISUAL STORYTELLING & METAPHORS: Highlight concrete visual metaphors, split-screen comparisons, 3D exploded diagram opportunities, and motion graphics cues that video editors can animate.
+  if (params.originalSeed && params.originalSeed.trim() && params.originalSeed.trim() !== params.topic.trim()) {
+    backgroundItems.push(`- **Baseline Curriculum Seed:** "${params.originalSeed.trim()}"`);
+  }
 
-YOUTUBE PRODUCTION DOSSIER STRUCTURE:
-1. The Hook & Popular Myth (0:00 - 0:45 Retention Anchor: What 99% of people get wrong, the unasked question, and the shocking premise)
-2. Timeline, Discoverers & Key Figures (The chronology, pivotal breakthrough moments, and real human stakes)
-3. The Empirical Smoking Gun & How It Works (Step-by-step mechanism, verified proof, and mind-bending archival evidence explained with intuitive clarity)
-4. Visual Storytelling & Concrete Demonstrations (Specific visual cues, animated motion graphics directions, and side-by-side analogies)
-5. The Paradigm Shift & Closing Climax (The bigger revelation: how this discovery shatters existing models and what it means for the future)
-6. Annotated Authentic Primary Sources Directory (Direct citable URLs, institutional authorities, museum records, and peer-reviewed citations across the web)`.trim();
+  if (params.format && params.format.trim()) {
+    backgroundItems.push(`- **Target Signature Format:** ${params.format.trim()}`);
+  }
+
+  if (params.keyPoints && params.keyPoints.trim()) {
+    backgroundItems.push(`- **Initial Key Notes & Hypotheses:**\n${params.keyPoints.trim()}`);
+  }
+
+  if (params.visualizationDirection && params.visualizationDirection.trim()) {
+    backgroundItems.push(`- **Physical & Visual Evidence Clues:**\n${params.visualizationDirection.trim()}`);
+  }
+
+  if (params.coreQuestions && params.coreQuestions.length > 0) {
+    backgroundItems.push(`- **Core Inquiry Questions Raised:**\n${params.coreQuestions.map((q, idx) => `  ${idx + 1}. ${q}`).join('\n')}`);
+  }
+
+  if (backgroundItems.length === 0) {
+    backgroundItems.push(`- **Initial Premise:** Investigate the core mechanisms, verifiable evidence, chronology, and empirical facts behind "${params.topic}".`);
+  }
+
+  const backgroundBlock = backgroundItems.join('\n\n');
+
+  // 2. Assemble reference sources and starting clues
+  const referenceItems: string[] = [];
+
+  if (params.sources && params.sources.trim()) {
+    referenceItems.push(`- **Guidance & Repositories:** ${params.sources.trim()}`);
+  }
+
+  if (params.articleTitle && params.articleUrl) {
+    referenceItems.push(`- **Seed Publication / Article:** "${params.articleTitle}" (${params.articleUrl})`);
+  } else if (params.articleTitle) {
+    referenceItems.push(`- **Seed Publication / Article:** "${params.articleTitle}"`);
+  } else if (params.articleUrl) {
+    referenceItems.push(`- **Reference Link:** ${params.articleUrl}`);
+  }
+
+  if (params.authorityName && params.authorityName.trim()) {
+    referenceItems.push(`- **Key Authority / Publisher:** ${params.authorityName.trim()}`);
+  }
+
+  if (params.guidance && params.guidance.trim()) {
+    referenceItems.push(`- **Additional Notes:** ${params.guidance.trim()}`);
+  }
+
+  if (referenceItems.length === 0) {
+    referenceItems.push(`- Authoritative academic journals, institutional archives, museum records, field reports, and verified primary documentation.`);
+  }
+
+  const referenceBlock = referenceItems.join('\n\n');
+
+  return `Conduct an exhaustive, evidence-backed investigation into the following topic:
+
+• **TOPIC:** ${params.topic}
+
+• **BACKGROUND / SEED INFORMATION:**
+${backgroundBlock}
+
+• **REFERENCE SOURCES / STARTING CLUES:**
+${referenceBlock}
+
+## OBJECTIVE
+
+Build a reliable, comprehensive research dossier that can later be used for content development.
+
+The topic may involve history, science, technology, archaeology, engineering, geopolitics, economics, discoveries, disasters, current affairs, mysteries, or any other evidence-based subject.
+
+Treat all supplied seed information as **starting leads, not established facts**.
+
+Independently determine the most important questions the topic raises and pursue the investigation wherever credible evidence leads.
+
+Do not limit the research to the wording, assumptions, or direction of the seed material.
+
+If new evidence reveals a more important question, contradiction, mechanism, person, event, cause, consequence, or angle, investigate it fully.
+
+If a seed claim is accurate, strengthen it with evidence.
+If partly accurate, correct it.
+If exaggerated or unsupported, say so clearly.
+
+## RESEARCH APPROACH
+
+Search broadly across credible sources including:
+
+* primary records and archives;
+* official and institutional sources;
+* universities, museums, and research organizations;
+* peer-reviewed studies and scholarly books;
+* technical, scientific, archaeological, and field reports;
+* reputable specialist publications and journalism;
+* historical newspapers, interviews, databases, and useful open-web sources.
+
+Do not restrict the investigation to academic sources only. Valuable information may come from any credible source, but important claims should be independently verified where possible.
+
+Actively pursue:
+
+* core facts, chronology, and context;
+* causes, mechanisms, and consequences;
+* important people, places, events, objects, and discoveries;
+* overlooked or lesser-known details;
+* surprising or counterintuitive findings;
+* myths versus evidence;
+* contradictions and competing interpretations;
+* unusual connections;
+* unresolved questions and missing evidence;
+* relevant dates, measurements, statistics, quotations, and primary records;
+* useful visual material such as maps, documents, artifacts, photographs, diagrams, datasets, and locations.
+
+For major claims, distinguish:
+
+**Verified Fact / Strong Evidence / Interpretation / Disputed / Uncertain / Unsupported**
+
+## OUTPUT
+
+### 1. Executive Summary
+
+What the investigation establishes overall.
+
+### 2. Investigation Path
+
+The most important questions that emerged during research and why they mattered.
+
+### 3. Core Findings
+
+The essential facts and strongest discoveries.
+
+### 4. Detailed Research
+
+Present the subject in the clearest logical, causal, thematic, or chronological structure.
+
+### 5. Key Evidence
+
+The strongest evidence supporting major findings.
+
+### 6. Lesser-Known & Notable Findings
+
+Important, surprising, unusual, or overlooked information uncovered during the investigation.
+
+### 7. Causes, Mechanisms & Consequences
+
+Where relevant, explain how and why things happened or worked and what followed.
+
+### 8. Disputes, Gaps & Uncertainty
+
+What remains debated, unclear, contradictory, or unsupported.
+
+### 9. Useful Visual / Primary Materials
+
+Relevant maps, records, artifacts, photographs, diagrams, datasets, locations, or archival materials.
+
+### 10. Source Directory
+
+Provide direct links to the most useful and credible sources, with a short note on what each contributes.
+
+## FINAL RULE
+
+Prioritize:
+
+**ACCURACY → EVIDENCE → OPEN-ENDED INVESTIGATION → DEPTH → DISCOVERY → UNIQUE INFORMATION**
+
+Do not write titles, hooks, scripts, CTAs, audience analysis, or content-packaging recommendations.
+
+This stage is **research and information gathering only**.`.trim();
 }
 
 /**
@@ -91,6 +237,10 @@ YOUTUBE PRODUCTION DOSSIER STRUCTURE:
  * Returns the pure, standardized AI research prompt directly.
  */
 export function formatTopicCardCopyText(idea: ProductionIdea): string {
+  if (idea.research_prompt && idea.research_prompt.trim()) {
+    return idea.research_prompt.trim();
+  }
+
   return buildStandardizedResearchPrompt({
     topic: idea.video_idea,
     hook: idea.curiosity_hook,
@@ -101,7 +251,8 @@ export function formatTopicCardCopyText(idea: ProductionIdea): string {
     overview: idea.content_brief_overview || idea.visualization_direction || idea.curiosity_hook || `Core concept for "${idea.video_idea}"`,
     keyPoints: idea.content_brief_key_points,
     visualizationDirection: idea.visualization_direction,
-    sources: idea.source_family_guidance || 'Authoritative historical archives, academic journals, and museum catalogs.',
+    sources: idea.starting_clues || idea.source_family_guidance || 'Authoritative historical archives, academic journals, and museum catalogs.',
+    coreQuestions: idea.core_questions,
     originalSeed: (idea.original_video_idea && idea.original_video_idea !== idea.video_idea) ? idea.original_video_idea : undefined
   });
 }
@@ -124,7 +275,13 @@ export function formatBriefModalCopyText(params: {
   format?: string;
   visualizationDirection?: string;
   originalSeed?: string;
+  researchPrompt?: string;
+  coreQuestions?: string[];
 }): string {
+  if (params.researchPrompt && params.researchPrompt.trim()) {
+    return params.researchPrompt.trim();
+  }
+
   return buildStandardizedResearchPrompt({
     topic: params.title,
     hook: params.hook,
@@ -136,6 +293,7 @@ export function formatBriefModalCopyText(params: {
     keyPoints: params.keyPoints,
     visualizationDirection: params.visualizationDirection,
     sources: params.sources,
+    coreQuestions: params.coreQuestions,
     originalSeed: params.originalSeed
   });
 }
@@ -145,6 +303,10 @@ export function formatBriefModalCopyText(params: {
  * Returns the pure, standardized AI research prompt directly.
  */
 export function formatDiscoveryIdeaCopyText(idea: GeneratedTopicIdea): string {
+  if (idea.research_prompt && idea.research_prompt.trim()) {
+    return idea.research_prompt.trim();
+  }
+
   const articleTitle = idea.source_article_title || idea.video_idea;
   const primaryUrl = idea.source_url || idea.source_official_url || '';
   const officialUrl = idea.source_official_url || (idea.source_url ? new URL(idea.source_url).origin : '');
@@ -159,7 +321,7 @@ export function formatDiscoveryIdeaCopyText(idea: GeneratedTopicIdea): string {
     overview: idea.content_brief_overview || `${idea.source_name} reporting on "${articleTitle}". ${idea.visualization_direction || ''}`,
     keyPoints: idea.content_brief_key_points,
     visualizationDirection: idea.visualization_direction,
-    sources: `${idea.source_name} (${officialUrl || primaryUrl}). Article link: ${primaryUrl}`,
+    sources: idea.starting_clues || `${idea.source_name} (${officialUrl || primaryUrl}). Article link: ${primaryUrl}`,
     coreQuestions: idea.core_questions,
     articleTitle: articleTitle,
     articleUrl: primaryUrl,
