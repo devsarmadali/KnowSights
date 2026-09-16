@@ -273,39 +273,42 @@ export function formatPsychologyScriptPrompt(topic: PsychologyTopic): string {
     : 'Primary academic synthesis and peer-reviewed behavioral research';
 
   return `================================================================================
-MASTER INVESTIGATIVE RESEARCH & NARRATIVE ARCHITECT PROMPT
-Behavioral Truths • Hidden Contradictions • Storytelling & Dialogue Generator
+"WISE WOLF vs. NAIVE SHEEP" MASTER STORY & RESEARCH INTELLIGENCE PROMPT
+Universe: Debunking Common Myths, Systemic Traps & Cognitive Deceptions (90–120 Video Series)
+Goal: High Replay Value • Viral Shareability • Premium Audience Engagement & Monetization
 ================================================================================
 
-[AI ROLE & OBJECTIVE]
-Act as an investigative behavioral researcher, critical truth-seeker, and elite narrative storyteller. 
-Your purpose is NOT to write a shallow summary or a rigid, second-by-second voiceover script. 
-Instead, your mission is to DEEPLY RESEARCH, EXPOSE CONTRADICTIONS, UNCOVER HIDDEN BENEFICIARIES, and BUILD FASCINATING STORIES & SHARP DIALOGUES around the psychological phenomenon below.
+[CHANNEL VISION & CREATIVE PHILOSOPHY]
+This prompt is designed for the flagship intellectual entertainment series: "Wise Wolf vs. Naive Sheep".
+• THE NAIVE SHEEP: Represents comfortable conventional wisdom, mainstream consensus, the trusting public, what "everybody knows", and the consumer who internalizes self-blame.
+• THE WISE WOLF: Represents the street-smart observer and critical thinker who looks beneath the surface, asks "Who told you that? Who profits when you believe it?", dismantles the illusion with calm surgical logic, and exposes the real psychological and economic game.
+• TARGET RECEPTION: Viewers re-watch repeatedly to catch the depth of the insight, save the video, share it with friends/family ("You need to see this"), and spark intense debate in the comments.
 
-Think of the classic corporate contradiction: the public was convinced for decades that "fat is the enemy," while in reality sugar conglomerates secretly funded the Harvard studies to divert scrutiny away from sugar. 
-Your job is to find the equivalent hidden machinery, systemic manipulation, and shocking contradictions behind this phenomenon: Who profits? Who gets blamed? Why does the human mind defend its own cage?
+[CREATIVE MANDATE FOR AI]
+Do NOT restrict yourself to a rigid, second-by-second teleprompter script. Do NOT over-limit the creative scope at this stage. 
+Instead, act as a master investigative researcher, behavioral psychologist, and world-class narrative architect. Provide expansive, versatile, high-impact creative raw material, sharp dialogues, deep research, and cinematic visual concepts around this topic.
 
 --------------------------------------------------------------------------------
-1. VERIFIED DOSSIER & RAW INTELLIGENCE (INPUT DATA)
+1. VERIFIED TOPIC DOSSIER & RAW KNOWLEDGE BASE
 --------------------------------------------------------------------------------
-• TOPIC: ${topic.phenomenon} (${topic.id})
+• PHENOMENON: ${topic.phenomenon} (${topic.id})
 • DISCIPLINE / SECTOR: ${topic.sector} [${topic.category} • ${topic.type}${topic.subtype ? ` • ${topic.subtype}` : ''}]
 • CORE DEFINITION: ${topic.definition}
 • UNDERLYING MECHANISM: ${topic.mechanism || topic.definition}
-• RELATABLE EVERYDAY TRIGGER: ${topic.everyday_trigger || topic.contexts || 'Familiar everyday decision friction'}
+• RELATABLE EVERYDAY TRIGGER: ${topic.everyday_trigger || topic.contexts || 'Everyday decision friction'}
 • TYPICAL CONTEXTS: ${topic.contexts || 'Everyday life, work, social interactions, media'}
 • TARGET AUDIENCE: ${topic.audience} (${topic.role_tag || 'General Public'})
 • EMOTIONAL LENS: ${topic.lens || 'Startling Realization & Provocative Curiosity'}
 
-[THE CONFLICT & HIDDEN TENSION]
+[THE CORE CONTRADICTION & TENSION]
 • THE HIDDEN ASSUMPTION: "${topic.hidden_assumption || 'People believe they make choices with complete conscious autonomy.'}"
-• WHO BENEFITS / GAINS: ${topic.who_benefits || 'Corporate, platform, or institutional actors extracting attention, compliance, or profit'}
-• WHO PAYS / BEARS THE COST: ${topic.who_pays || 'The individual via regret, financial drain, or quiet cognitive burnout'}
+• WHO BENEFITS / PROFITS: ${topic.who_benefits || 'Corporate, platform, or institutional actors extracting attention, compliance, or profit'}
+• WHO PAYS / BEARS THE REAL COST: ${topic.who_pays || 'The individual through regret, financial drain, or quiet cognitive burnout'}
 • COMMON POP-PSYCH MYTH: ${topic.myth || 'That this only happens to gullible or weak-willed individuals.'}
 • EMPIRICAL REALITY CHECK: ${topic.reality_check || topic.awakening_truth || 'This is hardwired cognitive architecture observed across cultures and demographics.'}
 • PROVOCATIVE QUESTION: "${topic.uncomfortable_q || 'If everyone is watching everyone else, who is actually deciding first?'}"
 
-[CREATIVE INGREDIENTS FROM KNOWLEDGE BASE]
+[DATABASE INGREDIENTS]
 • Angle Recipes: ${angleRecipes}
 • Suggested Scene Environments: ${visualScenes}
 • Tested Hook Seeds:
@@ -316,30 +319,33 @@ ${candidateEndings}
 • ${sourcesList}
 
 --------------------------------------------------------------------------------
-2. YOUR INVESTIGATIVE & STORYTELLING TASKS
+2. YOUR EXPLORATORY CREATIVE & RESEARCH SUITE
 --------------------------------------------------------------------------------
-Please execute a rigorous, mind-opening analysis and creative suite in 4 distinct sections:
+Please generate a rich, multifaceted creative dossier across the following 5 dimensions:
 
-SECTION 1: THE INVESTIGATIVE EXPOSÉ & CONTRADICTION FINDER
-- Deep Research: Unpack the real-world machinery of "${topic.phenomenon}". How is it exploited in modern society (by tech algorithms, marketing lobbies, corporate workplaces, governments, or social structures)?
-- The "Sugar vs. Fat" Contradiction: Identify the exact contradiction between what the public is taught to believe versus who actually profits. How are individuals gaslighted into believing this is their personal fault, while an external system reaps the rewards?
-- Historical or Real-World Precedents: Provide 1–2 concrete, documented historical or modern examples where this exact bias/mechanism caused a massive blind spot or systemic failure.
+DIMENSION 1: THE "WISE WOLF vs. NAIVE SHEEP" DIALOGUE SPARKS
+- Write 2 distinct, witty, memorable dialogue exchanges featuring the Wise Wolf and the Naive Sheep:
+  • Dialogue A (The Classic Confrontation): The Sheep confidently repeats what "everyone knows" about this topic, and the Wolf methodically exposes the hidden manipulation with sharp Socratic questions and an unexpected twist. (Think: Sheep: "Fat is bad for you!" Wolf: "Who told you that?" Sheep: "The doctors!" Wolf: "No, the sugar lobby paid the researchers in 1965 to say that.").
+  • Dialogue B (The Subtle Micro-Story): A dialogue showing the Sheep caught in an everyday real-world trap, while the Wolf reveals the invisible puppet strings pulling the strings in real time.
+- Make the dialogue punchy, quotable, dripping with subtext, and highly rewatchable.
 
-SECTION 2: DRAMATIC DIALOGUES & PARABLE GENERATION
-Create 2 dynamic, punchy dialogue scenes that bring this contradiction alive:
-• Scene A — The Parable / Archetypal Exchange (e.g. Sheep vs. Wolf, or Naive Consumer vs. Cynical Insider):
-  A witty, sharp Socratic conversation where one character repeats the popular naive assumption, and the other methodically unmasks the manipulation with undeniable logic. (Make it snappy, startling, and dripping with subtext).
-• Scene B — The Real-World Confrontation:
-  A high-tension everyday scene (e.g. during a corporate meeting, family purchase, or online dispute) where a character catches the hidden mechanism in action and calls it out.
+DIMENSION 2: DEEP INVESTIGATIVE RESEARCH & THE MANIPULATION ENGINE
+- Deep Reality Check: How is "${topic.phenomenon}" weaponized in modern society? Who builds the systems, algorithms, advertising campaigns, or workplace rules that rely on this psychological blind spot?
+- The Power & Profit Dynamic: Expose the systemic contradiction. How does the system convince people that their struggles are a personal defect, while the system monetizes the outcome?
+- Concrete Analogues & Case Studies: Provide 1–2 documented real-world cases, historical incidents, or industry examples demonstrating this exact mechanism in action.
 
-SECTION 3: THREE FASCINATING NARRATIVE STORY CONCEPTS
-Develop 3 distinct narrative concepts that can be turned into viral short-form stories or long-form investigative deep-dives:
-  1. The "Invisible Puppet Master" Story: An exposé-style narrative tracing how an unnoticed institutional cue silently dictated millions of individual decisions.
-  2. The "Mind-Bending Micro-Thriller": A relatable character story where a protagonist feels 100% confident in a choice, only to realize by the end that every clue was planted for them.
-  3. The "Paradigm Inversion": A story that completely disproves the common myth ("${topic.myth || 'Standard view'}") and replaces it with an eye-opening empirical truth.
+DIMENSION 3: HIGH-VALUE VISUAL METAPHORS & SCENE PRESETS
+- Visual Analogies: Propose 2–3 cinematic visual metaphors (e.g. split-screen contrasts, allegorical props, visual illusions, kinetic graphics, or symbolic set designs) that make the concept click instantly within 3 seconds.
+- Replay Value Elements: What visual or auditory details can be subtly woven into the background or delivery so that viewers immediately want to rewatch the video?
 
-SECTION 4: VIRAL REVELATIONS & MIND-AWAKENING HOOKS
-- The Awakening Sentence: One piercing, unforgettable sentence that permanently shatters the viewer's common assumption about this behavior.
-- Three Uncomfortable Debate Questions: Formulate 3 questions that strike right at the audience's ego or moral dilemmas, compelling people to share their personal experiences or fiercely debate in the comments.
-- Scientific Guardrails: Re-anchor the narrative in empirical truth—highlighting boundary conditions so the story remains intellectually bulletproof and scientifically sound (${topic.safe_claim_note || 'Avoid overgeneralizing; specify context and boundary conditions.'}).`;
+DIMENSION 4: THREE VERSATILE NARRATIVE CONCEPTS
+Develop 3 flexible mini-story concepts that can be produced in various formats (animation, live-action dialogue, or narrated short-doc):
+  1. The "Deceptive System" Narrative: An investigative story tracing how an unseen institutional rule steers millions of people without their consent.
+  2. The "Relatable Everyday Trap": A story following an ordinary person who feels totally in control, only to face the twist that every choice was pre-designed.
+  3. The "Myth Shatterer": A story that takes the most common popular assumption and systematically turns it inside out.
+
+DIMENSION 5: AWAKENING TRUTHS & VIRAL DEBATE IGNITERS
+- The Awakening Punchline: A single, profound philosophical sentence that shifts the viewer's paradigm and begs to be quoted and shared.
+- Three Debate-Sparking Questions: Formulate 3 uncomfortable questions that divide opinion or trigger deep self-reflection, designed to drive massive comment volume.
+- Empirical Guardrails: State the scientific boundary conditions (${topic.safe_claim_note || 'Avoid overgeneralizing; specify context and boundary conditions.'}) so the content remains intellectually unassailable.`;
 }

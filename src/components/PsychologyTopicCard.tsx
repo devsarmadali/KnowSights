@@ -264,10 +264,10 @@ export const PsychologyTopicCard: React.FC<PsychologyTopicCardProps> = ({
                 ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-200'
                 : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/[0.08] text-neutral-200 hover:text-white'
             }`}
-            title="Copy Master Investigative Research & Storyteller Prompt for ChatGPT / Gemini"
+            title="Copy 'Wise Wolf vs. Naive Sheep' Master Story & Research Prompt for ChatGPT / Gemini"
           >
             {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> : <Copy className="w-3.5 h-3.5 text-neutral-400 shrink-0" />}
-            <span className="text-[11px] truncate font-mono">{isCopied ? 'Copied!' : 'Story Prompt'}</span>
+            <span className="text-[11px] truncate font-mono">{isCopied ? 'Copied!' : 'Wolf vs Sheep'}</span>
           </button>
 
           {/* Save to Notes */}

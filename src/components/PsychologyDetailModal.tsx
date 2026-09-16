@@ -245,7 +245,7 @@ export const PsychologyDetailModal: React.FC<PsychologyDetailModalProps> = ({
             }`}
           >
             <Film className="w-3.5 h-3.5" />
-            <span>Master Story & Research Prompt</span>
+            <span>Wise Wolf vs. Naive Sheep Prompt</span>
           </button>
         </div>
 
@@ -477,19 +477,19 @@ export const PsychologyDetailModal: React.FC<PsychologyDetailModalProps> = ({
             </div>
           )}
 
-          {/* TAB 4: MASTER RESEARCH & STORY PROMPT */}
+          {/* TAB 4: WISE WOLF vs NAIVE SHEEP MASTER PROMPT */}
           {activeTab === 'prompt' && (
             <div className="space-y-3">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <span className="font-mono text-xs text-neutral-400 max-w-xl">
-                  Feed directly into ChatGPT, Gemini, or Claude to uncover systemic contradictions (e.g. Sheep vs. Wolf), investigate who profits, and construct mind-awakening stories and dialogues:
+                  Feed directly into ChatGPT, Gemini, or Claude for the "Wise Wolf vs. Naive Sheep" series (debunking myths, exposing systemic manipulation, dialogues, and high-replay mini-stories):
                 </span>
                 <button
                   onClick={handleCopyPrompt}
                   className="flex items-center space-x-1 px-3 py-1 rounded-lg text-xs font-semibold bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 text-emerald-300 cursor-pointer transition-colors"
                 >
                   {isCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{isCopied ? 'Copied Master Prompt!' : 'Copy Master Story Prompt'}</span>
+                  <span>{isCopied ? 'Copied Wolf Prompt!' : 'Copy Wise Wolf Prompt'}</span>
                 </button>
               </div>
 

@@ -449,11 +449,11 @@ export const App: React.FC = () => {
       const promptText = formatPsychologyScriptPrompt(topic);
       const newNote: UserNote = {
         id: `note-psych-${topic.id}`,
-        title: `${topic.phenomenon} [Story & Research Dossier]`,
-        content: `## Narrative Research Dossier: ${topic.phenomenon} (${topic.id})\n*Sector*: ${topic.sector} / ${topic.category} [${topic.type}]\n*Everyday Trigger*: ${topic.everyday_trigger || topic.contexts}\n\n### Core Phenomenon & Mechanism\n- **Definition**: ${topic.definition}\n- **Psychological Driver**: "${topic.mechanism}"\n- **Hidden Assumption**: "${topic.hidden_assumption || 'Standard'}"\n\n### Systemic Contradiction & Beneficiaries\n- **Who Benefits / Profits**: ${topic.who_benefits || 'Distributed systemic beneficiary'}\n- **Who Pays / Bears Cost**: ${topic.who_pays || 'The individual'}\n- **Pop-Psych Myth**: ${topic.myth || 'Standard view'}\n- **Empirical Reality-Check**: ${topic.reality_check || topic.awakening_truth}\n\n### Master Research, Story & Dialogue Prompt (for ChatGPT / Gemini / Claude)\n\`\`\`text\n${promptText}\n\`\`\`\n\n### Documented Scholarly Sources\n- ${topic.sources.join('\n- ') || 'Academic papers linked'}\n\n### Personal Investigation & Narrative Notes\n`,
+        title: `${topic.phenomenon} [Wise Wolf vs Naive Sheep]`,
+        content: `## "Wise Wolf vs. Naive Sheep" Dossier: ${topic.phenomenon} (${topic.id})\n*Sector*: ${topic.sector} / ${topic.category} [${topic.type}]\n*Everyday Trigger*: ${topic.everyday_trigger || topic.contexts}\n\n### Core Phenomenon & Mechanism\n- **Definition**: ${topic.definition}\n- **Psychological Driver**: "${topic.mechanism}"\n- **Hidden Assumption**: "${topic.hidden_assumption || 'Standard'}"\n\n### Systemic Contradiction & Beneficiaries\n- **Who Benefits / Profits**: ${topic.who_benefits || 'Distributed systemic beneficiary'}\n- **Who Pays / Bears Cost**: ${topic.who_pays || 'The individual'}\n- **Pop-Psych Myth**: ${topic.myth || 'Standard view'}\n- **Empirical Reality-Check**: ${topic.reality_check || topic.awakening_truth}\n\n### "Wise Wolf vs. Naive Sheep" Master Creative & Research Prompt\n\`\`\`text\n${promptText}\n\`\`\`\n\n### Documented Scholarly Sources\n- ${topic.sources.join('\n- ') || 'Academic papers linked'}\n\n### Dialogue & Story Iterations\n`,
         category: 'prompts',
-        tags: [topic.sector, topic.type || 'Psychology', 'InvestigativeStory', 'ResearchDossier'].filter(Boolean),
-        badge: 'Research & Story',
+        tags: [topic.sector, topic.type || 'Psychology', 'WiseWolfVsNaiveSheep', 'SeriesConcept'].filter(Boolean),
+        badge: 'Wolf vs Sheep',
         is_pinned: false,
         version: 1,
         created_at: new Date().toISOString(),
