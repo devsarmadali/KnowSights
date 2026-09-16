@@ -196,7 +196,7 @@ export const PsychologyDetailModal: React.FC<PsychologyDetailModalProps> = ({
               }`}
             >
               {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-emerald-400" />}
-              <span>{isCopied ? 'Copied Story Prompt!' : 'Copy Story & Research Prompt'}</span>
+              <span>{isCopied ? 'Copied Full Dossier!' : 'Copy Intelligence Dossier'}</span>
             </button>
           </div>
         </div>
@@ -245,7 +245,7 @@ export const PsychologyDetailModal: React.FC<PsychologyDetailModalProps> = ({
             }`}
           >
             <Film className="w-3.5 h-3.5" />
-            <span>Wise Wolf vs. Naive Sheep Prompt</span>
+            <span>Wise Wolf Intelligence Dossier</span>
           </button>
         </div>
 
@@ -477,19 +477,19 @@ export const PsychologyDetailModal: React.FC<PsychologyDetailModalProps> = ({
             </div>
           )}
 
-          {/* TAB 4: WISE WOLF vs NAIVE SHEEP MASTER PROMPT */}
+          {/* TAB 4: WISE WOLF vs NAIVE SHEEP MASTER DOSSIER */}
           {activeTab === 'prompt' && (
             <div className="space-y-3">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <span className="font-mono text-xs text-neutral-400 max-w-xl">
-                  Feed directly into ChatGPT, Gemini, or Claude for the "Wise Wolf vs. Naive Sheep" series (debunking myths, exposing systemic manipulation, dialogues, and high-replay mini-stories):
+                  Feed directly into ChatGPT, Gemini, or Claude to generate a full comprehensive research & story dossier (plain-English for the general public, flexible 60s reel to 5+ min deep-dive, Socratic dialogues, and narrative blueprints):
                 </span>
                 <button
                   onClick={handleCopyPrompt}
                   className="flex items-center space-x-1 px-3 py-1 rounded-lg text-xs font-semibold bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 text-emerald-300 cursor-pointer transition-colors"
                 >
                   {isCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{isCopied ? 'Copied Wolf Prompt!' : 'Copy Wise Wolf Prompt'}</span>
+                  <span>{isCopied ? 'Copied Full Dossier!' : 'Copy Master Intelligence Dossier'}</span>
                 </button>
               </div>
 
