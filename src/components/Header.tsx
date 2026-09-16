@@ -15,7 +15,8 @@ import {
   BookOpen, 
   Check, 
   FileText,
-  ShieldCheck
+  ShieldCheck,
+  Brain
 } from 'lucide-react';
 import { SystemStats } from '../types';
 import { DISCOVERY_SOURCES } from '../data/discoverySources';
@@ -23,8 +24,8 @@ import { DISCOVERY_SOURCES } from '../data/discoverySources';
 export type ThemeOption = 'dark' | 'sepia' | 'solarized-dark' | 'solarized-light';
 
 interface HeaderProps {
-  activeTab: 'mix' | 'browse' | 'discovery' | 'notes' | 'settings';
-  setActiveTab: (tab: 'mix' | 'browse' | 'discovery' | 'notes' | 'settings') => void;
+  activeTab: 'mix' | 'browse' | 'discovery' | 'psychology' | 'notes' | 'settings';
+  setActiveTab: (tab: 'mix' | 'browse' | 'discovery' | 'psychology' | 'notes' | 'settings') => void;
   stats: SystemStats | null;
   spreadsheetId: string;
   currentTheme?: ThemeOption;
@@ -56,7 +57,7 @@ export const Header: React.FC<HeaderProps> = ({
   }, []);
 
   const tabs: { 
-    id: 'mix' | 'browse' | 'discovery' | 'notes' | 'settings'; 
+    id: 'mix' | 'browse' | 'discovery' | 'psychology' | 'notes' | 'settings'; 
     label: string; 
     shortLabel: string;
     icon: any; 
@@ -75,6 +76,14 @@ export const Header: React.FC<HeaderProps> = ({
       shortLabel: "Pool",
       icon: Search, 
       badge: stats ? stats.total_ideas : undefined 
+    },
+    { 
+      id: 'psychology', 
+      label: "Psychology Engine", 
+      shortLabel: "Psychology", 
+      icon: Brain, 
+      badge: "1,000",
+      highlight: true
     },
     { 
       id: 'discovery', 
@@ -279,7 +288,7 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Tier 2: Dedicated Primary Navigation Bar - Fully Visible on ALL screen sizes */}
         <div className="pb-2.5 pt-1 border-t border-white/[0.06]">
-          <nav className="grid grid-cols-5 gap-1 sm:flex sm:items-center sm:justify-center sm:space-x-2">
+          <nav className="grid grid-cols-6 gap-1 sm:flex sm:items-center sm:justify-center sm:space-x-2">
             {tabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;

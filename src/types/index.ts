@@ -214,3 +214,5 @@ export interface UserNoteVersion {
   change_summary: string;
   created_at: string;
 }
+
+export * from './psychology';

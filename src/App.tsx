@@ -27,8 +27,11 @@ import { Header, ThemeOption } from './components/Header';
 import { DailyMixPage } from './pages/DailyMixPage';
 import { BrowsePage } from './pages/BrowsePage';
 import { DiscoveryLabPage } from './pages/DiscoveryLabPage';
+import { PsychologyPage } from './pages/PsychologyPage';
 import { NotesPage } from './pages/NotesPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { PsychologyTopic } from './types/psychology';
+import { formatPsychologyScriptPrompt } from './services/psychologyApi';
 import { 
   Loader2, 
   CheckCircle2, 
@@ -55,7 +58,7 @@ export const DEFAULT_CURRICULUM_SUBJECTS: string[] = [
 ];
 
 export const App: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'mix' | 'browse' | 'discovery' | 'notes' | 'settings'>('mix');
+  const [activeTab, setActiveTab] = useState<'mix' | 'browse' | 'discovery' | 'psychology' | 'notes' | 'settings'>('mix');
   const [config, setConfig] = useState<AppConfig>(loadConfig());
   const [currentBatch, setCurrentBatch] = useState<DailyBatch | null>(null);
   const [stats, setStats] = useState<SystemStats | null>(null);
@@ -433,6 +436,41 @@ export const App: React.FC = () => {
     }
   };
 
+  // Save Psychology Topic to Notes Vault
+  const handleSavePsychologyTopicToNotes = (topic: PsychologyTopic) => {
+    try {
+      const existing = getLocalNotes();
+      const existingIdx = existing.findIndex(n => n.id === `note-psych-${topic.id}`);
+      if (existingIdx >= 0) {
+        showToast(`Topic #${topic.id} is already in your Notes Vault.`, 'info');
+        return;
+      }
+
+      const promptText = formatPsychologyScriptPrompt(topic);
+      const newNote: UserNote = {
+        id: `note-psych-${topic.id}`,
+        title: `${topic.phenomenon} [FB Reel Blueprint]`,
+        content: `## Facebook Reels Concept: ${topic.phenomenon} (${topic.id})\n*Sector*: ${topic.sector} / ${topic.category} [${topic.type}]\n*Everyday Trigger*: ${topic.everyday_trigger || topic.contexts}\n\n### Core Phenomenon & Mechanism\n- **Definition**: ${topic.definition}\n- **Psychological Driver**: "${topic.mechanism}"\n- **Hidden Assumption**: "${topic.hidden_assumption || 'Standard'}"\n\n### Viral Tension\n- **Who Benefits / Profits**: ${topic.who_benefits || 'Distributed'}\n- **Who Pays / Bears Cost**: ${topic.who_pays || 'Individual'}\n\n### Complete FB Reels (9:16) Viral Script Blueprint\n\`\`\`text\n${promptText}\n\`\`\`\n\n### Empirical Citations & Guardrails\n- **Guardrail**: ${topic.safe_claim_note || 'Respect boundary conditions'}\n- **Scholarly Sources**: ${topic.sources.join(' | ') || 'Scholarly paper linked'}\n\n### Production Notes & Hook Iterations\n`,
+        category: 'prompts',
+        tags: [topic.sector, topic.type || 'Psychology', 'FBReels', 'ViralShorts'].filter(Boolean),
+        badge: 'FB Reel',
+        is_pinned: false,
+        version: 1,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      const updated = [newNote, ...existing];
+      saveLocalNotes(updated);
+      setNotesCount(updated.length);
+      api.saveNote(newNote).catch(err => console.warn("Background D1 note sync:", err));
+      showToast(`Saved ${topic.phenomenon} to Notes Vault!`, 'success');
+    } catch (e) {
+      console.error("Failed to save psychology topic to notes", e);
+      showToast("Could not save to notes.", 'error');
+    }
+  };
+
   return (
     <div className="app-root min-h-screen flex flex-col font-sans selection:bg-emerald-500/25 selection:text-emerald-200 relative overflow-x-hidden transition-colors duration-200">
       
@@ -503,6 +541,13 @@ export const App: React.FC = () => {
 
             {activeTab === 'browse' && (
               <BrowsePage onRefreshStats={refreshStats} />
+            )}
+
+            {activeTab === 'psychology' && (
+              <PsychologyPage 
+                onSaveToNotes={handleSavePsychologyTopicToNotes}
+                showToast={showToast}
+              />
             )}
 
             {activeTab === 'discovery' && (
