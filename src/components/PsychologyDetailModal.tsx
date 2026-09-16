@@ -196,7 +196,7 @@ export const PsychologyDetailModal: React.FC<PsychologyDetailModalProps> = ({
               }`}
             >
               {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-emerald-400" />}
-              <span>{isCopied ? 'Copied Reel Prompt' : 'Copy FB Reel Prompt'}</span>
+              <span>{isCopied ? 'Copied Story Prompt!' : 'Copy Story & Research Prompt'}</span>
             </button>
           </div>
         </div>
@@ -245,7 +245,7 @@ export const PsychologyDetailModal: React.FC<PsychologyDetailModalProps> = ({
             }`}
           >
             <Film className="w-3.5 h-3.5" />
-            <span>FB Reels Script Blueprint (9:16)</span>
+            <span>Master Story & Research Prompt</span>
           </button>
         </div>
 
@@ -477,19 +477,19 @@ export const PsychologyDetailModal: React.FC<PsychologyDetailModalProps> = ({
             </div>
           )}
 
-          {/* TAB 4: COMPLETE FB REELS SCRIPT PROMPT */}
+          {/* TAB 4: MASTER RESEARCH & STORY PROMPT */}
           {activeTab === 'prompt' && (
             <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-xs text-neutral-400">
-                  Ready-to-run Facebook Reels (9:16) script prompt engineered for viral retention & comment debates:
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <span className="font-mono text-xs text-neutral-400 max-w-xl">
+                  Feed directly into ChatGPT, Gemini, or Claude to uncover systemic contradictions (e.g. Sheep vs. Wolf), investigate who profits, and construct mind-awakening stories and dialogues:
                 </span>
                 <button
                   onClick={handleCopyPrompt}
                   className="flex items-center space-x-1 px-3 py-1 rounded-lg text-xs font-semibold bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 text-emerald-300 cursor-pointer transition-colors"
                 >
                   {isCopied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                  <span>{isCopied ? 'Copied Reel Prompt!' : 'Copy FB Reel Blueprint'}</span>
+                  <span>{isCopied ? 'Copied Master Prompt!' : 'Copy Master Story Prompt'}</span>
                 </button>
               </div>
 

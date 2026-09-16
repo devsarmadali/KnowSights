@@ -247,94 +247,99 @@ export function drawPsychologyMix(
   return selected;
 }
 
-// Dedicated Facebook Reels Viral Script Prompt Formatter
-// Engineered specifically for 9:16 vertical video, 35-55s duration, fast pattern interrupts, and comment drivers
+// Master Investigative Research & Narrative Ignition Prompt Formatter
+// Designed for ChatGPT, Gemini, and Claude to conduct deep research, expose systemic contradictions,
+// uncover unseen beneficiaries, generate fables/dialogues (e.g. Sheep vs. Wolf), and craft gripping narratives.
 export function formatPsychologyScriptPrompt(topic: PsychologyTopic): string {
-  // Extract candidate hooks or fallback to awakening truth
+  // Format hooks for inspiration
   const hooksList = (topic.candidate_hooks && topic.candidate_hooks.length > 0)
-    ? topic.candidate_hooks.slice(0, 3).map((h, i) => `  ${i + 1}. "${h}"`).join('\n')
-    : `  1. "${topic.awakening_truth || topic.prompt || 'Why do smart people fall for this every single day?'}"`;
+    ? topic.candidate_hooks.slice(0, 4).map((h, i) => `  ${i + 1}. "${h}"`).join('\n')
+    : `  1. "${topic.awakening_truth || topic.prompt || 'Why do smart, rational people fall for this trap without realizing it?'}"`;
 
-  const primaryHook = (topic.candidate_hooks && topic.candidate_hooks[0]) 
-    || topic.awakening_truth 
-    || topic.prompt 
-    || `The invisible psychological rule shaping how you behave without your permission.`;
+  const visualScenes = (topic.candidate_scenes && topic.candidate_scenes.length > 0)
+    ? topic.candidate_scenes.slice(0, 3).join(' | ')
+    : (topic.contexts || 'Workplace, digital feeds, marketplace transactions, social gatherings');
 
-  const visualScene = (topic.candidate_scenes && topic.candidate_scenes[0]) || topic.contexts || 'Familiar workplace, digital screen, or social setting';
-  const visualPreset = (topic.candidate_visuals && topic.candidate_visuals[0]) || 'Fast-paced 9:16 kinetic text overlay with sudden pattern interrupt';
-  const visualEnding = (topic.candidate_endings && topic.candidate_endings[0]) || topic.uncomfortable_q || 'Which side of this trap have you experienced?';
-  const engagementTrigger = (topic.candidate_engagement_triggers && topic.candidate_engagement_triggers[0]) || 'Hidden mechanism reveal';
-  const engagementGoal = (topic.candidate_engagement_goals && topic.candidate_engagement_goals[0]) || 'Comments & Viral Shares';
-  const angleRecipe = (topic.candidate_recipes && topic.candidate_recipes[0]) || topic.angle || 'Hidden mechanism + Relatable friction';
+  const candidateEndings = (topic.candidate_endings && topic.candidate_endings.length > 0)
+    ? topic.candidate_endings.slice(0, 3).map((e, i) => `  ${i + 1}. "${e}"`).join('\n')
+    : `  1. "${topic.uncomfortable_q || 'If you realized you were being steered, could you stop yourself?'}"`;
 
-  return `### META / FACEBOOK REELS VIRAL SCRIPT BLUEPRINT (9:16 VERTICAL)
-Role: Elite behavioral psychology creator & short-form viral storyteller.
-Platform Target: Facebook Reels / Meta Video (High comment-loop & shareability).
-Video Length: 35–50 Seconds (~115–140 spoken words, rapid cadence).
+  const angleRecipes = (topic.candidate_recipes && topic.candidate_recipes.length > 0)
+    ? topic.candidate_recipes.slice(0, 3).join(' • ')
+    : (topic.angle || 'Hidden mechanism + Systemic friction');
 
-=======================================================
-1. TOPIC INTELLIGENCE & VIRAL RATINGS
-=======================================================
-• TOPIC ID: ${topic.id}
-• PHENOMENON: ${topic.phenomenon}
-• SECTOR: ${topic.sector} [${topic.category} • ${topic.type}${topic.subtype ? ` • ${topic.subtype}` : ''}]
+  const sourcesList = topic.sources && topic.sources.length > 0 
+    ? topic.sources.join('\n• ') 
+    : 'Primary academic synthesis and peer-reviewed behavioral research';
+
+  return `================================================================================
+MASTER INVESTIGATIVE RESEARCH & NARRATIVE ARCHITECT PROMPT
+Behavioral Truths • Hidden Contradictions • Storytelling & Dialogue Generator
+================================================================================
+
+[AI ROLE & OBJECTIVE]
+Act as an investigative behavioral researcher, critical truth-seeker, and elite narrative storyteller. 
+Your purpose is NOT to write a shallow summary or a rigid, second-by-second voiceover script. 
+Instead, your mission is to DEEPLY RESEARCH, EXPOSE CONTRADICTIONS, UNCOVER HIDDEN BENEFICIARIES, and BUILD FASCINATING STORIES & SHARP DIALOGUES around the psychological phenomenon below.
+
+Think of the classic corporate contradiction: the public was convinced for decades that "fat is the enemy," while in reality sugar conglomerates secretly funded the Harvard studies to divert scrutiny away from sugar. 
+Your job is to find the equivalent hidden machinery, systemic manipulation, and shocking contradictions behind this phenomenon: Who profits? Who gets blamed? Why does the human mind defend its own cage?
+
+--------------------------------------------------------------------------------
+1. VERIFIED DOSSIER & RAW INTELLIGENCE (INPUT DATA)
+--------------------------------------------------------------------------------
+• TOPIC: ${topic.phenomenon} (${topic.id})
+• DISCIPLINE / SECTOR: ${topic.sector} [${topic.category} • ${topic.type}${topic.subtype ? ` • ${topic.subtype}` : ''}]
 • CORE DEFINITION: ${topic.definition}
-• PSYCHOLOGICAL MECHANISM: ${topic.mechanism || topic.definition}
-• RELATABLE EVERYDAY TRIGGER: ${topic.everyday_trigger || topic.contexts || 'Everyday decision friction'}
+• UNDERLYING MECHANISM: ${topic.mechanism || topic.definition}
+• RELATABLE EVERYDAY TRIGGER: ${topic.everyday_trigger || topic.contexts || 'Familiar everyday decision friction'}
+• TYPICAL CONTEXTS: ${topic.contexts || 'Everyday life, work, social interactions, media'}
 • TARGET AUDIENCE: ${topic.audience} (${topic.role_tag || 'General Public'})
-• EMOTIONAL LENS: ${topic.lens || 'Startling Realization'}
-• ENGAGEMENT OBJECTIVE: High ${engagementGoal} via ${engagementTrigger}
-• ALGORITHM SCORES: Shock: ${topic.shock}/5 | Relatability: ${topic.relatability}/5 | Comment Potential: ${topic.comment_potential}/5
+• EMOTIONAL LENS: ${topic.lens || 'Startling Realization & Provocative Curiosity'}
 
-=======================================================
-2. THE CONFLICT & HIDDEN DYNAMICS (THE HOOK ENGINE)
-=======================================================
-• THE HIDDEN ASSUMPTION: "${topic.hidden_assumption || 'People believe they make choices completely independently.'}"
-• WHO BENEFITS / PROFITS: ${topic.who_benefits || 'Systemic actors / platforms / marketers'}
-• WHO PAYS / BEARS THE COST: ${topic.who_pays || 'The individual via regret, financial cost, or cognitive fatigue'}
-• COMMON POP-PSYCH MYTH: ${topic.myth || 'That this only happens to naïve or uneducated people.'}
-• EMPIRICAL REALITY CHECK: ${topic.reality_check || topic.awakening_truth || 'This is a universal cognitive response observed across multiple replicated studies.'}
-• UNCOMFORTABLE QUESTION: "${topic.uncomfortable_q || 'If everyone is watching everyone else, who is actually deciding first?'}"
+[THE CONFLICT & HIDDEN TENSION]
+• THE HIDDEN ASSUMPTION: "${topic.hidden_assumption || 'People believe they make choices with complete conscious autonomy.'}"
+• WHO BENEFITS / GAINS: ${topic.who_benefits || 'Corporate, platform, or institutional actors extracting attention, compliance, or profit'}
+• WHO PAYS / BEARS THE COST: ${topic.who_pays || 'The individual via regret, financial drain, or quiet cognitive burnout'}
+• COMMON POP-PSYCH MYTH: ${topic.myth || 'That this only happens to gullible or weak-willed individuals.'}
+• EMPIRICAL REALITY CHECK: ${topic.reality_check || topic.awakening_truth || 'This is hardwired cognitive architecture observed across cultures and demographics.'}
+• PROVOCATIVE QUESTION: "${topic.uncomfortable_q || 'If everyone is watching everyone else, who is actually deciding first?'}"
 
-=======================================================
-3. A/B TEST HOOK PATTERNS (FIRST 3 SECONDS)
-=======================================================
+[CREATIVE INGREDIENTS FROM KNOWLEDGE BASE]
+• Angle Recipes: ${angleRecipes}
+• Suggested Scene Environments: ${visualScenes}
+• Tested Hook Seeds:
 ${hooksList}
+• Tested Ending Angles:
+${candidateEndings}
+• Documented Sources & Citations:
+• ${sourcesList}
 
-=======================================================
-4. EXACT 5-BEAT FACEBOOK REELS SCRIPT SPECIFICATIONS
-=======================================================
-Write out the verbatim spoken voiceover script, visual descriptions, and on-screen text overlays matching this high-retention structure:
+--------------------------------------------------------------------------------
+2. YOUR INVESTIGATIVE & STORYTELLING TASKS
+--------------------------------------------------------------------------------
+Please execute a rigorous, mind-opening analysis and creative suite in 4 distinct sections:
 
-[BEAT 1: 00:00 - 00:04 | THE 3-SECOND PATTERN INTERRUPT]
-• Visual: 9:16 Vertical. Fast-paced visual hook (${visualPreset}).
-• On-Screen Text (OST): 3–5 word bold headline in ALL CAPS.
-• Spoken Voiceover: Deliver the killer hook immediately ("${primaryHook}"). No introductory pleasantries ("Hey guys" or "In this video").
+SECTION 1: THE INVESTIGATIVE EXPOSÉ & CONTRADICTION FINDER
+- Deep Research: Unpack the real-world machinery of "${topic.phenomenon}". How is it exploited in modern society (by tech algorithms, marketing lobbies, corporate workplaces, governments, or social structures)?
+- The "Sugar vs. Fat" Contradiction: Identify the exact contradiction between what the public is taught to believe versus who actually profits. How are individuals gaslighted into believing this is their personal fault, while an external system reaps the rewards?
+- Historical or Real-World Precedents: Provide 1–2 concrete, documented historical or modern examples where this exact bias/mechanism caused a massive blind spot or systemic failure.
 
-[BEAT 2: 00:04 - 00:15 | THE RELATABLE SCENE SETUP]
-• Visual: Relatable real-world scene (${visualScene}).
-• On-Screen Text: Context subtitle.
-• Spoken Voiceover: Establish the everyday trigger (${topic.everyday_trigger || topic.contexts}). Make the viewer instantly identify with the situation.
+SECTION 2: DRAMATIC DIALOGUES & PARABLE GENERATION
+Create 2 dynamic, punchy dialogue scenes that bring this contradiction alive:
+• Scene A — The Parable / Archetypal Exchange (e.g. Sheep vs. Wolf, or Naive Consumer vs. Cynical Insider):
+  A witty, sharp Socratic conversation where one character repeats the popular naive assumption, and the other methodically unmasks the manipulation with undeniable logic. (Make it snappy, startling, and dripping with subtext).
+• Scene B — The Real-World Confrontation:
+  A high-tension everyday scene (e.g. during a corporate meeting, family purchase, or online dispute) where a character catches the hidden mechanism in action and calls it out.
 
-[BEAT 3: 00:15 - 00:32 | THE MECHANISM REVEAL & VALUE TENSION]
-• Visual: Fast graphic breakdown or visual demonstration of the psychological trap.
-• Spoken Voiceover: Name the phenomenon ("${topic.phenomenon}"). Reveal the psychological driver (${topic.mechanism}) and expose the hidden tension: Who Benefits vs Who Pays.
+SECTION 3: THREE FASCINATING NARRATIVE STORY CONCEPTS
+Develop 3 distinct narrative concepts that can be turned into viral short-form stories or long-form investigative deep-dives:
+  1. The "Invisible Puppet Master" Story: An exposé-style narrative tracing how an unnoticed institutional cue silently dictated millions of individual decisions.
+  2. The "Mind-Bending Micro-Thriller": A relatable character story where a protagonist feels 100% confident in a choice, only to realize by the end that every clue was planted for them.
+  3. The "Paradigm Inversion": A story that completely disproves the common myth ("${topic.myth || 'Standard view'}") and replaces it with an eye-opening empirical truth.
 
-[BEAT 4: 00:32 - 00:43 | THE REALITY CHECK]
-• Visual: Direct-to-camera or high-contrast evidence pop-up.
-• Spoken Voiceover: Bust the myth (${topic.myth || 'the common belief'}) and deliver the empirical reality-check (${topic.reality_check || topic.awakening_truth}).
-
-[BEAT 5: 00:43 - 00:50 | THE HIGH-COMMENT DEBATE CLOSING]
-• Visual: Closing frame with polarizing debate question on screen.
-• Spoken Voiceover: "${visualEnding}"
-• Viral Comment CTA: Force the viewer into a binary opinion or asking them to tag/share someone who does this constantly.
-
-=======================================================
-5. PRODUCTION & ALGORITHM GUARDRAILS
-=======================================================
-• Pacing: ~2.5 words per second. Fast, punchy, zero fluff.
-• Sound Design Cues: Sub-bass hit at 0:00, subtle vinyl scratch / whoosh at 0:15 reveal, rhythmic driving instrumental bed.
-• Caption Style: Large kinetic yellow/white captions in middle third of screen.
-• Scientific Guardrails: ${topic.safe_claim_note || 'Treat the awakening line as an empirical research seed. Do not overstate universality; respect contextual boundary conditions.'}
-${topic.sources && topic.sources.length > 0 ? `• Scholarly References: ${topic.sources.join(' | ')}` : ''}`;
+SECTION 4: VIRAL REVELATIONS & MIND-AWAKENING HOOKS
+- The Awakening Sentence: One piercing, unforgettable sentence that permanently shatters the viewer's common assumption about this behavior.
+- Three Uncomfortable Debate Questions: Formulate 3 questions that strike right at the audience's ego or moral dilemmas, compelling people to share their personal experiences or fiercely debate in the comments.
+- Scientific Guardrails: Re-anchor the narrative in empirical truth—highlighting boundary conditions so the story remains intellectually bulletproof and scientifically sound (${topic.safe_claim_note || 'Avoid overgeneralizing; specify context and boundary conditions.'}).`;
 }

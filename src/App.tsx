@@ -449,11 +449,11 @@ export const App: React.FC = () => {
       const promptText = formatPsychologyScriptPrompt(topic);
       const newNote: UserNote = {
         id: `note-psych-${topic.id}`,
-        title: `${topic.phenomenon} [FB Reel Blueprint]`,
-        content: `## Facebook Reels Concept: ${topic.phenomenon} (${topic.id})\n*Sector*: ${topic.sector} / ${topic.category} [${topic.type}]\n*Everyday Trigger*: ${topic.everyday_trigger || topic.contexts}\n\n### Core Phenomenon & Mechanism\n- **Definition**: ${topic.definition}\n- **Psychological Driver**: "${topic.mechanism}"\n- **Hidden Assumption**: "${topic.hidden_assumption || 'Standard'}"\n\n### Viral Tension\n- **Who Benefits / Profits**: ${topic.who_benefits || 'Distributed'}\n- **Who Pays / Bears Cost**: ${topic.who_pays || 'Individual'}\n\n### Complete FB Reels (9:16) Viral Script Blueprint\n\`\`\`text\n${promptText}\n\`\`\`\n\n### Empirical Citations & Guardrails\n- **Guardrail**: ${topic.safe_claim_note || 'Respect boundary conditions'}\n- **Scholarly Sources**: ${topic.sources.join(' | ') || 'Scholarly paper linked'}\n\n### Production Notes & Hook Iterations\n`,
+        title: `${topic.phenomenon} [Story & Research Dossier]`,
+        content: `## Narrative Research Dossier: ${topic.phenomenon} (${topic.id})\n*Sector*: ${topic.sector} / ${topic.category} [${topic.type}]\n*Everyday Trigger*: ${topic.everyday_trigger || topic.contexts}\n\n### Core Phenomenon & Mechanism\n- **Definition**: ${topic.definition}\n- **Psychological Driver**: "${topic.mechanism}"\n- **Hidden Assumption**: "${topic.hidden_assumption || 'Standard'}"\n\n### Systemic Contradiction & Beneficiaries\n- **Who Benefits / Profits**: ${topic.who_benefits || 'Distributed systemic beneficiary'}\n- **Who Pays / Bears Cost**: ${topic.who_pays || 'The individual'}\n- **Pop-Psych Myth**: ${topic.myth || 'Standard view'}\n- **Empirical Reality-Check**: ${topic.reality_check || topic.awakening_truth}\n\n### Master Research, Story & Dialogue Prompt (for ChatGPT / Gemini / Claude)\n\`\`\`text\n${promptText}\n\`\`\`\n\n### Documented Scholarly Sources\n- ${topic.sources.join('\n- ') || 'Academic papers linked'}\n\n### Personal Investigation & Narrative Notes\n`,
         category: 'prompts',
-        tags: [topic.sector, topic.type || 'Psychology', 'FBReels', 'ViralShorts'].filter(Boolean),
-        badge: 'FB Reel',
+        tags: [topic.sector, topic.type || 'Psychology', 'InvestigativeStory', 'ResearchDossier'].filter(Boolean),
+        badge: 'Research & Story',
         is_pinned: false,
         version: 1,
         created_at: new Date().toISOString(),
