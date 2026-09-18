@@ -1,6 +1,7 @@
 export interface PsychologyTopic {
   id: string; // e.g. "TOP-001"
   phenomenon: string; // e.g. "Confirmation bias"
+  dimension?: string; // e.g. "Psychological Manipulation", "System Traps & Structural Dynamics"
   sector: string; // e.g. "Cognitive Biases & Decision-Making"
   category: string;
   type: string;
@@ -61,6 +62,7 @@ export interface PsychologyTopic {
 export interface PsychologyFilterState {
   query: string;
   sector: string; // 'all' or specific sector name
+  dimension?: string; // 'all' or specific dimension name
   category: string;
   minShock: number;
   minRelatability: number;
@@ -78,6 +80,13 @@ export interface PsychologyStats {
     name: string;
     count: number;
     color: string;
+  }[];
+  dimensions?: {
+    name: string;
+    slug: string;
+    count: number;
+    color: string;
+    badgeClass: string;
   }[];
 }
 
@@ -213,3 +222,95 @@ export function getSectorConfig(sectorName: string) {
     borderClass: 'border-emerald-500/30'
   };
 }
+
+export interface PsychologyDimension {
+  name: string;
+  slug: string;
+  color: string;
+  badgeClass: string;
+  borderClass: string;
+  description: string;
+}
+
+export const PSYCHOLOGY_DIMENSIONS: PsychologyDimension[] = [
+  {
+    name: 'Psychological Manipulation',
+    slug: 'manipulation',
+    color: 'rose',
+    badgeClass: 'bg-rose-500/15 text-rose-300 border-rose-500/30 shadow-sm shadow-rose-500/10',
+    borderClass: 'border-rose-500/35',
+    description: 'DARVO, gaslighting, weaponized empathy, intermittent reinforcement, and interpersonal traps.'
+  },
+  {
+    name: 'Behavioral & Systemic Control',
+    slug: 'control',
+    color: 'indigo',
+    badgeClass: 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30 shadow-sm shadow-indigo-500/10',
+    borderClass: 'border-indigo-500/35',
+    description: 'Digital panopticons, velvet cages, dark nudging, institutional learned helplessness, and algorithmic conditioning.'
+  },
+  {
+    name: 'System Traps & Structural Dynamics',
+    slug: 'system-traps',
+    color: 'amber',
+    badgeClass: 'bg-amber-500/15 text-amber-300 border-amber-500/30 shadow-sm shadow-amber-500/10',
+    borderClass: 'border-amber-500/35',
+    description: 'Tragedy of the commons, policy resistance, addiction/intervener traps, Goodhart’s law, and threshold collapses.'
+  },
+  {
+    name: 'Status Quo & System Justification',
+    slug: 'status-quo',
+    color: 'cyan',
+    badgeClass: 'bg-cyan-500/15 text-cyan-300 border-cyan-500/30 shadow-sm shadow-cyan-500/10',
+    borderClass: 'border-cyan-500/35',
+    description: 'System justification theory, the meritocracy myth, creeping normality, and manufactured inevitability.'
+  },
+  {
+    name: 'Consumerism Manipulation',
+    slug: 'consumerism',
+    color: 'emerald',
+    badgeClass: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30 shadow-sm shadow-emerald-500/10',
+    borderClass: 'border-emerald-500/35',
+    description: 'Engineered dissatisfaction, hedonic treadmills, dark scarcity, aspirational debt, and Gruen transfer disorientation.'
+  },
+  {
+    name: 'Social Traps & Multipolar Dilemmas',
+    slug: 'social-traps',
+    color: 'purple',
+    badgeClass: 'bg-purple-500/15 text-purple-300 border-purple-500/30 shadow-sm shadow-purple-500/10',
+    borderClass: 'border-purple-500/35',
+    description: 'Moloch dynamics, crab mentality, pluralistic ignorance, positional arms races, and bystander apathy.'
+  },
+  {
+    name: 'Social Controls & Compliance',
+    slug: 'social-controls',
+    color: 'blue',
+    badgeClass: 'bg-blue-500/15 text-blue-300 border-blue-500/30 shadow-sm shadow-blue-500/10',
+    borderClass: 'border-blue-500/35',
+    description: 'Manufactured consent, Overton window shifts, tone policing, shame economies, and the spiral of silence.'
+  },
+  {
+    name: 'Sale of Fear & Threat Monetization',
+    slug: 'fear',
+    color: 'red',
+    badgeClass: 'bg-red-500/15 text-red-300 border-red-500/30 shadow-sm shadow-red-500/10',
+    borderClass: 'border-red-500/35',
+    description: 'Threat inflation, mean world syndrome, security theater, shock doctrines, and medicalization of normal struggles.'
+  }
+];
+
+export function getDimensionConfig(dimensionName?: string): PsychologyDimension {
+  const found = PSYCHOLOGY_DIMENSIONS.find(d => 
+    d.name.toLowerCase() === (dimensionName || '').toLowerCase() ||
+    d.slug.toLowerCase() === (dimensionName || '').toLowerCase()
+  );
+  return found || {
+    name: dimensionName || 'Critical Lens',
+    slug: 'general',
+    color: 'neutral',
+    badgeClass: 'bg-white/[0.05] text-neutral-300 border-white/[0.1]',
+    borderClass: 'border-white/[0.1]',
+    description: 'Core behavioral and systemic mechanism analysis.'
+  };
+}
+

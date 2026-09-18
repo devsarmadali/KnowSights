@@ -24,6 +24,55 @@ def safe_int(val, default=0):
     except (ValueError, TypeError):
         return default
 
+KNOWN_DIMS = [
+    'Psychological Manipulation',
+    'Behavioral & Systemic Control',
+    'System Traps & Structural Dynamics',
+    'Status Quo & System Justification',
+    'Consumerism Manipulation',
+    'Social Traps & Multipolar Dilemmas',
+    'Social Controls & Compliance',
+    'Sale of Fear & Threat Monetization'
+]
+
+def get_dimension(row):
+    fam = row.get('Candidate_Angle_Families', '').strip()
+    for d in KNOWN_DIMS:
+        if d.lower() in fam.lower():
+            return d
+    
+    text = (row.get('Phenomenon', '') + ' ' + row.get('Core_Definition', '') + ' ' + row.get('Keywords', '') + ' ' + row.get('Sector', '')).lower()
+    
+    if any(k in text for k in ['scam', 'gaslight', 'manipulat', 'deception', 'persuasion', 'dark triad', 'exploit']):
+        return 'Psychological Manipulation'
+    if any(k in text for k in ['surveillance', 'panopticon', 'dark pattern', 'nudge', 'operant', 'control', 'compliance', 'bureaucracy']):
+        return 'Behavioral & Systemic Control'
+    if any(k in text for k in ['commons', 'goodhart', 'feedback', 'externalit', 'system trap', 'incentive', 'lock-in', 'economics', 'rebound']):
+        return 'System Traps & Structural Dynamics'
+    if any(k in text for k in ['status quo', 'system justification', 'meritocracy', 'just-world', 'fatalism', 'inertia', 'tradition', 'inevitab']):
+        return 'Status Quo & System Justification'
+    if any(k in text for k in ['consumer', 'pricing', 'hedonic', 'fomo', 'debt', 'fashion', 'retail', 'brand', 'subscription', 'obsolescence']):
+        return 'Consumerism Manipulation'
+    if any(k in text for k in ['multipolar', 'crab', 'pluralistic', 'bystander', 'echo chamber', 'scapegoat', 'arms race', 'crowd']):
+        return 'Social Traps & Multipolar Dilemmas'
+    if any(k in text for k in ['consent', 'overton', 'tone policing', 'shame', 'spiral of silence', 'propaganda', 'chilling', 'carceral']):
+        return 'Social Controls & Compliance'
+    if any(k in text for k in ['fear', 'threat', 'panic', 'terror', 'anxiety', 'security theater', 'prepper', 'phobia', 'fud', 'risk']):
+        return 'Sale of Fear & Threat Monetization'
+        
+    sec = row.get('Sector', '')
+    if 'Corporate Deception' in sec: return 'Behavioral & Systemic Control'
+    if 'Consumer & Pricing' in sec: return 'Consumerism Manipulation'
+    if 'Persuasion' in sec: return 'Psychological Manipulation'
+    if 'Risk' in sec or 'Fear' in sec: return 'Sale of Fear & Threat Monetization'
+    if 'Social Influence' in sec: return 'Social Controls & Compliance'
+    if 'Crowd' in sec: return 'Social Traps & Multipolar Dilemmas'
+    if 'Public Behavior' in sec: return 'Status Quo & System Justification'
+    if 'Behavioral Economics' in sec: return 'System Traps & Structural Dynamics'
+    if 'Workplace' in sec: return 'Behavioral & Systemic Control'
+    if 'Social Media' in sec: return 'Behavioral & Systemic Control'
+    return 'Psychological Manipulation'
+
 def main():
     csv_path = 'Psychology_Topic_Engine_Master_V6_Consolidated.csv'
     if not os.path.exists(csv_path):
@@ -44,6 +93,7 @@ def main():
             category = row.get('Category', '').strip()
             topic_type = row.get('Type', '').strip()
             subtype = row.get('Subtype', '').strip()
+            dimension = get_dimension(row)
 
             # Definition & Mechanism
             definition = row.get('Core_Definition', '').strip()
@@ -132,6 +182,7 @@ def main():
                 'category': category,
                 'type': topic_type,
                 'subtype': subtype,
+                'dimension': dimension,
                 'definition': definition,
                 'mechanism': mechanism,
                 'contexts': contexts,

@@ -20,7 +20,7 @@ import {
   Search,
   BookOpen
 } from 'lucide-react';
-import { PsychologyTopic, getSectorConfig } from '../types/psychology';
+import { PsychologyTopic, getSectorConfig, getDimensionConfig } from '../types/psychology';
 import { formatPsychologyScriptPrompt } from '../services/psychologyApi';
 
 interface PsychologyTopicCardProps {
@@ -47,6 +47,7 @@ export const PsychologyTopicCard: React.FC<PsychologyTopicCardProps> = ({
   const [isSaved, setIsSaved] = useState(false);
 
   const sectorConfig = getSectorConfig(topic.sector);
+  const dimensionConfig = topic.dimension ? getDimensionConfig(topic.dimension) : null;
 
   const handleCopyPrompt = async () => {
     const text = formatPsychologyScriptPrompt(topic);
@@ -84,6 +85,11 @@ export const PsychologyTopicCard: React.FC<PsychologyTopicCardProps> = ({
             <span className="font-mono text-xs font-bold text-neutral-300 bg-white/[0.05] border border-white/[0.1] px-2 py-0.5 rounded-md">
               {topic.id}
             </span>
+            {dimensionConfig && (
+              <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-md border ${dimensionConfig.badgeClass}`}>
+                {dimensionConfig.name}
+              </span>
+            )}
             <span className={`text-[10px] font-mono font-semibold px-2 py-0.5 rounded-md border ${sectorConfig.badgeClass}`}>
               {topic.sector}
             </span>

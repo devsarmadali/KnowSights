@@ -1,4 +1,10 @@
-import { PsychologyTopic, PsychologyFilterState, PsychologyStats, PSYCHOLOGY_SECTORS } from '../types/psychology';
+import { 
+  PsychologyTopic, 
+  PsychologyFilterState, 
+  PsychologyStats, 
+  PSYCHOLOGY_SECTORS,
+  PSYCHOLOGY_DIMENSIONS 
+} from '../types/psychology';
 
 const STORAGE_KEY_PSYCH_STUDIED = 'knowsights_psych_studied_v1';
 const STORAGE_KEY_PSYCH_BOOKMARKS = 'knowsights_psych_bookmarks_v1';
@@ -113,6 +119,22 @@ export function filterPsychologyTopics(
       }
     }
 
+    // 1b. Systemic Dimension filter
+    if (filter.dimension && filter.dimension !== 'all') {
+      const targetDim = filter.dimension.toLowerCase();
+      const topicDim = (t.dimension || '').toLowerCase();
+      const matchedConfig = PSYCHOLOGY_DIMENSIONS.find(d => 
+        d.name.toLowerCase() === targetDim || d.slug.toLowerCase() === targetDim
+      );
+      if (matchedConfig) {
+        if (topicDim !== matchedConfig.name.toLowerCase()) {
+          return false;
+        }
+      } else if (topicDim !== targetDim) {
+        return false;
+      }
+    }
+
     // 2. Status filter
     if (filter.status === 'studied' && !studiedIds.has(t.id)) {
       return false;
@@ -179,8 +201,13 @@ export function getPsychologyStats(
   bookmarkedIds: Set<string>
 ): PsychologyStats {
   const sectorCountMap: Record<string, number> = {};
+  const dimensionCountMap: Record<string, number> = {};
+
   for (const t of topics) {
     sectorCountMap[t.sector] = (sectorCountMap[t.sector] || 0) + 1;
+    if (t.dimension) {
+      dimensionCountMap[t.dimension] = (dimensionCountMap[t.dimension] || 0) + 1;
+    }
   }
 
   const sectors = PSYCHOLOGY_SECTORS.map(s => ({
@@ -189,11 +216,20 @@ export function getPsychologyStats(
     color: s.color
   }));
 
+  const dimensions = PSYCHOLOGY_DIMENSIONS.map(d => ({
+    name: d.name,
+    slug: d.slug,
+    count: dimensionCountMap[d.name] || 0,
+    color: d.color,
+    badgeClass: d.badgeClass
+  }));
+
   return {
     total: topics.length,
     studiedCount: studiedIds.size,
     bookmarkedCount: bookmarkedIds.size,
-    sectors
+    sectors,
+    dimensions
   };
 }
 
@@ -314,6 +350,7 @@ CRITICAL GUIDELINES YOU MUST FOLLOW:
 1. VERIFIED TOPIC DOSSIER & RAW KNOWLEDGE BASE
 --------------------------------------------------------------------------------
 • PHENOMENON / TOPIC: ${topic.phenomenon} [ID: ${topic.id}]
+• CRITICAL SYSTEMIC DIMENSION: ${topic.dimension || 'Psychological Manipulation & Systemic Dynamics'}
 • SECTOR & DISCIPLINE: ${topic.sector} [${topic.category} • ${topic.type}${topic.subtype ? ` • ${topic.subtype}` : ''}]
 • CORE DEFINITION: ${topic.definition}
 • UNDERLYING MECHANISM: ${topic.mechanism || topic.definition}

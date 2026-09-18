@@ -20,7 +20,7 @@ import {
   Compass,
   Film
 } from 'lucide-react';
-import { PsychologyTopic, getSectorConfig } from '../types/psychology';
+import { PsychologyTopic, getSectorConfig, getDimensionConfig } from '../types/psychology';
 import { formatPsychologyScriptPrompt } from '../services/psychologyApi';
 
 interface PsychologyDetailModalProps {
@@ -65,6 +65,7 @@ export const PsychologyDetailModal: React.FC<PsychologyDetailModalProps> = ({
   if (!isOpen || !topic) return null;
 
   const sectorConfig = getSectorConfig(topic.sector);
+  const dimensionConfig = topic.dimension ? getDimensionConfig(topic.dimension) : null;
 
   const handleCopyPrompt = async () => {
     const text = formatPsychologyScriptPrompt(topic);
@@ -98,6 +99,11 @@ export const PsychologyDetailModal: React.FC<PsychologyDetailModalProps> = ({
               <span className="font-mono text-xs font-bold text-neutral-300 bg-white/[0.06] border border-white/[0.12] px-2.5 py-0.5 rounded-lg">
                 {topic.id}
               </span>
+              {dimensionConfig && (
+                <span className={`text-xs font-mono font-bold px-2.5 py-0.5 rounded-lg border ${dimensionConfig.badgeClass}`}>
+                  {dimensionConfig.name}
+                </span>
+              )}
               <span className={`text-xs font-mono font-semibold px-2.5 py-0.5 rounded-lg border ${sectorConfig.badgeClass}`}>
                 {topic.sector}
               </span>

@@ -22,7 +22,9 @@ import {
   PsychologyTopic, 
   PsychologyFilterState, 
   PSYCHOLOGY_SECTORS, 
-  getSectorConfig 
+  PSYCHOLOGY_DIMENSIONS,
+  getSectorConfig,
+  getDimensionConfig 
 } from '../types/psychology';
 import { 
   fetchPsychologyDatabase, 
@@ -36,6 +38,7 @@ import {
 } from '../services/psychologyApi';
 import { PsychologyTopicCard } from '../components/PsychologyTopicCard';
 import { PsychologyDetailModal } from '../components/PsychologyDetailModal';
+import { GeminiPsychologyModal } from '../components/GeminiPsychologyModal';
 
 interface PsychologyPageProps {
   onSaveToNotes?: (topic: PsychologyTopic) => void;
@@ -58,6 +61,7 @@ export const PsychologyPage: React.FC<PsychologyPageProps> = ({
   const [filter, setFilter] = useState<PsychologyFilterState>({
     query: '',
     sector: 'all',
+    dimension: 'all',
     category: '',
     minShock: 0,
     minRelatability: 0,
@@ -70,6 +74,7 @@ export const PsychologyPage: React.FC<PsychologyPageProps> = ({
   // Modal State
   const [selectedTopic, setSelectedTopic] = useState<PsychologyTopic | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isGeminiModalOpen, setIsGeminiModalOpen] = useState(false);
 
   // Daily Mix / Curated Draw Mode
   const [drawnBatch, setDrawnBatch] = useState<PsychologyTopic[] | null>(null);
@@ -145,6 +150,10 @@ export const PsychologyPage: React.FC<PsychologyPageProps> = ({
     }
   };
 
+  const handleAddGeminiTopics = (newTopics: PsychologyTopic[]) => {
+    setAllTopics(prev => [...newTopics, ...prev]);
+  };
+
   const handleClearDraw = () => {
     setDrawnBatch(null);
   };
@@ -153,6 +162,7 @@ export const PsychologyPage: React.FC<PsychologyPageProps> = ({
     setFilter({
       query: '',
       sector: 'all',
+      dimension: 'all',
       category: '',
       minShock: 0,
       minRelatability: 0,
@@ -167,6 +177,7 @@ export const PsychologyPage: React.FC<PsychologyPageProps> = ({
   const isFiltered = 
     filter.query !== '' || 
     filter.sector !== 'all' || 
+    (filter.dimension && filter.dimension !== 'all') ||
     filter.minShock > 0 || 
     filter.minRelatability > 0 || 
     filter.evidenceOnly || 
@@ -186,14 +197,14 @@ export const PsychologyPage: React.FC<PsychologyPageProps> = ({
                 <Brain className="w-5 h-5 text-neutral-950" />
               </div>
               <span className="font-mono text-xs font-bold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
-                Psychology Topic Engine V6
+                Psychology Topic Engine V6 • Expanded
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl lg:text-4xl font-display font-bold text-white tracking-tight">
               Human Behavior & Cognitive Architecture
             </h1>
             <p className="text-sm text-neutral-300 font-sans leading-relaxed">
-              1,000 verified psychological phenomena, dark patterns, social dilemmas, and cognitive biases across 20 distinct sectors. Complete with curiosity hooks, driver mechanisms, and scholarly DOIs.
+              {stats.total.toLocaleString()} verified psychological phenomena, systemic traps, manipulative dynamics, and cognitive biases across 8 critical dimensions and 20 sectors. Complete with curiosity hooks, driver mechanisms, and scholarly DOIs.
             </p>
           </div>
 
@@ -211,6 +222,14 @@ export const PsychologyPage: React.FC<PsychologyPageProps> = ({
               <span className="font-mono text-[10px] uppercase text-amber-400 block">Bookmarks</span>
               <span className="font-mono text-xl font-bold text-amber-300">{stats.bookmarkedCount}</span>
             </div>
+            <button
+              onClick={() => setIsGeminiModalOpen(true)}
+              className="flex items-center space-x-2 px-4 py-3 rounded-2xl bg-gradient-to-r from-cyan-500 via-teal-500 to-emerald-500 hover:from-cyan-400 hover:to-emerald-400 text-neutral-950 font-bold text-xs font-mono shadow-lg shadow-cyan-500/25 transition-all transform hover:-translate-y-0.5 cursor-pointer"
+              title="Open Gemini AI Topic Synthesizer Studio to generate new psychology topics on-demand"
+            >
+              <Sparkles className="w-4 h-4" />
+              <span>Gemini Studio</span>
+            </button>
             <button
               onClick={() => handleDrawMix(6)}
               className="flex items-center space-x-2 px-4 py-3 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-neutral-950 font-bold text-xs font-mono shadow-lg shadow-emerald-500/25 transition-all transform hover:-translate-y-0.5 cursor-pointer"
@@ -249,11 +268,66 @@ export const PsychologyPage: React.FC<PsychologyPageProps> = ({
               onClick={handleClearDraw}
               className="px-3 py-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/30 text-xs font-mono text-emerald-300 transition-colors cursor-pointer"
             >
-              Back to Full 1,000
+              Back to Full Pool ({stats.total})
             </button>
           </div>
         </div>
       )}
+
+      {/* 2b. Systemic Dimensions & Critical Angles Filter */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between text-xs font-mono text-neutral-400">
+          <div className="flex items-center space-x-2">
+            <span className="font-bold text-white uppercase tracking-wider">Systemic Dimensions</span>
+            <span className="text-neutral-500">• 8 Analytical Lenses (1,200 Topics)</span>
+          </div>
+          {filter.dimension && filter.dimension !== 'all' && (
+            <button
+              onClick={() => setFilter(prev => ({ ...prev, dimension: 'all', page: 1 }))}
+              className="text-cyan-400 hover:underline cursor-pointer"
+            >
+              Reset to All Dimensions
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-center space-x-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-white/10">
+          <button
+            onClick={() => {
+              setFilter(prev => ({ ...prev, dimension: 'all', page: 1 }));
+              if (drawnBatch) setDrawnBatch(null);
+            }}
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-mono font-bold whitespace-nowrap transition-all cursor-pointer border ${
+              (!filter.dimension || filter.dimension === 'all') && !drawnBatch
+                ? 'bg-gradient-to-r from-emerald-500 to-teal-400 text-neutral-950 border-emerald-400 shadow-md shadow-emerald-500/20'
+                : 'bg-white/[0.03] hover:bg-white/[0.08] text-neutral-300 border-white/[0.08]'
+            }`}
+          >
+            All Dimensions ({stats.total})
+          </button>
+
+          {stats.dimensions?.map((dim) => {
+            const isSelected = (filter.dimension || '').toLowerCase() === dim.name.toLowerCase() && !drawnBatch;
+            return (
+              <button
+                key={dim.slug}
+                onClick={() => {
+                  setFilter(prev => ({ ...prev, dimension: dim.name, page: 1 }));
+                  if (drawnBatch) setDrawnBatch(null);
+                }}
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-mono whitespace-nowrap transition-all cursor-pointer border flex items-center space-x-1.5 ${
+                  isSelected
+                    ? `${dim.badgeClass} ring-1 ring-white/30 font-bold scale-[1.02]`
+                    : 'bg-white/[0.03] hover:bg-white/[0.08] text-neutral-300 border-white/[0.08]'
+                }`}
+              >
+                <span>{dim.name}</span>
+                <span className="text-[10px] opacity-70 font-mono">({dim.count})</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       {/* 3. Horizontal Sector Selector (20 Sectors) */}
       <div className="space-y-2">
@@ -281,7 +355,7 @@ export const PsychologyPage: React.FC<PsychologyPageProps> = ({
                 : 'bg-white/[0.03] hover:bg-white/[0.08] text-neutral-300 border-white/[0.08]'
             }`}
           >
-            All Sectors (1,000)
+            All Sectors ({stats.total})
           </button>
 
           {PSYCHOLOGY_SECTORS.map((sec) => {
@@ -390,9 +464,14 @@ export const PsychologyPage: React.FC<PsychologyPageProps> = ({
         <span>
           Showing <strong className="text-white">{displayTopics.length}</strong> of{' '}
           <strong className="text-white">{total}</strong> topics
+          {filter.dimension && filter.dimension !== 'all' && (
+            <span className="text-cyan-400 font-semibold ml-1.5">
+              • Dimension: {filter.dimension}
+            </span>
+          )}
           {filter.sector !== 'all' && (
             <span className="text-emerald-400 font-semibold ml-1.5">
-              in {filter.sector}
+              • Sector: {filter.sector}
             </span>
           )}
         </span>
@@ -409,7 +488,7 @@ export const PsychologyPage: React.FC<PsychologyPageProps> = ({
         <div className="py-24 flex flex-col items-center justify-center space-y-3">
           <Loader2 className="w-8 h-8 text-emerald-400 animate-spin" />
           <p className="font-mono text-xs text-neutral-400">
-            Initializing Psychology Topic Engine database (1,000 records)...
+            Initializing Psychology Topic Engine database ({allTopics.length || '1,200'} records)...
           </p>
         </div>
       ) : loadError ? (
@@ -424,7 +503,7 @@ export const PsychologyPage: React.FC<PsychologyPageProps> = ({
             No psychology topics match your filter criteria
           </h3>
           <p className="text-xs text-neutral-400 max-w-md mx-auto">
-            Try adjusting your search query, lowering the shock threshold, or switching to "All Sectors".
+            Try adjusting your search query, lowering the shock threshold, or switching to "All Dimensions" / "All Sectors".
           </p>
           <button
             onClick={handleResetFilters}
@@ -520,6 +599,16 @@ export const PsychologyPage: React.FC<PsychologyPageProps> = ({
         onToggleStudied={handleToggleStudied}
         onToggleBookmark={handleToggleBookmark}
         onSaveToNotes={onSaveToNotes}
+      />
+
+      {/* 10. Gemini AI Topic Synthesizer Studio Modal */}
+      <GeminiPsychologyModal
+        isOpen={isGeminiModalOpen}
+        onClose={() => setIsGeminiModalOpen(false)}
+        onAddTopics={handleAddGeminiTopics}
+        existingCount={allTopics.length}
+        showToast={showToast}
+        initialDimension={filter.dimension}
       />
     </div>
   );

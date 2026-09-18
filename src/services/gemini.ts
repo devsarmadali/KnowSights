@@ -1,4 +1,5 @@
 import { AppConfig, DiscoveryArticle, DiscoverySource, GeneratedTopicIdea, BatchItem, ProductionIdea } from '../types';
+import { PsychologyTopic } from '../types/psychology';
 import { loadConfig } from './api';
 import { buildStandardizedResearchPrompt } from '../utils/researchPrompt';
 
@@ -793,5 +794,256 @@ export async function refineSingleDiscoveryIdeaWithGeminiRotation(
     error: result.error
   };
 }
+
+/**
+ * Generates high-depth Psychology Topics across critical systemic dimensions (e.g. Manipulation,
+ * Behavioral Control, System Traps, Consumerism Manipulation, Sale of Fear, etc.) using Gemini multi-key rotation.
+ */
+export async function generatePsychologyTopicsWithGeminiRotation(
+  dimension: string,
+  count: number = 3,
+  focusPrompt?: string,
+  startIdNumber: number = 1201,
+  config?: AppConfig
+): Promise<{ success: boolean; topics: PsychologyTopic[]; keyUsedIndex?: number; modelUsed?: string; error?: string }> {
+  const keys = getConfiguredGeminiKeys(config);
+  if (keys.length === 0) {
+    return {
+      success: false,
+      topics: [],
+      error: 'No Gemini API keys configured. Please configure an API key in Settings or App Config.'
+    };
+  }
+
+  const prompt = `You are the Lead Behavioral Scientist and Story Architect for "Wise Wolf vs. Naive Sheep" — a premier intellectual entertainment series exposing cognitive blindspots, institutional deceptions, and hidden systemic levers.
+
+Generate exactly ${count} deep, publication-grade psychology topics specifically focused on the critical dimension: "${dimension}".
+${focusPrompt && focusPrompt.trim() ? `Additional User Focus / Angle Directives: "${focusPrompt.trim()}"` : ''}
+
+CRITICAL EDITORIAL & SYSTEMIC DIRECTIVES:
+1. THEMATIC DEPTH: Topics must expose how human psychology is nudged, exploited, or conditioned by modern institutions, digital platforms, market architectures, or social hierarchies.
+2. CORE PHILOSOPHY: Contrast the "Naive Sheep" (who accepts the default, blames themselves, or falls for comfortable illusions) with the "Wise Wolf" (who asks lethal Socratic questions: "Who profits when you believe this? Who engineered this choice architecture?").
+3. ACCURACY & EVIDENCE: Ground each topic in authentic behavioral economics, cybernetics, social psychology, or systems theory (e.g., Kahneman, Cialdini, Donella Meadows, B.F. Skinner, Neil Postman, Herbert Simon).
+4. GROUNDED REALISM: Every concept must feature a visceral, relatable everyday scenario (workplaces, checkout lines, notification pings, financial choices, dating, family dynamics).
+
+OUTPUT FORMAT: Return ONLY a raw JSON array containing exactly ${count} objects (no markdown code blocks, no preamble, no commentary).
+Each object MUST strictly adhere to this format:
+[
+  {
+    "phenomenon": "Name of the psychological bias, trap, or systemic lever (e.g. Algorithmic Operant Conditioning)",
+    "dimension": "${dimension}",
+    "sector": "Choose closest: Cognitive Biases & Decision-Making | Social Influence & Conformity | Crowd & Mass Behavior | Consumer & Pricing Psychology | Corporate Deception & Dark Patterns | Media & Information Psychology | Social Media & Digital Behavior | Memory, Attention & Perception | Learning & Habit | Motivation & Self-Regulation | Identity, Status & Self | Relationships & Interpersonal Behavior | Workplace & Organizations | Ethics, Morality & Responsibility | Risk, Fear & Crisis Behavior | Persuasion, Scams & Compliance",
+    "category": "High level category (e.g. Behavioral Economics)",
+    "type": "Specific mechanism type (e.g. Cognitive Nudge)",
+    "subtype": "Subtype (e.g. Feedback Loop)",
+    "definition": "Sharp, punchy definition of what this phenomenon actually is.",
+    "mechanism": "The precise psychological or neuro-chemical reason why humans fall into this trap.",
+    "contexts": "Where this happens in daily life (e.g. Grocery aisles, corporate performance reviews, dating apps)",
+    "related": "2-3 related psychological or economic phenomena",
+    "audience": "General Public",
+    "role_tag": "Consumer / Citizen",
+    "angle": "Provocative storytelling angle for a YouTube video",
+    "lens": "Startling Realization & Hidden Puppet Strings",
+    "prompt": "The core question or dilemma that starts the script",
+    "question": "Socratic question that challenges the viewer",
+    "story": "A 2-sentence micro-story illustrating the trap in everyday life",
+    "awakening_truth": "The mind-blowing realization when the illusion falls away",
+    "hidden_assumption": "What people falsely assume is happening",
+    "uncomfortable_q": "An uncomfortable question that shatters conventional wisdom",
+    "who_benefits": "Who quietly profits or gains compliance from this phenomenon",
+    "who_pays": "Who bears the invisible financial, emotional, or time cost",
+    "everyday_trigger": "The exact everyday cue that activates this bias",
+    "myth": "The popular misconception people tell themselves",
+    "reality_check": "The harsh, verified behavioral truth",
+    "surprise_type": "Counter-Intuitive",
+    "status": "Published",
+    "evidence": "Empirical backing summary",
+    "controversy": "Low",
+    "sensitivity": "Low",
+    "verification": "Peer-Reviewed Literature",
+    "sources": ["2 reputable academic papers or seminal books"],
+    "verified_count": 2,
+    "shock": 4,
+    "relatability": 5,
+    "visualizability": 4,
+    "comment_potential": 5,
+    "sensationalism_risk": 1,
+    "safe_claim_note": "A scientific nuance boundary to prevent oversimplification",
+    "primary_prompt": "1-sentence hook prompt",
+    "candidate_angles": ["Angle 1", "Angle 2", "Angle 3"],
+    "candidate_questions": ["Question 1?", "Question 2?"],
+    "candidate_hooks": ["Hook 1", "Hook 2", "Hook 3"],
+    "candidate_endings": ["Ending 1", "Ending 2"],
+    "candidate_perspectives": ["Wolf perspective", "Sheep perspective"],
+    "candidate_stakeholders": ["The System", "The Consumer"],
+    "candidate_scenes": ["Scene 1", "Scene 2"],
+    "candidate_visuals": ["Visual metaphor 1", "Visual metaphor 2"],
+    "candidate_ethics": ["Ethical boundary"],
+    "candidate_series": ["Wise Wolf vs. Naive Sheep"],
+    "candidate_recipes": ["Myth-Buster"],
+    "candidate_seeds": ["Behavioral Economics"],
+    "candidate_engagement_triggers": ["Personal recognition"],
+    "candidate_engagement_goals": ["Trigger shares"],
+    "candidate_psychographics": ["Truth-seekers"],
+    "audience_guardrails": ["Avoid conspiratorial extremes; maintain rigorous empirical grounding."],
+    "audience_guidance": "Speak directly to everyday relatable life without academic jargon."
+  }
+]`;
+
+  let lastError = '';
+
+  for (const { index, key } of keys) {
+    for (const model of PREFERRED_GEMINI_MODELS) {
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`;
+
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              temperature: 0.7,
+              topP: 0.95,
+              maxOutputTokens: 8192
+            }
+          })
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          const msg = errData?.error?.message || `HTTP ${res.status}: ${res.statusText}`;
+          lastError = msg;
+
+          const isKeyInvalid = msg.toLowerCase().includes('api_key_invalid') ||
+                               msg.toLowerCase().includes('api key not valid') ||
+                               msg.toLowerCase().includes('api key expired');
+          if (isKeyInvalid) {
+            break; // Try next key
+          }
+          continue; // Try next model
+        }
+
+        const data = await res.json();
+        const candidate = data.candidates?.[0];
+        const rawText = candidate?.content?.parts?.[0]?.text;
+
+        if (!rawText) {
+          lastError = 'No text in Gemini response';
+          continue;
+        }
+
+        // Clean markdown backticks if present
+        let cleaned = rawText.trim();
+        if (cleaned.startsWith('```json')) {
+          cleaned = cleaned.slice(7);
+        } else if (cleaned.startsWith('```')) {
+          cleaned = cleaned.slice(3);
+        }
+        if (cleaned.endsWith('```')) {
+          cleaned = cleaned.slice(0, -3);
+        }
+        cleaned = cleaned.trim();
+
+        // Extract JSON array
+        const startIdx = cleaned.indexOf('[');
+        const endIdx = cleaned.lastIndexOf(']');
+        if (startIdx === -1 || endIdx === -1) {
+          lastError = 'Could not find JSON array in Gemini response';
+          continue;
+        }
+
+        const jsonStr = cleaned.slice(startIdx, endIdx + 1);
+        const parsedArray = JSON.parse(jsonStr);
+
+        if (!Array.isArray(parsedArray) || parsedArray.length === 0) {
+          lastError = 'Parsed Gemini output is not a non-empty array';
+          continue;
+        }
+
+        const formattedTopics: PsychologyTopic[] = parsedArray.map((item: any, idx: number) => {
+          const assignedId = `TOP-${startIdNumber + idx}`;
+          return {
+            id: assignedId,
+            phenomenon: item.phenomenon || `Topic ${assignedId}`,
+            dimension: item.dimension || dimension,
+            sector: item.sector || 'Cognitive Biases & Decision-Making',
+            category: item.category || 'Behavioral Economics',
+            type: item.type || 'Cognitive Nudge',
+            subtype: item.subtype || 'Feedback Loop',
+            definition: item.definition || '',
+            mechanism: item.mechanism || item.definition || '',
+            contexts: item.contexts || 'Everyday life',
+            related: item.related || '',
+            audience: item.audience || 'General Public',
+            role_tag: item.role_tag || 'Consumer / Citizen',
+            angle: item.angle || 'Hidden behavioral dynamic',
+            lens: item.lens || 'Startling Realization & Hidden Puppet Strings',
+            prompt: item.prompt || item.definition || '',
+            question: item.question || 'Why do we fall for this?',
+            story: item.story || '',
+            awakening_truth: item.awakening_truth || item.definition || '',
+            hidden_assumption: item.hidden_assumption || 'People believe they make choices with pure free will.',
+            uncomfortable_q: item.uncomfortable_q || 'If you knew you were being steered, could you stop yourself?',
+            who_benefits: item.who_benefits || 'Architects of the system and commercial platforms',
+            who_pays: item.who_pays || 'The individual consumer through lost attention and autonomy',
+            everyday_trigger: item.everyday_trigger || item.contexts || 'Daily micro-decisions',
+            myth: item.myth || 'That this only affects uneducated or gullible people.',
+            reality_check: item.reality_check || 'It is an engineered systemic friction that affects everyone.',
+            surprise_type: item.surprise_type || 'Counter-Intuitive',
+            status: item.status || 'Published',
+            evidence: item.evidence || 'Empirical behavioral research',
+            controversy: item.controversy || 'Low',
+            sensitivity: item.sensitivity || 'Low',
+            verification: item.verification || 'Peer-Reviewed Literature',
+            sources: Array.isArray(item.sources) ? item.sources : ['Peer-reviewed behavioral science literature'],
+            verified_count: typeof item.verified_count === 'number' ? item.verified_count : 2,
+            shock: typeof item.shock === 'number' ? item.shock : 4,
+            relatability: typeof item.relatability === 'number' ? item.relatability : 5,
+            visualizability: typeof item.visualizability === 'number' ? item.visualizability : 4,
+            comment_potential: typeof item.comment_potential === 'number' ? item.comment_potential : 5,
+            sensationalism_risk: typeof item.sensationalism_risk === 'number' ? item.sensationalism_risk : 1,
+            safe_claim_note: item.safe_claim_note || 'Avoid sweeping absolutes; preserve human nuance.',
+            primary_prompt: item.primary_prompt || item.prompt || '',
+            candidate_angles: Array.isArray(item.candidate_angles) ? item.candidate_angles : [item.angle || 'Systemic trap'],
+            candidate_questions: Array.isArray(item.candidate_questions) ? item.candidate_questions : [item.question || 'Why does this occur?'],
+            candidate_hooks: Array.isArray(item.candidate_hooks) ? item.candidate_hooks : [item.prompt || 'Are you aware of this invisible lever?'],
+            candidate_endings: Array.isArray(item.candidate_endings) ? item.candidate_endings : [item.uncomfortable_q || 'What will you do differently next time?'],
+            candidate_perspectives: Array.isArray(item.candidate_perspectives) ? item.candidate_perspectives : ['Wolf perspective', 'Sheep perspective'],
+            candidate_stakeholders: Array.isArray(item.candidate_stakeholders) ? item.candidate_stakeholders : ['The Institution', 'The Public'],
+            candidate_scenes: Array.isArray(item.candidate_scenes) ? item.candidate_scenes : ['Daily routine environment'],
+            candidate_visuals: Array.isArray(item.candidate_visuals) ? item.candidate_visuals : ['Split screen contrast'],
+            candidate_ethics: Array.isArray(item.candidate_ethics) ? item.candidate_ethics : ['Empirical clarity'],
+            candidate_series: Array.isArray(item.candidate_series) ? item.candidate_series : ['Wise Wolf vs. Naive Sheep'],
+            candidate_recipes: Array.isArray(item.candidate_recipes) ? item.candidate_recipes : ['Socratic Breakdown'],
+            candidate_seeds: Array.isArray(item.candidate_seeds) ? item.candidate_seeds : ['Behavioral Economics'],
+            candidate_engagement_triggers: Array.isArray(item.candidate_engagement_triggers) ? item.candidate_engagement_triggers : ['Personal recognition'],
+            candidate_engagement_goals: Array.isArray(item.candidate_engagement_goals) ? item.candidate_engagement_goals : ['Trigger shares'],
+            candidate_psychographics: Array.isArray(item.candidate_psychographics) ? item.candidate_psychographics : ['Truth-seekers'],
+            audience_guardrails: Array.isArray(item.audience_guardrails) ? item.audience_guardrails : ['Avoid conspiratorial extremes.'],
+            audience_guidance: item.audience_guidance || 'Ground in everyday language without academic jargon.'
+          };
+        });
+
+        return {
+          success: true,
+          topics: formattedTopics,
+          keyUsedIndex: index,
+          modelUsed: model
+        };
+      } catch (err: any) {
+        console.warn(`Error generating psychology topics with Gemini Key #${index} (${model}):`, err);
+        lastError = `Key #${index} (${model}): ${err.message}`;
+      }
+    }
+  }
+
+  return {
+    success: false,
+    topics: [],
+    error: `All configured Gemini keys failed. Last error: ${lastError}`
+  };
+}
+
 
 

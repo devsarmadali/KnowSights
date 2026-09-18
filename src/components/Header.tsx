@@ -31,6 +31,7 @@ interface HeaderProps {
   currentTheme?: ThemeOption;
   onThemeChange?: (theme: ThemeOption) => void;
   notesCount?: number;
+  psychologyCount?: number;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -40,7 +41,8 @@ export const Header: React.FC<HeaderProps> = ({
   spreadsheetId,
   currentTheme = 'dark',
   onThemeChange,
-  notesCount = 0
+  notesCount = 0,
+  psychologyCount = 1200
 }) => {
   const sheetUrl = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/edit`;
   const [showThemeMenu, setShowThemeMenu] = useState(false);
@@ -82,7 +84,7 @@ export const Header: React.FC<HeaderProps> = ({
       label: "Psychology Engine", 
       shortLabel: "Psychology", 
       icon: Brain, 
-      badge: "1,000",
+      badge: psychologyCount ? psychologyCount.toLocaleString() : "1,200",
       highlight: true
     },
     { 
