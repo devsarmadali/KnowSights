@@ -480,11 +480,13 @@ Your assignment is to conduct an exhaustive multi-source investigation into the 
    - Speak in a magnetic, conversational, street-smart tone. Use visceral, evocative language that immediately connects.
    - Deliver constant "shocks of recognition" where the viewer stops in their tracks and realizes: "Wait... this happened to me this morning and I thought it was completely my own decision!"
 
-2. THE "CHECKOUT CANDY" EFFECT (EXPOSING INVISIBLE CHOICE ARCHITECTURE):
-   - Consider the classic supermarket checkout counter: You meticulously checked off every item on your grocery list. But while standing in the narrow checkout chute waiting to pay, your willpower has been depleted by dozens of micro-decisions throughout the store. Right at eye level—at arm's reach of exhausted adults and restless children—they deliberately place brightly colored chocolates and candies. It was never on your list, but you buy it to soothe immediate craving and fatigue.
-   - Apply this exact investigative lens to "${topic.phenomenon}":
-     • What is the invisible architecture steering human behavior?
-     • What psychological fatigue points, cognitive vulnerabilities, or subtle environmental tripwires are engineered to manipulate ordinary people into acting against their best interests while convinced they acted with complete free will?
+2. UNMASKING INVISIBLE CHOICE ARCHITECTURE (DERIVE TOPIC-SPECIFIC EVERYDAY ANALOGIES):
+   - You have complete investigative freedom to discover and craft the most compelling, organic everyday analogy tailored specifically to "${topic.phenomenon}".
+   - Core Philosophy: In modern society, environments and systems are deliberately engineered to steer human decisions beneath conscious awareness. Whether it is retail stores positioning impulse triggers at decision-fatigue choke points, smartphone apps timing notifications when cognitive resistance is lowest, workplace policies manufacturing compliance through subtle peer friction, or banks designing default options to extract recurring fees—every psychological and systemic dynamic has its own distinct everyday playground.
+   - Do NOT force a rigid or fixed analogy across topics. Instead, examine the core mechanism of "${topic.phenomenon}" and derive a bespoke, intuitive everyday parallel:
+     • Where in modern life does an ordinary person walk right into this trap?
+     • What psychological fatigue points, cognitive blind spots, or environmental tripwires are engineered to manipulate them?
+     • How does the design trick them into believing they acted with 100% conscious free will?
 
 3. SEPARATING LAZY PARANOIA FROM DOCUMENTED SYSTEMIC REALITY:
    - We do NOT deal in baseless, amateur conspiracy fantasies.
@@ -540,8 +542,8 @@ Conduct an exhaustive investigative breakdown of "${topic.phenomenon}":
 1. The Hidden Architecture & Cognitive Vulnerabilities:
    - In plain English, how does this mechanism hijack human cognition?
    - What biological, neurological, or evolutionary vulnerabilities does it exploit (e.g. ego depletion, default biases, loss aversion, hyperbolic discounting)?
-2. The Everyday Manipulation Exemplar (The "Checkout Candy" Parallel):
-   - Provide a vivid, detailed, step-by-step real-world walkthrough illustrating how an ordinary person falls into this exact trap today (e.g., at a supermarket counter, clicking a digital subscription, responding to a workplace request, or swiping on an app). Break down each subtle nudge along the path.
+2. Bespoke Everyday Manipulation Analogy & Walkthrough:
+   - Formulate a tailored, highly relatable real-world situation that naturally fits "${topic.phenomenon}". Walk the viewer step-by-step through how an ordinary person walks right into this psychological trap today, convinced it was their own spontaneous idea. Break down each subtle nudge, cognitive friction, or environmental trigger along the journey.
 3. Sub-Applications Across 4 Core Arenas:
    - Demonstrate how "${topic.phenomenon}" is systematically applied across:
      (a) Retail, Consumer Goods & E-Commerce

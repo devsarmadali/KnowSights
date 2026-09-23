@@ -548,7 +548,7 @@ export const PsychologyDetailModal: React.FC<PsychologyDetailModalProps> = ({
             <div className="space-y-3">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <span className="font-mono text-xs text-neutral-400 max-w-xl">
-                  Feed directly into ChatGPT, Claude, or Gemini to conduct deep investigation, uncover hidden truths & manipulation playbooks (like the supermarket checkout candy effect), and generate a complete 15–20 min YouTube narration script:
+                  Feed directly into ChatGPT, Claude, or Gemini to conduct deep investigation, uncover hidden systemic truths, derive topic-specific manipulation analogies, and generate a complete 15–20 min YouTube narration script:
                 </span>
                 <button
                   onClick={handleCopyStoryPrompt}
