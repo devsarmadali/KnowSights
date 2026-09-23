@@ -18,10 +18,11 @@ import {
   FileText, 
   Layers,
   Compass,
-  Film
+  Film,
+  Video
 } from 'lucide-react';
 import { PsychologyTopic, getSectorConfig, getDimensionConfig } from '../types/psychology';
-import { formatPsychologyScriptPrompt } from '../services/psychologyApi';
+import { formatPsychologyScriptPrompt, formatPsychologyNarrativeStoryPrompt } from '../services/psychologyApi';
 
 interface PsychologyDetailModalProps {
   topic: PsychologyTopic | null;
@@ -44,8 +45,9 @@ export const PsychologyDetailModal: React.FC<PsychologyDetailModalProps> = ({
   onToggleBookmark,
   onSaveToNotes
 }) => {
-  const [activeTab, setActiveTab] = useState<'hooks' | 'tensions' | 'evidence' | 'prompt'>('hooks');
+  const [activeTab, setActiveTab] = useState<'hooks' | 'tensions' | 'evidence' | 'prompt' | 'story'>('hooks');
   const [isCopied, setIsCopied] = useState(false);
+  const [isStoryCopied, setIsStoryCopied] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
@@ -75,6 +77,17 @@ export const PsychologyDetailModal: React.FC<PsychologyDetailModalProps> = ({
       setTimeout(() => setIsCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy', err);
+    }
+  };
+
+  const handleCopyStoryPrompt = async () => {
+    const text = formatPsychologyNarrativeStoryPrompt(topic);
+    try {
+      await navigator.clipboard.writeText(text);
+      setIsStoryCopied(true);
+      setTimeout(() => setIsStoryCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy story prompt', err);
     }
   };
 
@@ -200,18 +213,32 @@ export const PsychologyDetailModal: React.FC<PsychologyDetailModalProps> = ({
                   ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-300'
                   : 'bg-emerald-500/15 hover:bg-emerald-500/25 border-emerald-500/30 text-emerald-300 hover:text-emerald-100'
               }`}
+              title="Copy 'Wise Wolf vs. Naive Sheep' Socratic Dialogue Intelligence Dossier"
             >
               {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-emerald-400" />}
-              <span>{isCopied ? 'Copied Full Dossier!' : 'Copy Intelligence Dossier'}</span>
+              <span>{isCopied ? 'Copied Dossier!' : 'Copy Wolf vs Sheep'}</span>
+            </button>
+
+            <button
+              onClick={handleCopyStoryPrompt}
+              className={`flex items-center space-x-1.5 px-3 py-1 rounded-lg text-xs font-semibold border transition-all cursor-pointer ${
+                isStoryCopied
+                  ? 'bg-purple-500/25 border-purple-500/50 text-purple-200 shadow-[0_0_12px_rgba(168,85,247,0.3)]'
+                  : 'bg-purple-500/15 hover:bg-purple-500/25 border-purple-500/30 text-purple-300 hover:text-purple-100'
+              }`}
+              title="Copy 15–20 Min YouTube Story Narration & Deep Research Script Prompt for ChatGPT"
+            >
+              {isStoryCopied ? <Check className="w-3.5 h-3.5 text-purple-300" /> : <Video className="w-3.5 h-3.5 text-purple-400" />}
+              <span>{isStoryCopied ? 'Copied Story!' : 'Copy 15-20m Story'}</span>
             </button>
           </div>
         </div>
 
         {/* Modal Tabs Bar */}
-        <div className="flex border-b border-white/[0.08] bg-[#0c1017] px-6">
+        <div className="flex border-b border-white/[0.08] bg-[#0c1017] px-6 overflow-x-auto scrollbar-none">
           <button
             onClick={() => setActiveTab('hooks')}
-            className={`py-3 px-4 text-xs font-semibold font-mono border-b-2 transition-colors cursor-pointer flex items-center space-x-1.5 ${
+            className={`py-3 px-4 text-xs font-semibold font-mono border-b-2 transition-colors cursor-pointer flex items-center space-x-1.5 whitespace-nowrap ${
               activeTab === 'hooks'
                 ? 'border-emerald-400 text-emerald-300'
                 : 'border-transparent text-neutral-400 hover:text-neutral-200'
@@ -222,7 +249,7 @@ export const PsychologyDetailModal: React.FC<PsychologyDetailModalProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('tensions')}
-            className={`py-3 px-4 text-xs font-semibold font-mono border-b-2 transition-colors cursor-pointer flex items-center space-x-1.5 ${
+            className={`py-3 px-4 text-xs font-semibold font-mono border-b-2 transition-colors cursor-pointer flex items-center space-x-1.5 whitespace-nowrap ${
               activeTab === 'tensions'
                 ? 'border-emerald-400 text-emerald-300'
                 : 'border-transparent text-neutral-400 hover:text-neutral-200'
@@ -233,7 +260,7 @@ export const PsychologyDetailModal: React.FC<PsychologyDetailModalProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('evidence')}
-            className={`py-3 px-4 text-xs font-semibold font-mono border-b-2 transition-colors cursor-pointer flex items-center space-x-1.5 ${
+            className={`py-3 px-4 text-xs font-semibold font-mono border-b-2 transition-colors cursor-pointer flex items-center space-x-1.5 whitespace-nowrap ${
               activeTab === 'evidence'
                 ? 'border-emerald-400 text-emerald-300'
                 : 'border-transparent text-neutral-400 hover:text-neutral-200'
@@ -244,7 +271,7 @@ export const PsychologyDetailModal: React.FC<PsychologyDetailModalProps> = ({
           </button>
           <button
             onClick={() => setActiveTab('prompt')}
-            className={`py-3 px-4 text-xs font-semibold font-mono border-b-2 transition-colors cursor-pointer flex items-center space-x-1.5 ${
+            className={`py-3 px-4 text-xs font-semibold font-mono border-b-2 transition-colors cursor-pointer flex items-center space-x-1.5 whitespace-nowrap ${
               activeTab === 'prompt'
                 ? 'border-emerald-400 text-emerald-300'
                 : 'border-transparent text-neutral-400 hover:text-neutral-200'
@@ -252,6 +279,17 @@ export const PsychologyDetailModal: React.FC<PsychologyDetailModalProps> = ({
           >
             <Film className="w-3.5 h-3.5" />
             <span>Wise Wolf Intelligence Dossier</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('story')}
+            className={`py-3 px-4 text-xs font-semibold font-mono border-b-2 transition-colors cursor-pointer flex items-center space-x-1.5 whitespace-nowrap ${
+              activeTab === 'story'
+                ? 'border-purple-400 text-purple-300'
+                : 'border-transparent text-neutral-400 hover:text-neutral-200'
+            }`}
+          >
+            <Video className="w-3.5 h-3.5 text-purple-400" />
+            <span>15–20m YouTube Story Script</span>
           </button>
         </div>
 
@@ -501,6 +539,28 @@ export const PsychologyDetailModal: React.FC<PsychologyDetailModalProps> = ({
 
               <pre className="p-4 rounded-2xl bg-black/60 border border-white/[0.08] text-xs font-mono text-emerald-200/90 whitespace-pre-wrap leading-relaxed overflow-x-auto max-h-[400px]">
                 {formatPsychologyScriptPrompt(topic)}
+              </pre>
+            </div>
+          )}
+
+          {/* TAB 5: 15–20 MINUTE YOUTUBE STORY SCRIPT */}
+          {activeTab === 'story' && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <span className="font-mono text-xs text-neutral-400 max-w-xl">
+                  Feed directly into ChatGPT, Claude, or Gemini to conduct deep investigation, uncover hidden truths & manipulation playbooks (like the supermarket checkout candy effect), and generate a complete 15–20 min YouTube narration script:
+                </span>
+                <button
+                  onClick={handleCopyStoryPrompt}
+                  className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 text-purple-300 cursor-pointer transition-colors shadow-[0_0_10px_rgba(168,85,247,0.2)]"
+                >
+                  {isStoryCopied ? <Check className="w-3.5 h-3.5 text-purple-300" /> : <Video className="w-3.5 h-3.5 text-purple-400" />}
+                  <span>{isStoryCopied ? 'Copied Story Prompt!' : 'Copy 15-20m Story Prompt'}</span>
+                </button>
+              </div>
+
+              <pre className="p-4 rounded-2xl bg-black/60 border border-white/[0.08] text-xs font-mono text-purple-200/90 whitespace-pre-wrap leading-relaxed overflow-x-auto max-h-[400px]">
+                {formatPsychologyNarrativeStoryPrompt(topic)}
               </pre>
             </div>
           )}

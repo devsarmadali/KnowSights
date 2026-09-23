@@ -258,6 +258,96 @@ export function formatTopicCardCopyText(idea: ProductionIdea): string {
 }
 
 /**
+ * Formats a 15–20 Minute YouTube Narrative Story & Deep-Dive Investigative Script Prompt for a ProductionIdea
+ */
+export function formatProductionIdeaStoryPrompt(idea: ProductionIdea): string {
+  const coreQuestionsText = (idea.core_questions && idea.core_questions.length > 0)
+    ? idea.core_questions.map((q, i) => `  ${i + 1}. "${q}"`).join('\n')
+    : `  1. "Why is the real truth behind this topic kept hidden from the public?"`;
+
+  return `================================================================================
+MASTER INVESTIGATIVE STORYTELLING PROMPT: 15–20 MINUTE YOUTUBE DOCUMENTARY
+Target Format: Long-Form High-Retention YouTube Video Essay / Story Narration
+Target Runtime: 15 to 20 Minutes (~2,500 to 3,500 Spoken Script Words + Scene Direction)
+Universe: Hidden Realities, Choice Architecture, and Unconscious Manipulation
+Objective: Deep-Dive Investigative Research Dossier + Complete Turnkey Video Script
+================================================================================
+
+[YOUR INVESTIGATIVE & STORYTELLING IDENTITY]
+You are an elite investigative documentary director, master behavioral psychologist, and world-class YouTube narrative architect (combining the hypnotic narrative pacing of Johnny Harris and MagnatesMedia, the systemic forensic eye of Vox and Coffeezilla, and the behavioral clarity of Daniel Kahneman and Robert Cialdini).
+
+Your assignment is to conduct an exhaustive multi-source investigation into the verified topic below, and synthesize your findings into a riveting, cinematic, 15 to 20-minute narration-driven YouTube video script and intelligence dossier.
+
+--------------------------------------------------------------------------------
+[CRITICAL CREATIVE DIRECTIVES — READ CAREFULLY BEFORE WRITING]
+--------------------------------------------------------------------------------
+1. WRITTEN FOR THE CURIOUS GENERAL PUBLIC (ZERO ACADEMIC JARGON):
+   - Our audience consists of ordinary, curious human beings who want to understand why the world feels rigged, exhausting, or confusing.
+   - STRIP AWAY all sterile clinical terminology, dry statistical abstractions, and textbook theorizing.
+   - Speak in a magnetic, conversational, street-smart tone. Use visceral, evocative language that immediately connects.
+   - Deliver constant "shocks of recognition" where the viewer stops in their tracks and realizes: "Wait... this happens all the time and I never noticed!"
+
+2. THE "CHECKOUT CANDY" EFFECT (EXPOSING INVISIBLE CHOICE ARCHITECTURE):
+   - Consider the classic supermarket checkout counter: You meticulously checked off every item on your grocery list. But while standing in the narrow checkout chute waiting to pay, your willpower has been depleted by dozens of micro-decisions throughout the store. Right at eye level—at arm's reach of exhausted adults and restless children—they deliberately place brightly colored chocolates and candies. It was never on your list, but you buy it to soothe immediate craving and fatigue.
+   - Apply this exact investigative lens to "${idea.video_idea}":
+     • What is the invisible architecture steering human behavior?
+     • What psychological fatigue points, cognitive vulnerabilities, or subtle environmental tripwires are engineered to manipulate ordinary people into acting against their best interests while convinced they acted with complete free will?
+
+3. SEPARATING LAZY PARANOIA FROM DOCUMENTED SYSTEMIC REALITY:
+   - We do NOT deal in baseless, amateur conspiracy fantasies.
+   - Instead, expose the far more chilling, DOCUMENTED reality: the patents, commercial consulting playbooks, corporate incentive structures, casino math, and algorithmic loops that manipulate human decisions in broad daylight because they are legally, mathematically, and culturally institutionalized.
+
+4. 15–20 MINUTE AUDIENCE RETENTION ARCHITECTURE:
+   - YouTube viewers drop off if a video gets repetitive or preachy. You must structure this with relentless narrative momentum:
+     • Pattern interrupts every 90 seconds (visual shifts, audio cues, perspective flips).
+     • Nested curiosity loops: Introduce an unsettling mystery before resolving the previous revelation.
+     • Concrete micro-demonstrations that challenge the viewer to test their own reaction right in their chair.
+     • Dynamic escalation: Start with a relatable, tiny everyday trap, zoom out to corporate billions and historical blueprints, and climax with a profound awakening of personal autonomy.
+
+--------------------------------------------------------------------------------
+1. TOPIC DOSSIER & RAW INTELLIGENCE FOUNDATION
+--------------------------------------------------------------------------------
+• CORE TOPIC / PHENOMENON: ${idea.video_idea} [ID: ${idea.idea_id}]
+• SUBJECT & FAMILY: ${idea.subject} [${idea.topic_family}]
+• CURIOSITY HOOK: "${idea.curiosity_hook || 'What is hiding in plain sight?'}"
+• CONTENT ANGLE: ${idea.content_angle || 'Hidden mechanisms and systemic contradictions'}
+• OVERVIEW & CONTEXT: ${idea.content_brief_overview || idea.visualization_direction || 'Everyday decision environments and institutional design'}
+• KEY BEATS & EVIDENCE: ${idea.content_brief_key_points || 'Primary systemic tensions and behavioral nudges'}
+• VISUAL DIRECTION: ${idea.visualization_direction || 'Cinematic documentary style, real-world case studies, dynamic motion graphics'}
+• STARTING CLUES & ARCHIVES: ${idea.starting_clues || idea.source_family_guidance || 'Academic literature, patent databases, and historical declassifications'}
+• CORE INVESTIGATIVE QUESTIONS:
+${coreQuestionsText}
+
+--------------------------------------------------------------------------------
+2. REQUIRED OUTPUT DELIVERABLES — EXECUTE ALL 3 PHASES IN FULL
+--------------------------------------------------------------------------------
+
+PHASE 1: THE INVESTIGATIVE INTELLIGENCE DOSSIER (DEEP RESEARCH & ANGLES)
+Conduct an exhaustive investigative breakdown of "${idea.video_idea}":
+1. The Hidden Architecture & Cognitive Vulnerabilities (how human cognition is quietly exploited).
+2. The Everyday Manipulation Exemplar (The "Checkout Candy" Parallel applied to this topic).
+3. Sub-Applications Across 4 Core Arenas (Retail/Commerce, Apps/Algorithms, Workplace/Institutions, Social Dynamics).
+4. The Paper Trail & Historical Roots (patents, behavioral experiments, leaked corporate memos).
+5. The Incentive Audit & "Manufactured Guilt" (who profits, who bears the real cost, and why victims blame themselves).
+
+PHASE 2: COMPLETE 15–20 MINUTE YOUTUBE MASTER SCRIPT (SCENE-BY-SCENE)
+Write a full, cinematic narration script (~2,500 – 3,500 words of spoken voiceover + detailed visual and pacing cues):
+• PROLOGUE: THE INVISIBLE TRIPWIRE (0:00 – 2:30)
+• CHAPTER 1: THE ANATOMY OF THE TRAP (2:30 – 6:00)
+• CHAPTER 2: THE ARCHITECTS & THE PLAYBOOK (6:00 – 10:00)
+• CHAPTER 3: THE EXPANDING WEB — CROSS-INDUSTRY MANIPULATIONS (10:00 – 14:00)
+• CHAPTER 4: THE CUI BONO — WHO PROFITS & WHO PAYS (14:00 – 17:00)
+• CHAPTER 5: BREAKING THE SPELL — MENTAL ARMOR & THE AWAKENING (17:00 – 20:00)
+
+PHASE 3: YOUTUBE ALGORITHM PACKAGING & RETENTION ACCELERATOR
+1. 5 High-CTR Curiosity-Driven Video Titles.
+2. 3 High-Conversion Thumbnail Concepts (contrast, composition, text < 4 words).
+3. Viral Pinned Comment & Community Debate Igniter.
+4. 3 Tangible Visual Metaphors for Video Editors.`;
+}
+
+
+/**
  * Formats full clipboard text for the Source-Ready Research Brief modal
  * Returns the pure, standardized AI research prompt incorporating the brief's overview and key beats.
  */

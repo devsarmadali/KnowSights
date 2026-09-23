@@ -18,10 +18,11 @@ import {
   FileText, 
   Layers,
   Search,
-  BookOpen
+  BookOpen,
+  Video
 } from 'lucide-react';
 import { PsychologyTopic, getSectorConfig, getDimensionConfig } from '../types/psychology';
-import { formatPsychologyScriptPrompt } from '../services/psychologyApi';
+import { formatPsychologyScriptPrompt, formatPsychologyNarrativeStoryPrompt } from '../services/psychologyApi';
 
 interface PsychologyTopicCardProps {
   topic: PsychologyTopic;
@@ -44,6 +45,7 @@ export const PsychologyTopicCard: React.FC<PsychologyTopicCardProps> = ({
 }) => {
   const [showHiddenDynamic, setShowHiddenDynamic] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [isStoryCopied, setIsStoryCopied] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
 
   const sectorConfig = getSectorConfig(topic.sector);
@@ -57,6 +59,17 @@ export const PsychologyTopicCard: React.FC<PsychologyTopicCardProps> = ({
       setTimeout(() => setIsCopied(false), 2000);
     } catch (err) {
       console.error('Failed to copy psychology prompt', err);
+    }
+  };
+
+  const handleCopyStoryPrompt = async () => {
+    const text = formatPsychologyNarrativeStoryPrompt(topic);
+    try {
+      await navigator.clipboard.writeText(text);
+      setIsStoryCopied(true);
+      setTimeout(() => setIsStoryCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy 15-20m narrative story prompt', err);
     }
   };
 
@@ -260,45 +273,65 @@ export const PsychologyTopicCard: React.FC<PsychologyTopicCardProps> = ({
           )}
         </div>
 
-        {/* Symmetrical 3-Column Action Toolbar */}
-        <div className="grid grid-cols-3 gap-1.5 pt-1">
-          {/* Copy Prompt */}
-          <button
-            onClick={handleCopyPrompt}
-            className={`flex items-center justify-center space-x-1 py-1.5 px-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
-              isCopied
-                ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-200'
-                : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/[0.08] text-neutral-200 hover:text-white'
-            }`}
-            title="Copy 'Wise Wolf vs. Naive Sheep' Master Intelligence Dossier for ChatGPT / Gemini"
-          >
-            {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> : <Copy className="w-3.5 h-3.5 text-neutral-400 shrink-0" />}
-            <span className="text-[11px] truncate font-mono">{isCopied ? 'Copied!' : 'Wolf vs Sheep'}</span>
-          </button>
+        {/* Dual-Tier Action Toolbar */}
+        <div className="space-y-1.5 pt-1">
+          {/* Row 1: Dual Creative Intelligence Prompt Engines */}
+          <div className="grid grid-cols-2 gap-1.5">
+            {/* Engine 1: Wise Wolf vs Naive Sheep Socratic Dossier */}
+            <button
+              onClick={handleCopyPrompt}
+              className={`flex items-center justify-center space-x-1.5 py-1.5 px-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                isCopied
+                  ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-200 shadow-[0_0_12px_rgba(16,185,129,0.25)]'
+                  : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/[0.08] text-neutral-200 hover:text-white'
+              }`}
+              title="Copy 'Wise Wolf vs. Naive Sheep' Socratic Dialogue Intelligence Dossier for ChatGPT / Gemini"
+            >
+              {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" /> : <Copy className="w-3.5 h-3.5 text-emerald-400 shrink-0" />}
+              <span className="text-[11px] truncate font-mono">{isCopied ? 'Copied!' : 'Wolf vs Sheep'}</span>
+            </button>
 
-          {/* Save to Notes */}
-          <button
-            onClick={handleSaveToNotesClick}
-            className={`flex items-center justify-center space-x-1 py-1.5 px-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
-              isSaved
-                ? 'bg-cyan-500/20 border-cyan-500/40 text-cyan-200'
-                : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/[0.08] text-neutral-200 hover:text-white'
-            }`}
-            title="Save this topic card directly to Notes & Prompts"
-          >
-            {isSaved ? <Check className="w-3.5 h-3.5 text-cyan-400 shrink-0" /> : <FileText className="w-3.5 h-3.5 text-neutral-400 shrink-0" />}
-            <span className="text-[11px] truncate">{isSaved ? 'Saved!' : 'Note'}</span>
-          </button>
+            {/* Engine 2: 15–20 Min YouTube Story Narration & Investigative Script */}
+            <button
+              onClick={handleCopyStoryPrompt}
+              className={`flex items-center justify-center space-x-1.5 py-1.5 px-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                isStoryCopied
+                  ? 'bg-purple-500/25 border-purple-500/50 text-purple-200 shadow-[0_0_15px_rgba(168,85,247,0.35)]'
+                  : 'bg-purple-500/10 hover:bg-purple-500/20 border-purple-500/25 text-purple-300 hover:text-purple-100'
+              }`}
+              title="Copy 15–20 Min YouTube Story Narration & Deep-Dive Investigative Script Prompt for ChatGPT / Claude"
+            >
+              {isStoryCopied ? <Check className="w-3.5 h-3.5 text-purple-300 shrink-0" /> : <Video className="w-3.5 h-3.5 text-purple-400 shrink-0" />}
+              <span className="text-[11px] truncate font-mono font-medium">{isStoryCopied ? 'Copied Story!' : '15-20m Story'}</span>
+            </button>
+          </div>
 
-          {/* Deep Dive Modal */}
-          <button
-            onClick={() => onOpenDetail(topic)}
-            className="flex items-center justify-center space-x-1 py-1.5 px-2 rounded-xl text-xs font-semibold bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 hover:text-emerald-100 transition-all cursor-pointer"
-            title="Deep dive into candidate hooks, story recipes, and research DOIs"
-          >
-            <Search className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-            <span className="text-[11px] truncate">Deep Dive</span>
-          </button>
+          {/* Row 2: Secondary Card Utility Actions */}
+          <div className="grid grid-cols-2 gap-1.5">
+            {/* Save to Notes Vault */}
+            <button
+              onClick={handleSaveToNotesClick}
+              className={`flex items-center justify-center space-x-1.5 py-1.5 px-2 rounded-xl text-xs font-semibold border transition-all cursor-pointer ${
+                isSaved
+                  ? 'bg-cyan-500/20 border-cyan-500/40 text-cyan-200 shadow-[0_0_12px_rgba(6,182,212,0.25)]'
+                  : 'bg-white/[0.04] hover:bg-white/[0.08] border-white/[0.08] text-neutral-300 hover:text-white'
+              }`}
+              title="Save this topic card directly to Notes & Prompts Vault"
+            >
+              {isSaved ? <Check className="w-3.5 h-3.5 text-cyan-400 shrink-0" /> : <FileText className="w-3.5 h-3.5 text-neutral-400 shrink-0" />}
+              <span className="text-[11px] truncate">{isSaved ? 'Saved!' : 'Save Note'}</span>
+            </button>
+
+            {/* Deep Dive Modal */}
+            <button
+              onClick={() => onOpenDetail(topic)}
+              className="flex items-center justify-center space-x-1.5 py-1.5 px-2 rounded-xl text-xs font-semibold bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-emerald-300 hover:text-emerald-100 transition-all cursor-pointer"
+              title="Deep dive into candidate hooks, story recipes, and research DOIs"
+            >
+              <Search className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <span className="text-[11px] truncate">Deep Dive</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>

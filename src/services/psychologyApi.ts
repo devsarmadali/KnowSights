@@ -431,3 +431,174 @@ PART 6: VIRAL SPARKS, DEBATE IGNITERS & MENTAL ARMOR
 - 3 High-Engagement Debate Questions: Formulate 3 provocative, boundary-pushing questions designed to spark heated, thoughtful debates in the comment section.
 - The Practical "Wolf Mindset" Takeaway: One actionable, street-smart rule of thumb an everyday person can use today to protect themselves from this trap.`;
 }
+
+// Master 15–20 Minute YouTube Narrative Story & Investigative Deep-Dive Prompt Formatter
+// Engineered for ChatGPT, Claude, and Gemini to autonomously conduct deep research, uncover shrouded angles,
+// systemic contradictions, and hidden manipulation playbooks, producing a complete 15-20 min video essay script
+// (~2,500–3,500 words) tailored to the curious general public.
+export function formatPsychologyNarrativeStoryPrompt(topic: PsychologyTopic): string {
+  const hooksList = (topic.candidate_hooks && topic.candidate_hooks.length > 0)
+    ? topic.candidate_hooks.slice(0, 4).map((h, i) => `  ${i + 1}. "${h}"`).join('\n')
+    : `  1. "${topic.awakening_truth || topic.prompt || 'Why do smart, rational people fall for this trap without realizing it?'}"`;
+
+  const visualScenes = (topic.candidate_scenes && topic.candidate_scenes.length > 0)
+    ? topic.candidate_scenes.slice(0, 4).join(' | ')
+    : (topic.contexts || 'Supermarket checkout aisles, late-night smartphone feeds, workplace cubicles, banking portals');
+
+  const candidateEndings = (topic.candidate_endings && topic.candidate_endings.length > 0)
+    ? topic.candidate_endings.slice(0, 3).map((e, i) => `  ${i + 1}. "${e}"`).join('\n')
+    : `  1. "${topic.uncomfortable_q || 'If you realized you were being steered, could you stop yourself?'}"`;
+
+  const candidateAngles = (topic.candidate_angles && topic.candidate_angles.length > 0)
+    ? topic.candidate_angles.slice(0, 3).map((a, i) => `  ${i + 1}. ${a}`).join('\n')
+    : `  1. ${topic.angle || 'Hidden psychological mechanism + systemic friction'}`;
+
+  const sourcesList = topic.sources && topic.sources.length > 0 
+    ? topic.sources.join('\n• ') 
+    : 'Primary academic synthesis and peer-reviewed behavioral research';
+
+  return `================================================================================
+MASTER INVESTIGATIVE STORYTELLING PROMPT: 15–20 MINUTE YOUTUBE DOCUMENTARY
+Target Format: Long-Form High-Retention YouTube Video Essay / Story Narration
+Target Runtime: 15 to 20 Minutes (~2,500 to 3,500 Spoken Script Words + Scene Direction)
+Universe: Hidden Realities, Choice Architecture, and Unconscious Manipulation
+Objective: Deep-Dive Investigative Research Dossier + Complete Turnkey Video Script
+================================================================================
+
+[YOUR INVESTIGATIVE & STORYTELLING IDENTITY]
+You are an elite investigative documentary director, master behavioral psychologist, and world-class YouTube narrative architect (combining the hypnotic narrative pacing of Johnny Harris and MagnatesMedia, the systemic forensic eye of Vox and Coffeezilla, and the behavioral clarity of Daniel Kahneman and Robert Cialdini).
+
+Your assignment is to conduct an exhaustive multi-source investigation into the verified topic below, and synthesize your findings into a riveting, cinematic, 15 to 20-minute narration-driven YouTube video script and intelligence dossier.
+
+--------------------------------------------------------------------------------
+[CRITICAL CREATIVE DIRECTIVES — READ CAREFULLY BEFORE WRITING]
+--------------------------------------------------------------------------------
+1. WRITTEN FOR THE CURIOUS GENERAL PUBLIC (ZERO ACADEMIC JARGON):
+   - Our audience is NOT an auditorium of university professors or psychology PhDs.
+   - Our audience consists of ordinary, curious human beings who want to understand why the world feels rigged, exhausting, or confusing.
+   - STRIP AWAY all sterile clinical terminology, dry statistical abstractions, and textbook theorizing.
+   - Speak in a magnetic, conversational, street-smart tone. Use visceral, evocative language that immediately connects.
+   - Deliver constant "shocks of recognition" where the viewer stops in their tracks and realizes: "Wait... this happened to me this morning and I thought it was completely my own decision!"
+
+2. THE "CHECKOUT CANDY" EFFECT (EXPOSING INVISIBLE CHOICE ARCHITECTURE):
+   - Consider the classic supermarket checkout counter: You meticulously checked off every item on your grocery list. But while standing in the narrow checkout chute waiting to pay, your willpower has been depleted by dozens of micro-decisions throughout the store. Right at eye level—at arm's reach of exhausted adults and restless children—they deliberately place brightly colored chocolates and candies. It was never on your list, but you buy it to soothe immediate craving and fatigue.
+   - Apply this exact investigative lens to "${topic.phenomenon}":
+     • What is the invisible architecture steering human behavior?
+     • What psychological fatigue points, cognitive vulnerabilities, or subtle environmental tripwires are engineered to manipulate ordinary people into acting against their best interests while convinced they acted with complete free will?
+
+3. SEPARATING LAZY PARANOIA FROM DOCUMENTED SYSTEMIC REALITY:
+   - We do NOT deal in baseless, amateur conspiracy fantasies.
+   - Instead, expose the far more chilling, DOCUMENTED reality: the patents, commercial consulting playbooks, corporate incentive structures, casino math, and algorithmic loops that manipulate human decisions in broad daylight because they are legally, mathematically, and culturally institutionalized.
+
+4. 15–20 MINUTE AUDIENCE RETENTION ARCHITECTURE:
+   - YouTube viewers drop off if a video gets repetitive or preachy. You must structure this with relentless narrative momentum:
+     • Pattern interrupts every 90 seconds (visual shifts, audio cues, perspective flips).
+     • Nested curiosity loops: Introduce an unsettling mystery before resolving the previous revelation.
+     • Concrete micro-demonstrations that challenge the viewer to test their own reaction right in their chair.
+     • Dynamic escalation: Start with a relatable, tiny everyday trap, zoom out to corporate billions and historical blueprints, and climax with a profound awakening of personal autonomy.
+
+--------------------------------------------------------------------------------
+1. VERIFIED TOPIC DOSSIER & RAW INTELLIGENCE FOUNDATION
+--------------------------------------------------------------------------------
+• CORE PHENOMENON / SUBJECT: ${topic.phenomenon} [ID: ${topic.id}]
+• CRITICAL SYSTEMIC DIMENSION: ${topic.dimension || 'Psychological Manipulation & Systemic Dynamics'}
+• SECTOR & DISCIPLINE: ${topic.sector} [${topic.category} • ${topic.type}${topic.subtype ? ` • ${topic.subtype}` : ''}]
+• FORMAL DEFINITION: ${topic.definition}
+• UNDERLYING MECHANISM: ${topic.mechanism || topic.definition}
+• RELATABLE EVERYDAY TRIGGER: ${topic.everyday_trigger || topic.contexts || 'Everyday decision friction'}
+• REAL-WORLD ARENAS: ${topic.contexts || 'Retail environments, digital feeds, corporate workplaces, financial apps'}
+• TARGET AUDIENCE: ${topic.audience} (${topic.role_tag || 'General Public'})
+• EMOTIONAL LENS: ${topic.lens || 'Startling Realization & Provocative Curiosity'}
+
+[THE INCENTIVE AUDIT & CONTRADICTION MATRIX]
+• THE POPULAR ILLUSION (What the public assumes): "${topic.hidden_assumption || 'People believe they make choices with complete conscious autonomy.'}"
+• WHO PROFITS / THE ARCHITECTS: ${topic.who_benefits || 'Corporate platforms, institutions, advertisers, or social hierarchies extracting compliance, time, or capital'}
+• WHO BEARS THE COST (The unaware public): ${topic.who_pays || 'The individual through wasted energy, financial drain, guilt, or cognitive exhaustion'}
+• POPULAR POP-PSYCH MYTH: ${topic.myth || 'That this only happens to gullible or weak-willed individuals.'}
+• AWAKENING REALITY CHECK: ${topic.reality_check || topic.awakening_truth || 'This is an engineered or evolved behavioral blind spot that affects virtually everyone.'}
+• UNCOMFORTABLE CORE QUESTION: "${topic.uncomfortable_q || 'If you realized you were being steered, could you stop yourself?'}"
+
+[DATABASE INGREDIENTS & CITATION FOUNDATION]
+• Primary Seed Angle: ${topic.angle || 'Hidden mechanism + systemic friction'}
+• Candidate Angles from Curriculum:
+${candidateAngles}
+• Tested Hook Seeds:
+${hooksList}
+• Suggested Scene Environments: ${visualScenes}
+• Candidate Ending Hooks:
+${candidateEndings}
+• Documented Sources & Empirical DOIs:
+• ${sourcesList}
+• Scientific Guardrail / Safe Claim Boundary: ${topic.safe_claim_note || 'Avoid sweeping absolutes; highlight conditions and everyday human context.'}
+
+--------------------------------------------------------------------------------
+2. REQUIRED OUTPUT DELIVERABLES — EXECUTE ALL 3 PHASES IN FULL
+--------------------------------------------------------------------------------
+
+PHASE 1: THE INVESTIGATIVE INTELLIGENCE DOSSIER (DEEP RESEARCH & ANGLES)
+Conduct an exhaustive investigative breakdown of "${topic.phenomenon}":
+1. The Hidden Architecture & Cognitive Vulnerabilities:
+   - In plain English, how does this mechanism hijack human cognition?
+   - What biological, neurological, or evolutionary vulnerabilities does it exploit (e.g. ego depletion, default biases, loss aversion, hyperbolic discounting)?
+2. The Everyday Manipulation Exemplar (The "Checkout Candy" Parallel):
+   - Provide a vivid, detailed, step-by-step real-world walkthrough illustrating how an ordinary person falls into this exact trap today (e.g., at a supermarket counter, clicking a digital subscription, responding to a workplace request, or swiping on an app). Break down each subtle nudge along the path.
+3. Sub-Applications Across 4 Core Arenas:
+   - Demonstrate how "${topic.phenomenon}" is systematically applied across:
+     (a) Retail, Consumer Goods & E-Commerce
+     (b) Smartphone Apps, Social Feeds & Digital Algorithms
+     (c) Corporate Workplaces, Banking & Institutional Systems
+     (d) Interpersonal Relationships, Social Proof & Dating/Family Dynamics
+4. The Paper Trail & Historical Roots:
+   - Uncover the historical origins: What experiments, psychological studies, corporate consulting firms, or patents first weaponized this mechanism?
+5. The Incentive Audit & "Manufactured Guilt":
+   - Follow the money: Who monetizes this behavior, and how much is extracted?
+   - How does the system condition people to blame their own "weak willpower" or "bad habits" rather than the engineered choice architecture around them?
+
+PHASE 2: COMPLETE 15–20 MINUTE YOUTUBE MASTER SCRIPT (SCENE-BY-SCENE)
+Write a full, cinematic narration script (~2,500 – 3,500 words of spoken voiceover + detailed visual and pacing cues) divided into the following timed chapters:
+
+• PROLOGUE: THE INVISIBLE TRIPWIRE (0:00 – 2:30)
+  - Visuals / B-Roll: An unsettling, relatable everyday scene unfolding in cinematic detail.
+  - Narration: An electrifying pattern interrupt challenging the viewer's belief in their own decision-making autonomy.
+  - The Micro-Demonstration: An interactive thought experiment or brain test that immediately catches the viewer off-guard.
+  - The Core Stakes: State the shocking question this documentary will investigate.
+
+• CHAPTER 1: THE ANATOMY OF THE TRAP (2:30 – 6:00)
+  - Visuals / Cues: Dynamic kinetic typography, graphic split-screens, behavioral animations.
+  - Narration: Peel back the curtain. Explain "${topic.phenomenon}" in crisp, street-smart terms.
+  - Relatable Story: Walk through a concrete everyday scenario showing how the trap operates beneath conscious awareness.
+  - The Core Glitch: Why smart, educated people walk right into this trap every day.
+
+• CHAPTER 2: THE ARCHITECTS & THE PLAYBOOK (6:00 – 10:00)
+  - Visuals / Cues: Archival footage, patent diagrams, leaked corporate documents, dark aesthetic.
+  - Narration: Who designed this? How did consumer science, casino architects, or tech engineers turn a human quirk into a multi-billion dollar harvesting machine?
+  - Debunking the Myth: Shatter the conventional wisdom and pop-psych excuse ("${topic.myth || 'Only weak people fall for this'}").
+
+• CHAPTER 3: THE EXPANDING WEB — CROSS-INDUSTRY MANIPULATIONS (10:00 – 14:00)
+  - Visuals / Cues: Fast-paced montage across modern life (supermarkets, smartphones, banking apps, office meetings).
+  - Narration: Show how the same exact lever from Chapter 1 is stealthily deployed across completely different aspects of the viewer's life without them connecting the dots.
+  - Systemic Contradictions & Shrouded Angles: Expose the perverse incentives and hidden societal costs that nobody talks about.
+
+• CHAPTER 4: THE CUI BONO — WHO PROFITS & WHO PAYS (14:00 – 17:00)
+  - Visuals / Cues: Financial flow charts, stark minimalist graphics, emotional human close-ups.
+  - Narration: Follow the money and power. The chilling contrast between the billions extracted by institutions and the silent exhaustion, anxiety, and drained bank accounts of the public.
+  - Dismantling the Blame: Liberate the viewer from manufactured self-blame by proving the game was rigged before they walked into the room.
+
+• CHAPTER 5: BREAKING THE SPELL — MENTAL ARMOR & THE AWAKENING (17:00 – 20:00)
+  - Visuals / Cues: Warmer lighting, empowering visual motifs, crisp typography.
+  - Narration: Transition from exposure to empowerment.
+  - The 3-Step Reality Check: Tactical, concrete rules of thumb the viewer can use starting today to spot the invisible tripwires in real time.
+  - The Philosophical Epiphany: An unforgettable closing monologue on free will, conscious attention, and regaining sovereignty in an engineered world.
+  - Call to Action & Community Discussion Hook.
+
+PHASE 3: YOUTUBE ALGORITHM PACKAGING & RETENTION ACCELERATOR
+1. 5 High-CTR Curiosity-Driven Video Titles:
+   - Provide 5 distinct title angles (The Expose, The Systemic Trap, The Psychological Reveal, The Everyday Mystery, The Provocative Question).
+2. 3 High-Conversion Thumbnail Concepts:
+   - Visual layout, visual contrast points, face/object juxtaposition, and high-impact text overlay (under 4 words).
+3. Viral Pinned Comment & Community Debate Igniter:
+   - A provocative, boundary-pushing question designed to spark 500+ comments and fuel the YouTube recommendation algorithm.
+4. 3 Tangible Visual Metaphors for Video Editors:
+   - Practical props, visual motifs, or graphic metaphors that make the invisible mechanism immediately visual and unforgettable.`;
+}
+
